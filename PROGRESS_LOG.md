@@ -262,9 +262,27 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+### [fix] — Use GameHub's own built-in classes, remove d8 injection entirely
+**Commit:** `b52055c` | **Tag:** v2.0.6-pre
+#### Root cause discovered
+GameHub's APK already contains `commons-compress`, `zstd-jni` (`libzstd-jni-1.5.7-4.so`), and `org.tukaani.xz` as part of its normal dependencies. However, `commons-compress` is fully obfuscated by ProGuard — `TarArchiveInputStream.getNextTarEntry()` renamed to `s()`, `isDirectory()` renamed to unknown single-letter. When we injected d8-converted JARs (classes18+), Android's class loader used GameHub's obfuscated copy first (earlier dex wins), so `getNextTarEntry()` was not found. For aircompressor: `sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET` does not exist as a static field on Android ART.
+#### What changed
+- **`WcpExtractor.smali`**: Rewritten to use GameHub's built-in classes with their actual runtime signatures:
+  - ZIP: `java.util.zip.ZipInputStream`, flat extraction (basename only) — unchanged
+  - zstd tar: `Lcom/github/luben/zstd/ZstdInputStreamNoFinalizer;` (JNI class, NOT obfuscated) → `<init>(Ljava/io/InputStream;)V`
+  - XZ tar: `Lorg/tukaani/xz/XZInputStream;` (NOT obfuscated) → `<init>(Ljava/io/InputStream;I)V` (-1 = unlimited)
+  - Tar: `TarArchiveInputStream.<init>(InputStream)V` + `s()` for `getNextTarEntry()` (obfuscated name, confirmed via bridge)
+  - Directory detection: `getName().endsWith("/")` — `getName()` is kept (ArchiveEntry interface); `isDirectory()` is not
+  - Format detection: `BufferedInputStream.mark(4)/reset()` — single open, no double open
+- **`build.yml`**: Removed "Convert libraries to dex" + "Inject dex into APK" steps — GameHub already has everything needed
+#### Files touched
+- `patches/smali_classes16/com/xj/landscape/launcher/ui/menu/WcpExtractor.smali`
+- `.github/workflows/build.yml`
+
+---
+
 ## Planned Work
 
-- [ ] Confirm v2.0.5-pre: WCP (XZ FEX + zstd DXVK/VKD3D) extraction works end-to-end
-- [ ] If zstd (ZstdInputStream from aircompressor) also fails, investigate switching to an alternate pure-Java zstd implementation or bundling zstd-jni
-- [ ] Once both ZIP and WCP confirmed working, cut stable v2.1.0 release
+- [ ] Confirm v2.0.6-pre: ZIP (flat) works, WCP zstd (DXVK/VKD3D) works, WCP XZ (FEX) works
+- [ ] Once all three confirmed working, cut stable v2.1.0 release
 - [ ] Explore contributing functional patches to `playday3008/gamehub-patches` PR #13
