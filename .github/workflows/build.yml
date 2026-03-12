@@ -93,7 +93,7 @@ jobs:
             
             # Align
             echo "Zipaligning..."
-            ${ANDROID_SDK_ROOT}/build-tools/$(ls ${ANDROID_SDK_ROOT}/build-tools | tail -1)/zipalign -v 4 rebuilt-unsigned.apk rebuilt-aligned.apk
+            ${ANDROID_SDK_ROOT}/build-tools/$(ls ${ANDROID_SDK_ROOT}/build-tools | tail -1)/zipalign -f -v 4 rebuilt-unsigned.apk rebuilt-aligned.apk
             
             # Sign
             echo "Signing with AOSP testkey..."
