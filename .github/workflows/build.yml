@@ -56,7 +56,7 @@ jobs:
             echo "No patches to apply."
           fi
 
-      - name: Bundle extraction libraries (commons-compress, aircompressor, xz)
+      - name: Convert extraction libraries to dex (commons-compress, aircompressor, xz)
         run: |
           BUILD_TOOLS=$(ls -d ${ANDROID_SDK_ROOT}/build-tools/* | sort -V | tail -1)
           echo "Using build-tools: $BUILD_TOOLS"
@@ -66,24 +66,27 @@ jobs:
           curl -fsSL "https://repo1.maven.org/maven2/io/airlift/aircompressor/0.27/aircompressor-0.27.jar" -o aircompressor.jar
           curl -fsSL "https://repo1.maven.org/maven2/org/tukaani/xz/1.9/xz-1.9.jar" -o xz.jar
 
-          # Convert JARs to dex
+          # Convert JARs to dex (may produce classes.dex, classes2.dex, ...)
           mkdir -p lib_dex
           $BUILD_TOOLS/d8 --release --min-api 29 --output lib_dex/ commons-compress.jar aircompressor.jar xz.jar
-
-          # Download baksmali (org.smali:baksmali:2.5.2 on Maven Central)
-          curl -fsSL "https://repo1.maven.org/maven2/org/smali/baksmali/2.5.2/baksmali-2.5.2.jar" -o baksmali.jar
-
-          # Decompile each dex file into a separate smali folder
-          java -jar baksmali.jar d lib_dex/classes.dex -o apktool_out/smali_classes18/
-          [ -f lib_dex/classes2.dex ] && java -jar baksmali.jar d lib_dex/classes2.dex -o apktool_out/smali_classes19/ || true
-          [ -f lib_dex/classes3.dex ] && java -jar baksmali.jar d lib_dex/classes3.dex -o apktool_out/smali_classes20/ || true
-
-          echo "Library smali count: $(find apktool_out/smali_classes18 apktool_out/smali_classes19 apktool_out/smali_classes20 -name '*.smali' 2>/dev/null | wc -l)"
+          echo "d8 output: $(ls lib_dex/)"
 
       - name: Rebuild APK
         run: |
           java -jar $HOME/bin/apktool.jar b apktool_out -o rebuilt-unsigned.apk
           echo "Rebuilt APK size: $(du -sh rebuilt-unsigned.apk | cut -f1)"
+
+      - name: Inject library dex files into APK
+        run: |
+          # APK is a ZIP — add library dex as classes18.dex, classes19.dex, ...
+          # (apktool already packed classes.dex through classes17.dex from smali folders)
+          N=18
+          for dex in $(ls lib_dex/classes*.dex | sort -V); do
+            cp "$dex" "lib_dex/classes${N}.dex"
+            zip rebuilt-unsigned.apk -j "lib_dex/classes${N}.dex"
+            echo "Added classes${N}.dex ($(du -sh lib_dex/classes${N}.dex | cut -f1))"
+            N=$((N+1))
+          done
 
       - name: Align and sign APK
         run: |
