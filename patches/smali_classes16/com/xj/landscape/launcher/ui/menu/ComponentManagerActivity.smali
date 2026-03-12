@@ -63,7 +63,7 @@
 .end method
 
 .method public showComponents()V
-    .locals 9
+    .locals 11
     const/4 v0, 0x0
     iput v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->mode:I
     new-instance v1, Ljava/io/File;
@@ -99,12 +99,39 @@
     check-cast v5, [Ljava/io/File;
     iput-object v5, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->components:[Ljava/io/File;
     new-array v6, v3, [Ljava/lang/String;
+    # Load SharedPreferences before the name loop (v0 is free — mode was already iput)
+    const-string v8, "bh_injected"
+    const/4 v0, 0x0
+    invoke-virtual {p0, v8, v0}, Landroid/app/Activity;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v0
     const/4 v7, 0x0
     :name_loop
     if-ge v7, v3, :name_loop_end
     aget-object v8, v5, v7
     invoke-virtual {v8}, Ljava/io/File;->getName()Ljava/lang/String;
     move-result-object v8
+    # Check if this component has a stored injection filename
+    const/4 v9, 0x0
+    invoke-interface {v0, v8, v9}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    move-result-object v9
+    if-eqz v9, :use_plain_name
+    # Build "name [-> filename]"
+    move-object v10, v8
+    new-instance v8, Ljava/lang/StringBuilder;
+    invoke-direct {v8}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-virtual {v8, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v8
+    const-string v10, " [-> "
+    invoke-virtual {v8, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v8
+    invoke-virtual {v8, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v8
+    const-string v10, "]"
+    invoke-virtual {v8, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v8
+    invoke-virtual {v8}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v8
+    :use_plain_name
     aput-object v8, v6, v7
     add-int/lit8 v7, v7, 0x1
     goto :name_loop
@@ -315,12 +342,16 @@
 .end method
 
 .method public injectFile(Landroid/net/Uri;)V
-    .locals 4
+    .locals 5
 
     # v0 = component dir
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->components:[Ljava/io/File;
     iget v1, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->selectedIndex:I
     aget-object v0, v0, v1
+
+    # v4 = display name of the file being injected
+    invoke-virtual {p0, p1}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->getFileName(Landroid/net/Uri;)Ljava/lang/String;
+    move-result-object v4
 
     # v1 = Handler(mainLooper)
     invoke-static {}, Landroid/os/Looper;->getMainLooper()Landroid/os/Looper;
@@ -328,9 +359,9 @@
     new-instance v2, Landroid/os/Handler;
     invoke-direct {v2, v1}, Landroid/os/Handler;-><init>(Landroid/os/Looper;)V
 
-    # v1 = background worker runnable
+    # v1 = background worker runnable (with filename)
     new-instance v1, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity$1;
-    invoke-direct {v1, p0, p1, v0, v2}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity$1;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;Landroid/net/Uri;Ljava/io/File;Landroid/os/Handler;)V
+    invoke-direct {v1, p0, p1, v0, v2, v4}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity$1;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;Landroid/net/Uri;Ljava/io/File;Landroid/os/Handler;Ljava/lang/String;)V
 
     # Start background thread
     new-instance v3, Ljava/lang/Thread;
@@ -338,6 +369,42 @@
     invoke-virtual {v3}, Ljava/lang/Thread;->start()V
 
     return-void
+.end method
+
+.method public getFileName(Landroid/net/Uri;)Ljava/lang/String;
+    .locals 9
+    # Build projection = ["_display_name"]
+    const/4 v0, 0x1
+    new-array v0, v0, [Ljava/lang/String;
+    const/4 v1, 0x0
+    const-string v2, "_display_name"
+    aput-object v2, v0, v1
+    # Set up 6 consecutive registers for invoke-virtual/range
+    # v3=ContentResolver, v4=Uri, v5=projection, v6=null, v7=null, v8=null
+    invoke-virtual {p0}, Landroid/app/Activity;->getContentResolver()Landroid/content/ContentResolver;
+    move-result-object v3
+    move-object v4, p1
+    move-object v5, v0
+    const/4 v6, 0x0
+    const/4 v7, 0x0
+    const/4 v8, 0x0
+    invoke-virtual/range {v3 .. v8}, Landroid/content/ContentResolver;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
+    move-result-object v0
+    if-eqz v0, :fallback
+    invoke-interface {v0}, Landroid/database/Cursor;->moveToFirst()Z
+    move-result v1
+    if-eqz v1, :close_and_fallback
+    const/4 v1, 0x0
+    invoke-interface {v0, v1}, Landroid/database/Cursor;->getString(I)Ljava/lang/String;
+    move-result-object v2
+    invoke-interface {v0}, Landroid/database/Cursor;->close()V
+    if-eqz v2, :fallback
+    return-object v2
+    :close_and_fallback
+    invoke-interface {v0}, Landroid/database/Cursor;->close()V
+    :fallback
+    const-string v2, "unknown"
+    return-object v2
 .end method
 
 .method public onBackPressed()V
