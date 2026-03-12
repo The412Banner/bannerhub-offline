@@ -292,16 +292,18 @@
     invoke-virtual {p0}, Landroid/app/Activity;->getContentResolver()Landroid/content/ContentResolver;
     move-result-object v3
 
-    # Query _display_name for a valid filename
-    const/4 v4, 0x1
-    new-array v4, v4, [Ljava/lang/String;
-    const-string v5, "_display_name"
-    const/4 v6, 0x0
-    aput-object v5, v4, v6
-    const/4 v5, 0x0
+    # Query _display_name — need invoke-virtual/range with consecutive regs v3..v8
+    # v3=resolver, v4=uri, v5=projection, v6=null selection, v7=null selectionArgs, v8=null sortOrder
+    move-object v4, p1
+    const/4 v5, 0x1
+    new-array v5, v5, [Ljava/lang/String;
+    const-string v6, "_display_name"
+    const/4 v7, 0x0
+    aput-object v6, v5, v7
     const/4 v6, 0x0
     const/4 v7, 0x0
-    invoke-virtual {v3, p1, v4, v5, v6, v7}, Landroid/content/ContentResolver;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
+    const/4 v8, 0x0
+    invoke-virtual/range {v3 .. v8}, Landroid/content/ContentResolver;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
     move-result-object v4
 
     # v1 = filename (default)
