@@ -1,0 +1,88 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download original APK
+        run: |
+          gh release download base-apk --pattern "*.apk" -D base/ -R ${{ github.repository }}
+          ls base/
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install apktool
+        run: |
+          APKTOOL_VER=2.9.3
+          wget -q "https://github.com/iBotPeaches/Apktool/releases/download/v${APKTOOL_VER}/apktool_${APKTOOL_VER}.jar" -O /usr/local/lib/apktool.jar
+          wget -q "https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool" -O /usr/local/bin/apktool
+          chmod +x /usr/local/bin/apktool
+          apktool --version
+
+      - name: Decompile APK
+        run: |
+          APK=$(ls base/*.apk | head -1)
+          echo "Decompiling: $APK"
+          apktool d "$APK" -o apktool_out -f
+
+      - name: Apply patches
+        run: |
+          if [ -d "patches" ] && [ "$(ls -A patches)" ]; then
+            echo "Applying patches..."
+            cp -r patches/. apktool_out/
+            echo "Patches applied."
+          else
+            echo "No patches to apply."
+          fi
+
+      - name: Rebuild APK
+        run: |
+          apktool b apktool_out -o rebuilt-unsigned.apk
+          echo "Rebuilt APK size: $(du -sh rebuilt-unsigned.apk | cut -f1)"
+
+      - name: Align and sign APK
+        run: |
+          # Zipalign
+          ${ANDROID_SDK_ROOT}/build-tools/$(ls ${ANDROID_SDK_ROOT}/build-tools | tail -1)/zipalign \
+            -v 4 rebuilt-unsigned.apk rebuilt-aligned.apk
+
+          # Sign with committed keystore
+          ${ANDROID_SDK_ROOT}/build-tools/$(ls ${ANDROID_SDK_ROOT}/build-tools | tail -1)/apksigner \
+            sign \
+            --ks keystore.jks \
+            --ks-key-alias bannerhub \
+            --ks-pass pass:bannerhub123 \
+            --key-pass pass:bannerhub123 \
+            --out Gamehub-rebuilt.apk \
+            rebuilt-aligned.apk
+
+          echo "Signed APK size: $(du -sh Gamehub-rebuilt.apk | cut -f1)"
+
+      - name: Get tag name
+        id: tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "name=manual-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: Gamehub ${{ steps.tag.outputs.name }}
+          prerelease: ${{ contains(steps.tag.outputs.name, '-') }}
+          files: Gamehub-rebuilt.apk
