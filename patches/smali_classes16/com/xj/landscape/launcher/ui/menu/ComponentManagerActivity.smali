@@ -158,20 +158,14 @@
 .end method
 
 .method public backupComponent()V
-    .locals 10
+    .locals 6
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->components:[Ljava/io/File;
     iget v1, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->selectedIndex:I
     aget-object v0, v0, v1
     invoke-virtual {v0}, Ljava/io/File;->getName()Ljava/lang/String;
     move-result-object v1
-    invoke-static {}, Landroid/os/Environment;->getExternalStoragePublicDirectory(Ljava/lang/String;)Ljava/io/File;
-    move-result-object v2
-    const-string v3, "Downloads"
-    new-instance v2, Ljava/io/File;
-    invoke-static {}, Landroid/os/Environment;->getExternalStoragePublicDirectory(Ljava/lang/String;)Ljava/io/File;
-    move-result-object v4
-    const-string v5, "DIRECTORY_DOWNLOADS"
-    invoke-static {v5}, Landroid/os/Environment;->getExternalStoragePublicDirectory(Ljava/lang/String;)Ljava/io/File;
+    sget-object v2, Landroid/os/Environment;->DIRECTORY_DOWNLOADS:Ljava/lang/String;
+    invoke-static {v2}, Landroid/os/Environment;->getExternalStoragePublicDirectory(Ljava/lang/String;)Ljava/io/File;
     move-result-object v2
     new-instance v3, Ljava/io/File;
     const-string v4, "BannerHub"
@@ -244,7 +238,6 @@
     invoke-direct {v6, v3}, Ljava/io/FileInputStream;-><init>(Ljava/io/File;)V
     new-instance v7, Ljava/io/FileOutputStream;
     invoke-direct {v7, v5}, Ljava/io/FileOutputStream;-><init>(Ljava/io/File;)V
-    new-array v8, v8, [B
     const/16 v8, 0x2000
     new-array v8, v8, [B
     :read_loop
