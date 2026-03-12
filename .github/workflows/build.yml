@@ -70,8 +70,8 @@ jobs:
           mkdir -p lib_dex
           $BUILD_TOOLS/d8 --release --min-api 29 --output lib_dex/ commons-compress.jar aircompressor.jar xz.jar
 
-          # Download baksmali
-          curl -fsSL "https://github.com/google/smali/releases/download/3.0.3/baksmali-3.0.3.jar" -o baksmali.jar
+          # Download baksmali (org.smali:baksmali:2.5.2 on Maven Central)
+          curl -fsSL "https://repo1.maven.org/maven2/org/smali/baksmali/2.5.2/baksmali-2.5.2.jar" -o baksmali.jar
 
           # Decompile each dex file into a separate smali folder
           java -jar baksmali.jar d lib_dex/classes.dex -o apktool_out/smali_classes18/
