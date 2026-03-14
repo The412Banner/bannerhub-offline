@@ -4,6 +4,25 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## v2.2.3-pre — fix: RTS gesture settings dialog crash + cog icon (2026-03-14)
+**Commit:** `580fb60` | **Tag:** `v2.2.3-pre`
+
+### What changed
+- `rts_gesture_config_dialog.xml`: replaced all 3 `com.hjq.shape.view.ShapeTextView` elements
+  with plain `TextView` using `android:background` inline colors.
+  ShapeTextView is from the HJQ library, which is not in GameHub 5.3.5 — caused
+  `ClassNotFoundException` at inflate time → app crash on every cog tap.
+  Spinners (`rts_gesture_pinch_spinner`, `rts_gesture_two_finger_spinner`): `android:background="#1affffff"`.
+  Close button (`tvClose`): `android:background="#ff3b82f6"`.
+- `winemu_sidebar_controls_fragment.xml`: replaced `@drawable/ic_settings` with
+  `@drawable/winemu_ic_setting_focus_white` so the gear button is visibly white on the dark sidebar.
+
+### Files touched
+- `patches/res/layout/rts_gesture_config_dialog.xml`
+- `patches/res/layout/winemu_sidebar_controls_fragment.xml`
+
+---
+
 ## v2.2.2 — feat: per-variant display labels + full release notes (2026-03-14)
 **Commit:** `8f435ce` (code), `cc06d32` (docs) | **Tag:** `v2.2.2`
 
