@@ -58,27 +58,29 @@ jobs:
 
       - name: Rebuild and Sign Multiple APKs
         run: |
-          # Define targets: "output_filename:package_name"
+          # Define targets: "output_filename:package_name:display_label"
           TARGETS=(
-            "Bannerhub-5.3.5-Revanced-Normal.apk:gamehub.lite"
-            "Bannerhub-5.3.5-Revanced-PuBG.apk:com.tencent.ig"
-            "Bannerhub-5.3.5-Revanced-AnTuTu.apk:com.antutu.ABenchMark"
-            "Bannerhub-5.3.5-Revanced-Ludashi.apk:com.ludashi.aibench"
-            "Bannerhub-5.3.5-Revanced-Genshin.apk:com.mihoyo.genshinimpact"
+            "Bannerhub-5.3.5-Revanced-Normal.apk:gamehub.lite:GameHub Revanced"
+            "Bannerhub-5.3.5-Revanced-PuBG.apk:com.tencent.ig:GameHub Revanced PuBG"
+            "Bannerhub-5.3.5-Revanced-AnTuTu.apk:com.antutu.ABenchMark:GameHub Revanced AnTuTu"
+            "Bannerhub-5.3.5-Revanced-Ludashi.apk:com.ludashi.aibench:GameHub Revanced Ludashi"
+            "Bannerhub-5.3.5-Revanced-Genshin.apk:com.mihoyo.genshinimpact:GameHub Revanced Genshin"
           )
 
           for target in "${TARGETS[@]}"; do
             out_apk="${target%%:*}"
-            pkg_name="${target##*:}"
-            
+            remainder="${target#*:}"
+            pkg_name="${remainder%%:*}"
+            display_label="${remainder#*:}"
+
             echo "========================================"
             echo "Building $out_apk with package $pkg_name"
             echo "========================================"
-            
+
             # Create a fresh copy of the patched decompiled source
             rm -rf apktool_out
             cp -r apktool_out_base apktool_out
-            
+
             # Update package name if not default
             if [ "$pkg_name" != "gamehub.lite" ]; then
               echo "Patching AndroidManifest.xml for package: $pkg_name"
@@ -86,6 +88,9 @@ jobs:
               # Update provider authorities to prevent install conflicts with multiple versions
               sed -i "s/android:authorities=\"gamehub.lite/android:authorities=\"$pkg_name/g" apktool_out/AndroidManifest.xml
             fi
+
+            # Set per-variant display label
+            sed -i "s/android:label=\"GameHub Revanced\"/android:label=\"$display_label\"/" apktool_out/AndroidManifest.xml
             
             # Rebuild
             echo "Building APK with apktool..."
