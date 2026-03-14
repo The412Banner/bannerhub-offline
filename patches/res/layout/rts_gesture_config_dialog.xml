@@ -170,7 +170,7 @@
                         android:textSize="@dimen/mw_14sp"
                         android:textColor="@color/white"
                         android:paddingStart="@dimen/dp_8" />
-                    <com.hjq.shape.view.ShapeTextView
+                    <TextView
                         android:id="@id/rts_gesture_pinch_spinner"
                         android:layout_width="wrap_content"
                         android:layout_height="@dimen/mw_32dp"
@@ -180,8 +180,7 @@
                         android:textSize="@dimen/mw_12sp"
                         android:textColor="#ff888e99"
                         android:clickable="true"
-                        app:xj_shape_radius="@dimen/mw_4dp"
-                        app:xj_shape_solidColor="#0affffff" />
+                        android:background="#1affffff" />
                 </LinearLayout>
         
                 <!-- Two-Finger Drag Gesture Row -->
@@ -204,7 +203,7 @@
                         android:textSize="@dimen/mw_14sp"
                         android:textColor="@color/white"
                         android:paddingStart="@dimen/dp_8" />
-                    <com.hjq.shape.view.ShapeTextView
+                    <TextView
                         android:id="@id/rts_gesture_two_finger_spinner"
                         android:layout_width="wrap_content"
                         android:layout_height="@dimen/mw_32dp"
@@ -214,8 +213,7 @@
                         android:textSize="@dimen/mw_12sp"
                         android:textColor="#ff888e99"
                         android:clickable="true"
-                        app:xj_shape_radius="@dimen/mw_4dp"
-                        app:xj_shape_solidColor="#0affffff" />
+                        android:background="#1affffff" />
                 </LinearLayout>
         
             </LinearLayout>
@@ -231,7 +229,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/mw_16dp"
             android:layout_marginHorizontal="@dimen/mw_60dp">
-            <com.hjq.shape.view.ShapeTextView
+            <TextView
                 android:textSize="@dimen/mw_14sp"
                 android:textColor="@color/comm_white_f0f0f0"
                 android:gravity="center"
@@ -239,8 +237,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/mw_44dp"
                 android:text="@string/comm_close"
-                app:xj_shape_radius="@dimen/mw_4dp"
-                app:xj_shape_solidColor="#ff3b82f6" />
+                android:background="#ff3b82f6" />
         </com.xj.common.view.focus.focus.view.FocusableFrameLayout>
         
     </LinearLayout>
