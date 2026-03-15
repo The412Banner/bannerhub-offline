@@ -4,6 +4,26 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.3.1-beta1 — In-app component downloader (2026-03-15)
+**Commit:** (pending)  |  **Tag:** v2.3.1-beta1  |  **CI run:** (pending — Normal APK only)
+
+### What changed
+- "↓ Download from Nightlies" entry added to Component Manager type-selection menu (Add New Component flow)
+- Tapping it opens ComponentDownloadActivity: fetches GitHub Releases API, lists latest nightly .wcp/.zip/.xz assets
+- Tap any asset → downloads to cacheDir → calls ComponentInjectorHelper.injectComponent → toast result + finish
+- Type auto-detected from filename: box64→94, fex→95, vkd3d→13, turnip/adreno/driver→10, default=dxvk→12
+
+### Files touched
+- `patches/smali_classes16/.../ComponentManagerActivity.smali` — showTypeSelection (6→7 items), onItemClick mode=2 (position 0 launches downloader)
+- `patches/smali_classes16/.../ComponentDownloadActivity.smali` (new)
+- `patches/smali_classes16/.../ComponentDownloadActivity$1.smali` (new — FetchRunnable)
+- `patches/smali_classes16/.../ComponentDownloadActivity$2.smali` (new — ShowListRunnable)
+- `patches/smali_classes16/.../ComponentDownloadActivity$3.smali` (new — DownloadRunnable)
+- `patches/smali_classes16/.../ComponentDownloadActivity$4.smali` (new — CompleteRunnable)
+- `patches/AndroidManifest.xml` — registered ComponentDownloadActivity
+
+---
+
 ## [stable] — v2.3.0 — Stable release (2026-03-15)
 **Commit:** `cdb1f06`  |  **Tag:** v2.3.0  |  **CI run:** `23118528237` (~22min ✓)
 

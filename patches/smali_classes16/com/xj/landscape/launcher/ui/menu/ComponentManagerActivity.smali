@@ -192,24 +192,27 @@
     .locals 4
     const/4 v0, 0x2
     iput v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->mode:I
-    const/4 v0, 0x6
+    const/4 v0, 0x7
     new-array v0, v0, [Ljava/lang/String;
     const/4 v1, 0x0
-    const-string v2, "DXVK"
+    const-string v2, "\u2193 Download from Nightlies"
     aput-object v2, v0, v1
     const/4 v1, 0x1
-    const-string v2, "VKD3D-Proton"
+    const-string v2, "DXVK"
     aput-object v2, v0, v1
     const/4 v1, 0x2
-    const-string v2, "Box64"
+    const-string v2, "VKD3D-Proton"
     aput-object v2, v0, v1
     const/4 v1, 0x3
-    const-string v2, "FEXCore"
+    const-string v2, "Box64"
     aput-object v2, v0, v1
     const/4 v1, 0x4
-    const-string v2, "GPU Driver / Turnip"
+    const-string v2, "FEXCore"
     aput-object v2, v0, v1
     const/4 v1, 0x5
+    const-string v2, "GPU Driver / Turnip"
+    aput-object v2, v0, v1
+    const/4 v1, 0x6
     const-string v2, "\u2190 Back"
     aput-object v2, v0, v1
     new-instance v1, Landroid/widget/ArrayAdapter;
@@ -248,7 +251,16 @@
     :not1
     const/4 v1, 0x2
     if-ne v0, v1, :default_back
-    packed-switch p3, :sw2_data
+    # position 0 = Download from Nightlies
+    if-nez p3, :not_download
+    const-class v0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;
+    new-instance v1, Landroid/content/Intent;
+    invoke-direct {v1, p0, v0}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+    invoke-virtual {p0, v1}, Landroid/app/Activity;->startActivity(Landroid/content/Intent;)V
+    return-void
+    :not_download
+    add-int/lit8 v1, p3, -0x1
+    packed-switch v1, :sw2_data
     invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->showComponents()V
     return-void
 
