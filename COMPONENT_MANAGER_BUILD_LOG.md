@@ -984,6 +984,111 @@ gh release edit v2.2.5-pre --repo The412Banner/bannerhub --notes "..."
 
 ---
 
+## Entry 018 — Menu visibility + FEXCore resilience (v2.2.6-pre)
+**Date:** 2026-03-15  |  **Commit:** `00a324a`  |  **Tag:** v2.2.6-pre
+
+### Problem diagnosed
+Two bugs reported after v2.2.5-pre:
+1. **DXVK folder created but not selectable in menu** — `SelectAndDownloadDialog` is
+   100% server-driven. `EmuComponents.D()` writes to SharedPrefs, but `fetchList$1`
+   only converts server-returned `EnvLayerEntity` objects into `DialogSettingListItemEntity`.
+   Local components never reached the dialog list.
+2. **FEXCore no folder created** — `readWcpProfile` returns null when XZ decompression
+   fails or profile.json is absent. Previous code showed "No profile.json found in WCP"
+   toast and returned without calling `makeComponentDir`.
+3. **Bonus: State.INSTALLED triggers re-download** — `isComponentNeed2Download` only
+   short-circuits on `Extracted` (and `Downloaded`). INSTALLED falls through, causing
+   GameHub to attempt a re-download from the empty URL.
+
+### Root cause analysis path
+- Read `SelectAndDownloadDialog.smali` → confirmed `fetchList.invoke(type, callback)`
+  is the only data source; `isInstalled$1` only marks server items as installed by name
+- Read `GameSettingViewModel.n()` (smali_classes10) → maps content types to subtypes,
+  launches `fetchList$1` coroutine, sends server call
+- Read `GameSettingViewModel$fetchList$1.smali` (2971 lines) → found callback invocation
+  at line 2951: `iget $callback; invoke-interface {callback, list}` — v7=list, v5=state obj
+- Read `PcSettingItemEntity.smali` → confirmed constants:
+  `CONTENT_TYPE_TRANSLATOR=0x20=32`, `TRANSLATOR_BOX=0x5e=94`, `TRANSLATOR_FEX=0x5f=95`
+- Read `EmuComponents$Companion.smali` → `a()` calls `EmuComponents.e()` (no Context needed)
+- Read `State.smali` → confirmed `LState;->Extracted:LState;` exists (obfuscated root class)
+- Read `DialogSettingListItemEntity.smali` → no-arg constructor at line 91;
+  setters: `setTitle`, `setDisplayName`, `setType`, `setEnvLayerEntity`, `setDownloaded`
+
+### Files created
+```
+[NEW] patches/smali_classes3/com/xj/winemu/settings/
+      GameSettingViewModel$fetchList$1.smali
+      — copied from apktool_out/, 2 lines added before callback invocation
+      — method: cp apktool_out/... patches/...
+```
+
+### Files modified
+```
+[MOD] patches/smali_classes16/com/xj/landscape/launcher/ui/menu/
+      ComponentInjectorHelper.smali
+
+Change A — injectComponent (WCP branch, null profile fallback):
+  OLD: if-nez v1, :have_profile
+       const-string v8, "No profile.json found in WCP"
+       goto :toast_and_return
+
+  NEW: if-nez v1, :have_profile
+       # fall back to filename
+       invoke-static getDisplayName(p0, p1) → v3
+       invoke-static stripExt(v3) → v3
+       move-object v4, v3; const-string v5, ""; goto :have_name
+
+Change B — registerComponent (State fix):
+  OLD: sget-object v3, LState;->INSTALLED:LState;
+  NEW: sget-object v3, LState;->Extracted:LState;
+
+Change C — new method appendLocalComponents(List<DSLIE>, int):
+  .locals 9; try-catch wraps entire method
+  1. EmuComponents.e() → check null
+  2. iget HashMap a → values() → iterator()
+  3. For each ComponentRepo: getEntry() → getType()
+  4. if type==p1 OR (p1==32 AND type in {94,95}): type_match
+  5. Build DialogSettingListItemEntity via <init>() + setTitle/setDisplayName/
+     setType(p1)/setEnvLayerEntity/setDownloaded(true)
+  6. list.add(item)
+```
+
+```
+[MOD] patches/smali_classes3/com/xj/winemu/settings/
+      GameSettingViewModel$fetchList$1.smali
+
+Change D — inject appendLocalComponents call (2 lines before callback):
+  Original line 2944: invoke-virtual setData(v7)
+  Original line 2947: iget-object $callback
+
+  Inserted between:
+    iget v0, v5, ...->$contentType:I
+    invoke-static ComponentInjectorHelper;->appendLocalComponents(v7, v0)
+```
+
+### CI
+```
+Workflow:   build-quick.yml (v*-pre* tag → Normal APK only)
+Run ID:     23102478881
+Steps:      Setup → Checkout → Download APK → Install apktool → Decompile →
+            Remove artifacts → Apply patches → Rebuild+Sign → Upload release
+Result:     ✅ PASSED (3m 37s)
+APK:        Bannerhub-5.3.5-Revanced-Normal.apk
+```
+
+### Commits and pushes
+```
+git add patches/smali_classes16/com/xj/landscape/launcher/ui/menu/ComponentInjectorHelper.smali
+git add "patches/smali_classes3/com/xj/winemu/settings/GameSettingViewModel$fetchList$1.smali"
+git commit -m "fix: component injection — menu visibility + FEX resilience"
+git push origin refs/heads/main
+git tag v2.2.6-pre
+git push origin refs/tags/v2.2.6-pre
+gh release edit v2.2.6-pre --notes "..."
+```
+
+---
+
 ---
 
 # Appendix A — EmuComponents API

@@ -4,6 +4,32 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [pre] — v2.2.6-pre — Component menu visibility + FEXCore resilience (2026-03-15)
+**Commit:** `00a324a`  |  **Tag:** v2.2.6-pre  |  **CI run:** `23102478881` (3m37s ✓)
+
+### What changed
+- **ComponentInjectorHelper — FEXCore fallback**: When `readWcpProfile` returns null
+  (XZ decompression fails or no `profile.json`), injection no longer aborts. Instead
+  falls back to filename-derived name and continues to folder creation + extraction.
+- **ComponentInjectorHelper — state fix**: `registerComponent` now uses
+  `LState;->Extracted:LState;` instead of `LState;->INSTALLED:LState;`. This makes
+  `EmuComponents.isComponentNeed2Download()` return false immediately so GameHub won't
+  try to re-download the component from an empty URL.
+- **ComponentInjectorHelper — appendLocalComponents**: New static method
+  `appendLocalComponents(List<DialogSettingListItemEntity>, int contentType)` that
+  iterates the EmuComponents HashMap and appends locally installed components matching
+  the queried content type. `TRANSLATOR(32)` also matches `BOX64(94)` and `FEXCORE(95)`.
+- **GameSettingViewModel$fetchList$1 — inject call**: Two lines added just before the
+  server callback is invoked — reads `$contentType` from the coroutine state, calls
+  `appendLocalComponents(v7, contentType)`. Injected DXVK/VKD3D/GPU/Box64/FEXCore
+  components now appear alongside server results in every selection dialog.
+
+### Files touched
+- `patches/smali_classes16/com/xj/landscape/launcher/ui/menu/ComponentInjectorHelper.smali`
+- `patches/smali_classes3/com/xj/winemu/settings/GameSettingViewModel$fetchList$1.smali` (new)
+
+---
+
 ## [pre] — v2.2.5-pre — True component injection into GameHub menus (2026-03-14)
 **Commit:** `e7dd944`  |  **Tag:** v2.2.5-pre
 
