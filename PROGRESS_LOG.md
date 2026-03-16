@@ -27,6 +27,22 @@ Implemented in-app component downloader. Full journey: initial fetch (Nightlies 
 
 ---
 
+## [feat] — v2.3.1-pre9 — Split GPU Drivers into Kimchi and StevenMXZ repos (2026-03-16)
+**Commit:** `5989ef4`  |  **Tag:** v2.3.1-pre9
+
+### What changed
+- Removed combined "GPU Drivers (Kimchi+StevenMXZ)" repo
+- Added "Kimchi GPU Drivers" (sw0_1) → `kimchi_drivers.json` flat array
+- Added "StevenMXZ GPU Drivers" (sw0_2) → `stevenmxz_drivers.json` flat array
+- Both use `startFetchGpuDrivers()` / `$9` GpuDriversFetchRunnable (same flat JSON array format)
+- `showRepos()`: 3→4 items; Back now at index 3
+- `sw0_data`: extended from 2→3 entries
+
+### Files touched
+- `patches/smali_classes16/.../ComponentDownloadActivity.smali` — showRepos(), sw0_1, new sw0_2, sw0_data
+
+---
+
 ## [fix] — v2.3.1-pre8 — Fix blank component name after ZIP inject (2026-03-16)
 **Commit:** `a893204`  |  **Tag:** v2.3.1-pre8
 
