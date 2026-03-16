@@ -118,15 +118,18 @@
     const-string v2, "Select a source"
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const/4 v0, 0x3
+    const/4 v0, 0x4
     new-array v0, v0, [Ljava/lang/String;
     const/4 v1, 0x0
     const-string v2, "Arihany WCPHub"
     aput-object v2, v0, v1
     const/4 v1, 0x1
-    const-string v2, "GPU Drivers (Kimchi+StevenMXZ)"
+    const-string v2, "Kimchi GPU Drivers"
     aput-object v2, v0, v1
     const/4 v1, 0x2
+    const-string v2, "StevenMXZ GPU Drivers"
+    aput-object v2, v0, v1
+    const/4 v1, 0x3
     const-string v2, "\u2190 Back"
     aput-object v2, v0, v1
 
@@ -306,15 +309,28 @@
     return-void
 
     :sw0_1
-    # GPU Drivers (Kimchi+StevenMXZ) — clear lists first
+    # Kimchi GPU Drivers — clear lists first
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllNames:Ljava/util/ArrayList;
     invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllUrls:Ljava/util/ArrayList;
     invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
-    const-string v1, "Fetching GPU Drivers..."
+    const-string v1, "Fetching Kimchi GPU Drivers..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/drivers.json"
+    const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/kimchi_drivers.json"
+    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
+    return-void
+
+    :sw0_2
+    # StevenMXZ GPU Drivers — clear lists first
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllNames:Ljava/util/ArrayList;
+    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllUrls:Ljava/util/ArrayList;
+    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
+    const-string v1, "Fetching StevenMXZ GPU Drivers..."
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/stevenmxz_drivers.json"
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
     return-void
 
@@ -349,6 +365,7 @@
     .packed-switch 0x0
         :sw0_0
         :sw0_1
+        :sw0_2
     .end packed-switch
 
     nop
