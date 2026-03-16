@@ -118,7 +118,7 @@
     const-string v2, "Select a source"
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const/4 v0, 0x4
+    const/4 v0, 0x5
     new-array v0, v0, [Ljava/lang/String;
     const/4 v1, 0x0
     const-string v2, "Arihany WCPHub"
@@ -130,6 +130,9 @@
     const-string v2, "StevenMXZ GPU Drivers"
     aput-object v2, v0, v1
     const/4 v1, 0x3
+    const-string v2, "MTR Drivers"
+    aput-object v2, v0, v1
+    const/4 v1, 0x4
     const-string v2, "\u2190 Back"
     aput-object v2, v0, v1
 
@@ -334,6 +337,19 @@
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
     return-void
 
+    :sw0_3
+    # MTR Drivers — clear lists first
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllNames:Ljava/util/ArrayList;
+    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllUrls:Ljava/util/ArrayList;
+    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
+    const-string v1, "Fetching MTR Drivers..."
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/mtr_drivers.json"
+    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
+    return-void
+
     # ── mode=1 switch targets ─────────────────────────────────────────────────
     :sw1_0
     const/16 v1, 0xc
@@ -366,6 +382,7 @@
         :sw0_0
         :sw0_1
         :sw0_2
+        :sw0_3
     .end packed-switch
 
     nop
