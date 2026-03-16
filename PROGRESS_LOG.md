@@ -27,6 +27,19 @@ Implemented in-app component downloader. Full journey: initial fetch (Nightlies 
 
 ---
 
+## [feat] — v2.3.1-pre10 — Add MTR Drivers repo (2026-03-16)
+**Commit:** `d2c4ec2`  |  **Tag:** v2.3.1-pre10
+
+### What changed
+- Added "MTR Drivers" (sw0_3) → `mtr_drivers.json` flat array via `$9` GpuDriversFetchRunnable
+- `showRepos()`: 4→5 items; Back at index 4
+- `sw0_data`: extended to 4 entries
+
+### Files touched
+- `patches/smali_classes16/.../ComponentDownloadActivity.smali`
+
+---
+
 ## [feat] — v2.3.1-pre9 — Split GPU Drivers into Kimchi and StevenMXZ repos (2026-03-16)
 **Commit:** `5989ef4`  |  **Tag:** v2.3.1-pre9
 
