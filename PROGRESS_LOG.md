@@ -28,7 +28,7 @@ Implemented in-app component downloader. Full journey: initial fetch (Nightlies 
 ---
 
 ## [fix] — v2.3.1-pre8 — Fix blank component name after ZIP inject (2026-03-16)
-**Commit:** `(pending)`  |  **Tag:** v2.3.1-pre8
+**Commit:** `a893204`  |  **Tag:** v2.3.1-pre8
 
 ### Root cause
 `getDisplayName(ctx, uri)` queries ContentResolver `_display_name`. For `file://` URIs created by `Uri.fromFile()` (used by $3 DownloadRunnable after caching to cacheDir), ContentResolver returns null cursor → `v7 = ""` → `stripExt("") = ""` → blank name in toast and GameHub's component list.
