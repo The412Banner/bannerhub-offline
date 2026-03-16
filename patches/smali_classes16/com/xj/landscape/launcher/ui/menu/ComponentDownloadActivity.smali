@@ -118,18 +118,15 @@
     const-string v2, "Select a source"
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const/4 v0, 0x4
+    const/4 v0, 0x3
     new-array v0, v0, [Ljava/lang/String;
     const/4 v1, 0x0
     const-string v2, "Arihany WCPHub"
     aput-object v2, v0, v1
     const/4 v1, 0x1
-    const-string v2, "Kimchi GPU Drivers"
+    const-string v2, "GPU Drivers (Kimchi+StevenMXZ)"
     aput-object v2, v0, v1
     const/4 v1, 0x2
-    const-string v2, "StevenMXZ GPU Drivers"
-    aput-object v2, v0, v1
-    const/4 v1, 0x3
     const-string v2, "\u2190 Back"
     aput-object v2, v0, v1
 
@@ -309,29 +306,16 @@
     return-void
 
     :sw0_1
-    # Kimchi GPU Drivers — clear lists first
+    # GPU Drivers (Kimchi+StevenMXZ) — clear lists first
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllNames:Ljava/util/ArrayList;
     invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllUrls:Ljava/util/ArrayList;
     invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
-    const-string v1, "Fetching Kimchi GPU Drivers..."
+    const-string v1, "Fetching GPU Drivers..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    const-string v0, "https://api.github.com/repos/The412Banner/Nightlies/releases/tags/kimchi-drivers"
-    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchSingleRelease(Ljava/lang/String;)V
-    return-void
-
-    :sw0_2
-    # StevenMXZ GPU Drivers — clear lists first
-    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllNames:Ljava/util/ArrayList;
-    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
-    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mAllUrls:Ljava/util/ArrayList;
-    invoke-virtual {v0}, Ljava/util/ArrayList;->clear()V
-    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
-    const-string v1, "Fetching StevenMXZ GPU Drivers..."
-    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/stevenMXZ/drivers.json"
-    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchAllReleases(Ljava/lang/String;)V
+    const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/drivers.json"
+    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
     return-void
 
     # ── mode=1 switch targets ─────────────────────────────────────────────────
@@ -365,7 +349,6 @@
     .packed-switch 0x0
         :sw0_0
         :sw0_1
-        :sw0_2
     .end packed-switch
 
     nop
@@ -394,6 +377,16 @@
     .locals 2
     new-instance v0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$6;
     invoke-direct {v0, p0, p1}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$6;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;Ljava/lang/String;)V
+    new-instance v1, Ljava/lang/Thread;
+    invoke-direct {v1, v0}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
+    invoke-virtual {v1}, Ljava/lang/Thread;->start()V
+    return-void
+.end method
+
+.method public startFetchGpuDrivers(Ljava/lang/String;)V
+    .locals 2
+    new-instance v0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$9;
+    invoke-direct {v0, p0, p1}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$9;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;Ljava/lang/String;)V
     new-instance v1, Ljava/lang/Thread;
     invoke-direct {v1, v0}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
     invoke-virtual {v1}, Ljava/lang/Thread;->start()V
@@ -493,6 +486,13 @@
     const/16 v0, 0xa
     return v0
     :not_driver
+    const-string v0, "qualcomm"
+    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v0
+    if-eqz v0, :not_qualcomm
+    const/16 v0, 0xa
+    return v0
+    :not_qualcomm
     const/16 v0, 0xc
     return v0
 .end method
