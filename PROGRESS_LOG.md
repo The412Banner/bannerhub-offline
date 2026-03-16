@@ -4,6 +4,18 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.3.1-beta5 — Remove Nightlies repo, Arihany only (2026-03-16)
+**Commit:** `b0cf210`  |  **Tag:** v2.3.1-beta5  |  **CI run:** `23123388373` (✓, Normal APK, package=`banner.hub`)
+
+### What changed
+- Removed "Nightlies by The412Banner" from showRepos() array and sw0 switch (array 3→2, sw0_1 deleted, sw0_0 now = Arihany)
+- Deleted GitHub releases for beta1/beta2/beta3 (tags already removed)
+
+### Files touched
+- `patches/smali_classes16/.../ComponentDownloadActivity.smali` — showRepos() + sw0 switch table
+
+---
+
 ## [beta] — v2.3.1-beta4 — Fix Arihany: switch to pack.json format (2026-03-16)
 **Commit:** `71f74fd`  |  **Tag:** v2.3.1-beta4  |  **CI run:** `23123229797` (✓, Normal APK, package=`banner.hub`)
 
