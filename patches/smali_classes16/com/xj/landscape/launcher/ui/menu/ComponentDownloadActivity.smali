@@ -118,12 +118,15 @@
     const-string v2, "Select a source"
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    const/4 v0, 0x2
+    const/4 v0, 0x3
     new-array v0, v0, [Ljava/lang/String;
     const/4 v1, 0x0
     const-string v2, "Arihany WCPHub"
     aput-object v2, v0, v1
     const/4 v1, 0x1
+    const-string v2, "K11MCH1 AdrenoToolsDrivers"
+    aput-object v2, v0, v1
+    const/4 v1, 0x2
     const-string v2, "\u2190 Back"
     aput-object v2, v0, v1
 
@@ -298,6 +301,15 @@
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchPackJson(Ljava/lang/String;)V
     return-void
 
+    :sw0_1
+    # K11MCH1 AdrenoToolsDrivers (all releases)
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
+    const-string v1, "Fetching K11MCH1 AdrenoToolsDrivers..."
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const-string v0, "https://api.github.com/repos/K11MCH1/AdrenoToolsDrivers/releases?per_page=100"
+    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchAllReleases(Ljava/lang/String;)V
+    return-void
+
     # ── mode=1 switch targets ─────────────────────────────────────────────────
     :sw1_0
     const/16 v1, 0xc
@@ -328,6 +340,7 @@
     :sw0_data
     .packed-switch 0x0
         :sw0_0
+        :sw0_1
     .end packed-switch
 
     nop
@@ -356,6 +369,16 @@
     .locals 2
     new-instance v0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$6;
     invoke-direct {v0, p0, p1}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$6;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;Ljava/lang/String;)V
+    new-instance v1, Ljava/lang/Thread;
+    invoke-direct {v1, v0}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
+    invoke-virtual {v1}, Ljava/lang/Thread;->start()V
+    return-void
+.end method
+
+.method public startFetchAllReleases(Ljava/lang/String;)V
+    .locals 2
+    new-instance v0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$7;
+    invoke-direct {v0, p0, p1}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity$7;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;Ljava/lang/String;)V
     new-instance v1, Ljava/lang/Thread;
     invoke-direct {v1, v0}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
     invoke-virtual {v1}, Ljava/lang/Thread;->start()V
