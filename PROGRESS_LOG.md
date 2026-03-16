@@ -4,6 +4,29 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## SESSION SUMMARY — 2026-03-16
+Implemented in-app component downloader. Full journey: initial fetch (Nightlies only) → Looper crash fix ($5 InjectRunnable) → multi-repo/category redesign → Arihany added (Releases API failed, switched to pack.json via $6) → cleaned to Arihany-only → promoted to v2.3.1-pre.
+
+**Architecture:**
+- `ComponentDownloadActivity` — 3-mode Activity (0=repos, 1=categories, 2=assets); mode-driven ListView; `onBackPressed()` navigates backwards
+- `$1` — FetchRunnable: GitHub Releases API (finds first `nightly-*` tag); used by Nightlies-style repos
+- `$2` — ShowCategoriesRunnable: posts `showCategories()` to UI thread after fetch
+- `$3` — DownloadRunnable: streams file to cacheDir, posts `$5`
+- `$4` — CompleteRunnable: shows Toast + finish()
+- `$5` — InjectRunnable: calls `ComponentInjectorHelper.injectComponent()` on UI thread (Looper fix)
+- `$6` — PackJsonFetchRunnable: fetches flat JSON array (type/verName/remoteUrl), skips Wine/Proton, extracts filename from URL last segment; used by Arihany/StevenMXZ-style repos
+- `detectType(String)I` — case-insensitive (toLowerCase first); box64→94, fex→95, vkd3d→13, turnip/adreno/driver→10, default DXVK→12
+- `startFetch(String)` — spawns $1 thread (GitHub Releases API format)
+- `startFetchPackJson(String)` — spawns $6 thread (flat JSON array format)
+
+**Key lessons:**
+- Arihany has no `nightly-*` tags — Releases API returns empty; must use pack.json
+- Wine/Proton type ints unknown in GameHub — skip to avoid wrong-type injection
+- `injectComponent()` calls Toast internally → must run on UI thread (Looper requirement)
+- `val$type:I` primitive fields must NOT have trailing `;` in smali type descriptors
+
+---
+
 ## [beta] — v2.3.1-beta6 — Add StevenMXZ repo (2026-03-16)
 **Commit:** `1f4a628`  |  **Tag:** v2.3.1-beta6  |  **CI run:** `23123530054` (✓, Normal APK, package=`banner.hub`)
 
