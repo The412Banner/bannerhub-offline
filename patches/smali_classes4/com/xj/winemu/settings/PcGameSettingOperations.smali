@@ -948,387 +948,188 @@
 .method public final A()Ljava/util/List;
     .locals 33
 
-    .line 1
-    const/4 v0, 0x0
+    # BannerHub: CPU core selector — bitmask-based specific core selection.
+    # Each entry id IS the affinity bitmask passed directly to sched_setaffinity
+    # via WINEMU_CPU_AFFINITY env var (EnvironmentController.d() patched).
+    # 0 = No Limit. Presets cover common big.LITTLE layouts (Snapdragon/Dimensity).
 
-    .line 2
+    # Get stored bitmask (0 = no limit)
     const/4 v1, 0x0
-
-    .line 3
     const/4 v2, 0x1
-
-    .line 4
     move-object/from16 v3, p0
-
-    .line 5
-    .line 6
-    invoke-static {v3, v1, v2, v0}, Lcom/xj/winemu/settings/PcGameSettingOperations;->C(Lcom/xj/winemu/settings/PcGameSettingOperations;IILjava/lang/Object;)I
-
-    .line 7
-    .line 8
-    .line 9
+    invoke-static {v3, v1, v2, v1}, Lcom/xj/winemu/settings/PcGameSettingOperations;->C(Lcom/xj/winemu/settings/PcGameSettingOperations;IILjava/lang/Object;)I
     move-result v0
 
-    .line 10
+    # Create result list
     new-instance v3, Ljava/util/ArrayList;
-
-    .line 11
-    .line 12
     invoke-direct {v3}, Ljava/util/ArrayList;-><init>()V
 
-    .line 13
-    .line 14
-    .line 15
-    sget-object v4, Lcom/winemu/core/utils/CpuInfoCollector;->a:Lcom/winemu/core/utils/CpuInfoCollector;
-
-    .line 16
-    .line 17
-    invoke-virtual {v4}, Lcom/winemu/core/utils/CpuInfoCollector;->b()I
-
-    .line 18
-    .line 19
-    .line 20
-    move-result v4
-
-    .line 21
-    invoke-static {}, Lcom/blankj/utilcode/util/Utils;->a()Landroid/app/Application;
-
-    .line 22
-    .line 23
-    .line 24
-    move-result-object v5
-
-    .line 25
-    sget v6, Lcom/xj/language/R$string;->pc_cc_cpu_core_no_limit:I
-
-    .line 26
-    .line 27
-    invoke-virtual {v5, v6}, Landroid/content/Context;->getString(I)Ljava/lang/String;
-
-    .line 28
-    .line 29
-    .line 30
-    move-result-object v11
-
-    .line 31
-    const-string v5, "getString(...)"
-
-    .line 32
-    .line 33
-    invoke-static {v11, v5}, Lkotlin/jvm/internal/Intrinsics;->f(Ljava/lang/Object;Ljava/lang/String;)V
-
-    .line 34
-    .line 35
-    .line 36
-    if-nez v0, :cond_0
-
-    .line 37
-    .line 38
-    move v10, v2
-
-    .line 39
-    goto :goto_0
-
-    .line 40
-    :cond_0
-    move v10, v1
-
-    .line 41
-    :goto_0
-    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
-
-    .line 42
-    .line 43
+    # Initialize constant constructor fields once (reused for all entries)
+    const/4 v9, 0x0
+    const/4 v12, 0x0
+    const/4 v13, 0x0
+    const/4 v14, 0x0
+    const/4 v15, 0x0
+    const/16 v16, 0x0
+    const/16 v17, 0x0
+    const-wide/16 v18, 0x0
+    const/16 v20, 0x0
+    const/16 v21, 0x0
+    const/16 v22, 0x0
+    const/16 v23, 0x0
+    const/16 v24, 0x0
+    const/16 v25, 0x0
+    const/16 v26, 0x0
+    const/16 v27, 0x0
+    const/16 v28, 0x0
+    const/16 v29, 0x0
+    const/16 v30, 0x0
     const v31, 0x3ffff2
-
-    .line 44
-    .line 45
-    .line 46
     const/16 v32, 0x0
 
-    .line 47
-    .line 48
+    # ---- No Limit (id=0) ----
     const/4 v8, 0x0
-
-    .line 49
-    const/4 v9, 0x0
-
-    .line 50
-    const/4 v12, 0x0
-
-    .line 51
-    const/4 v13, 0x0
-
-    .line 52
-    const/4 v14, 0x0
-
-    .line 53
-    const/4 v15, 0x0
-
-    .line 54
-    const/16 v16, 0x0
-
-    .line 55
-    .line 56
-    const/16 v17, 0x0
-
-    .line 57
-    .line 58
-    const-wide/16 v18, 0x0
-
-    .line 59
-    .line 60
-    const/16 v20, 0x0
-
-    .line 61
-    .line 62
-    const/16 v21, 0x0
-
-    .line 63
-    .line 64
-    const/16 v22, 0x0
-
-    .line 65
-    .line 66
-    const/16 v23, 0x0
-
-    .line 67
-    .line 68
-    const/16 v24, 0x0
-
-    .line 69
-    .line 70
-    const/16 v25, 0x0
-
-    .line 71
-    .line 72
-    const/16 v26, 0x0
-
-    .line 73
-    .line 74
-    const/16 v27, 0x0
-
-    .line 75
-    .line 76
-    const/16 v28, 0x0
-
-    .line 77
-    .line 78
-    const/16 v29, 0x0
-
-    .line 79
-    .line 80
-    const/16 v30, 0x0
-
-    .line 81
-    .line 82
+    if-nez v0, :cond_bh_nl_ns
+    const/4 v10, 0x1
+    goto :goto_bh_nl
+    :cond_bh_nl_ns
+    const/4 v10, 0x0
+    :goto_bh_nl
+    const-string v11, "No Limit"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
     invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-
-    .line 83
-    .line 84
-    .line 85
     invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 86
-    .line 87
-    .line 88
-    if-le v4, v2, :cond_2
+    # ---- Performance cores 4-7 (id=0xF0=240) ----
+    const/16 v8, 0xf0
+    if-ne v0, v8, :cond_bh_p47_ns
+    const/4 v10, 0x1
+    goto :goto_bh_p47
+    :cond_bh_p47_ns
+    const/4 v10, 0x0
+    :goto_bh_p47
+    const-string v11, "Cores 4-7 (Performance)"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 89
-    .line 90
-    sub-int/2addr v4, v2
+    # ---- Efficiency cores 0-3 (id=0x0F=15) ----
+    const/16 v8, 0xf
+    if-ne v0, v8, :cond_bh_e03_ns
+    const/4 v10, 0x1
+    goto :goto_bh_e03
+    :cond_bh_e03_ns
+    const/4 v10, 0x0
+    :goto_bh_e03
+    const-string v11, "Cores 0-3 (Efficiency)"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 91
-    move v7, v4
+    # ---- Core 0 (id=1) ----
+    const/4 v8, 0x1
+    if-ne v0, v8, :cond_bh_c0_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c0
+    :cond_bh_c0_ns
+    const/4 v10, 0x0
+    :goto_bh_c0
+    const-string v11, "Core 0"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 92
-    :goto_1
-    if-lez v7, :cond_2
+    # ---- Core 1 (id=2) ----
+    const/4 v8, 0x2
+    if-ne v0, v8, :cond_bh_c1_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c1
+    :cond_bh_c1_ns
+    const/4 v10, 0x0
+    :goto_bh_c1
+    const-string v11, "Core 1"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 93
-    .line 94
-    invoke-static {}, Lcom/blankj/utilcode/util/Utils;->a()Landroid/app/Application;
+    # ---- Core 2 (id=4) ----
+    const/4 v8, 0x4
+    if-ne v0, v8, :cond_bh_c2_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c2
+    :cond_bh_c2_ns
+    const/4 v10, 0x0
+    :goto_bh_c2
+    const-string v11, "Core 2"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 95
-    .line 96
-    .line 97
-    move-result-object v4
+    # ---- Core 3 (id=8) ----
+    const/4 v8, 0x8
+    if-ne v0, v8, :cond_bh_c3_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c3
+    :cond_bh_c3_ns
+    const/4 v10, 0x0
+    :goto_bh_c3
+    const-string v11, "Core 3"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 98
-    sget v6, Lcom/xj/language/R$string;->pc_cc_cpu_core:I
+    # ---- Core 4 (id=16) ----
+    const/16 v8, 0x10
+    if-ne v0, v8, :cond_bh_c4_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c4
+    :cond_bh_c4_ns
+    const/4 v10, 0x0
+    :goto_bh_c4
+    const-string v11, "Core 4"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 99
-    .line 100
-    invoke-virtual {v4, v6}, Landroid/content/Context;->getString(I)Ljava/lang/String;
+    # ---- Core 5 (id=32) ----
+    const/16 v8, 0x20
+    if-ne v0, v8, :cond_bh_c5_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c5
+    :cond_bh_c5_ns
+    const/4 v10, 0x0
+    :goto_bh_c5
+    const-string v11, "Core 5"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 101
-    .line 102
-    .line 103
-    move-result-object v4
+    # ---- Core 6 (id=64) ----
+    const/16 v8, 0x40
+    if-ne v0, v8, :cond_bh_c6_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c6
+    :cond_bh_c6_ns
+    const/4 v10, 0x0
+    :goto_bh_c6
+    const-string v11, "Core 6"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 104
-    invoke-static {v4, v5}, Lkotlin/jvm/internal/Intrinsics;->f(Ljava/lang/Object;Ljava/lang/String;)V
+    # ---- Core 7 / Prime (id=128) ----
+    const/16 v8, 0x80
+    if-ne v0, v8, :cond_bh_c7_ns
+    const/4 v10, 0x1
+    goto :goto_bh_c7
+    :cond_bh_c7_ns
+    const/4 v10, 0x0
+    :goto_bh_c7
+    const-string v11, "Core 7 (Prime)"
+    new-instance v7, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
+    invoke-direct/range {v7 .. v32}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {v3, v7}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    .line 105
-    .line 106
-    .line 107
-    invoke-static {v7}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
-
-    .line 108
-    .line 109
-    .line 110
-    move-result-object v6
-
-    .line 111
-    filled-new-array {v6}, [Ljava/lang/Object;
-
-    .line 112
-    .line 113
-    .line 114
-    move-result-object v6
-
-    .line 115
-    invoke-static {v6, v2}, Ljava/util/Arrays;->copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;
-
-    .line 116
-    .line 117
-    .line 118
-    move-result-object v6
-
-    .line 119
-    invoke-static {v4, v6}, Ljava/lang/String;->format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
-
-    .line 120
-    .line 121
-    .line 122
-    move-result-object v10
-
-    .line 123
-    const-string v4, "format(...)"
-
-    .line 124
-    .line 125
-    invoke-static {v10, v4}, Lkotlin/jvm/internal/Intrinsics;->f(Ljava/lang/Object;Ljava/lang/String;)V
-
-    .line 126
-    .line 127
-    .line 128
-    if-ne v0, v7, :cond_1
-
-    .line 129
-    .line 130
-    move v9, v2
-
-    .line 131
-    goto :goto_2
-
-    .line 132
-    :cond_1
-    move v9, v1
-
-    .line 133
-    :goto_2
-    new-instance v6, Lcom/xj/winemu/bean/DialogSettingListItemEntity;
-
-    .line 134
-    .line 135
-    const v30, 0x3ffff2
-
-    .line 136
-    .line 137
-    .line 138
-    const/16 v31, 0x0
-
-    .line 139
-    .line 140
-    const/4 v8, 0x0
-
-    .line 141
-    const/4 v11, 0x0
-
-    .line 142
-    const/4 v12, 0x0
-
-    .line 143
-    const/4 v13, 0x0
-
-    .line 144
-    const/4 v14, 0x0
-
-    .line 145
-    const/4 v15, 0x0
-
-    .line 146
-    const/16 v16, 0x0
-
-    .line 147
-    .line 148
-    const-wide/16 v17, 0x0
-
-    .line 149
-    .line 150
-    const/16 v19, 0x0
-
-    .line 151
-    .line 152
-    const/16 v20, 0x0
-
-    .line 153
-    .line 154
-    const/16 v21, 0x0
-
-    .line 155
-    .line 156
-    const/16 v22, 0x0
-
-    .line 157
-    .line 158
-    const/16 v23, 0x0
-
-    .line 159
-    .line 160
-    const/16 v24, 0x0
-
-    .line 161
-    .line 162
-    const/16 v25, 0x0
-
-    .line 163
-    .line 164
-    const/16 v26, 0x0
-
-    .line 165
-    .line 166
-    const/16 v27, 0x0
-
-    .line 167
-    .line 168
-    const/16 v28, 0x0
-
-    .line 169
-    .line 170
-    const/16 v29, 0x0
-
-    .line 171
-    .line 172
-    invoke-direct/range {v6 .. v31}, Lcom/xj/winemu/bean/DialogSettingListItemEntity;-><init>(IIZLjava/lang/String;Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;IILcom/xj/winemu/api/bean/EnvLayerEntity;ZILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-
-    .line 173
-    .line 174
-    .line 175
-    invoke-interface {v3, v6}, Ljava/util/List;->add(Ljava/lang/Object;)Z
-
-    .line 176
-    .line 177
-    .line 178
-    add-int/lit8 v7, v7, -0x1
-
-    .line 179
-    .line 180
-    goto :goto_1
-
-    .line 181
-    :cond_2
     return-object v3
 .end method
 
@@ -1974,6 +1775,9 @@
 .method public final D(I)Ljava/lang/String;
     .locals 4
 
+    # BannerHub: display label for stored CPU affinity bitmask value.
+    # Reads stored bitmask, returns the matching label string.
+
     .line 1
     invoke-virtual {p0}, Lcom/xj/winemu/settings/PcGameSettingOperations;->c0()Lcom/blankj/utilcode/util/SPUtils;
 
@@ -2020,113 +1824,73 @@
     .line 22
     move-result p0
 
-    .line 23
-    if-nez p0, :cond_0
-
-    .line 24
-    .line 25
-    invoke-static {}, Lcom/blankj/utilcode/util/Utils;->a()Landroid/app/Application;
-
-    .line 26
-    .line 27
-    .line 28
-    move-result-object p0
-
-    .line 29
-    sget p1, Lcom/xj/language/R$string;->pc_cc_cpu_core_no_limit:I
-
-    .line 30
-    .line 31
-    invoke-virtual {p0, p1}, Landroid/content/Context;->getString(I)Ljava/lang/String;
-
-    .line 32
-    .line 33
-    .line 34
-    move-result-object p0
-
-    .line 35
-    invoke-static {p0}, Lkotlin/jvm/internal/Intrinsics;->d(Ljava/lang/Object;)V
-
-    .line 36
-    .line 37
-    .line 38
+    # p0 = stored bitmask (int). Match against known values.
+    if-nez p0, :cond_bh_d_nz
+    const-string p0, "No Limit"
     return-object p0
 
-    .line 39
-    :cond_0
-    invoke-static {}, Lcom/blankj/utilcode/util/Utils;->a()Landroid/app/Application;
+    :cond_bh_d_nz
+    const/16 v0, 0xf0
+    if-ne p0, v0, :cond_bh_d1
+    const-string p0, "Cores 4-7 (Performance)"
+    return-object p0
 
-    .line 40
-    .line 41
-    .line 42
-    move-result-object p1
+    :cond_bh_d1
+    const/16 v0, 0xf
+    if-ne p0, v0, :cond_bh_d2
+    const-string p0, "Cores 0-3 (Efficiency)"
+    return-object p0
 
-    .line 43
-    sget v0, Lcom/xj/language/R$string;->pc_cc_cpu_core:I
-
-    .line 44
-    .line 45
-    invoke-virtual {p1, v0}, Landroid/content/Context;->getString(I)Ljava/lang/String;
-
-    .line 46
-    .line 47
-    .line 48
-    move-result-object p1
-
-    .line 49
-    const-string v0, "getString(...)"
-
-    .line 50
-    .line 51
-    invoke-static {p1, v0}, Lkotlin/jvm/internal/Intrinsics;->f(Ljava/lang/Object;Ljava/lang/String;)V
-
-    .line 52
-    .line 53
-    .line 54
-    invoke-static {p0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
-
-    .line 55
-    .line 56
-    .line 57
-    move-result-object p0
-
-    .line 58
-    filled-new-array {p0}, [Ljava/lang/Object;
-
-    .line 59
-    .line 60
-    .line 61
-    move-result-object p0
-
-    .line 62
+    :cond_bh_d2
     const/4 v0, 0x1
+    if-ne p0, v0, :cond_bh_d3
+    const-string p0, "Core 0"
+    return-object p0
 
-    .line 63
-    invoke-static {p0, v0}, Ljava/util/Arrays;->copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;
+    :cond_bh_d3
+    const/4 v0, 0x2
+    if-ne p0, v0, :cond_bh_d4
+    const-string p0, "Core 1"
+    return-object p0
 
-    .line 64
-    .line 65
-    .line 66
-    move-result-object p0
+    :cond_bh_d4
+    const/4 v0, 0x4
+    if-ne p0, v0, :cond_bh_d5
+    const-string p0, "Core 2"
+    return-object p0
 
-    .line 67
-    invoke-static {p1, p0}, Ljava/lang/String;->format(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+    :cond_bh_d5
+    const/4 v0, 0x8
+    if-ne p0, v0, :cond_bh_d6
+    const-string p0, "Core 3"
+    return-object p0
 
-    .line 68
-    .line 69
-    .line 70
-    move-result-object p0
+    :cond_bh_d6
+    const/16 v0, 0x10
+    if-ne p0, v0, :cond_bh_d7
+    const-string p0, "Core 4"
+    return-object p0
 
-    .line 71
-    const-string p1, "format(...)"
+    :cond_bh_d7
+    const/16 v0, 0x20
+    if-ne p0, v0, :cond_bh_d8
+    const-string p0, "Core 5"
+    return-object p0
 
-    .line 72
-    .line 73
-    invoke-static {p0, p1}, Lkotlin/jvm/internal/Intrinsics;->f(Ljava/lang/Object;Ljava/lang/String;)V
+    :cond_bh_d8
+    const/16 v0, 0x40
+    if-ne p0, v0, :cond_bh_d9
+    const-string p0, "Core 6"
+    return-object p0
 
-    .line 74
-    .line 75
-    .line 76
+    :cond_bh_d9
+    const/16 v0, 0x80
+    if-ne p0, v0, :cond_bh_dfb
+    const-string p0, "Core 7 (Prime)"
+    return-object p0
+
+    :cond_bh_dfb
+    const-string p0, "No Limit"
     return-object p0
 .end method
 
