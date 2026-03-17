@@ -100,6 +100,12 @@
     or-int/2addr v1, v2
     :cond_s7
 
+    # All 8 cores checked (0xFF) == No Limit — treat same as "No Limit" button
+    const/16 v2, 0xff
+    if-ne v1, v2, :cond_notmax
+    const/4 v1, 0x0
+    :cond_notmax
+
     # Save: sputils.m(key, newMask)
     iget-object v0, v3, Lcom/xj/winemu/settings/CpuMultiSelectHelper$2;->b:Lcom/blankj/utilcode/util/SPUtils;
     iget-object v2, v3, Lcom/xj/winemu/settings/CpuMultiSelectHelper$2;->c:Ljava/lang/String;

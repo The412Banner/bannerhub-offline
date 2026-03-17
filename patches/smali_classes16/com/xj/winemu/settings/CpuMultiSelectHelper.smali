@@ -251,11 +251,13 @@
     move-result-object v3
     invoke-virtual {v3}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
     move-result-object v3
-    iget v3, v3, Landroid/util/DisplayMetrics;->heightPixels:I
-    mul-int/lit16 v3, v3, 0x4
-    div-int/lit16 v3, v3, 0x5    # 80% = 4/5
+    iget v4, v3, Landroid/util/DisplayMetrics;->widthPixels:I
+    div-int/lit8 v4, v4, 0x2     # width = widthPixels / 2
 
-    const/4 v4, -0x2             # WRAP_CONTENT = -2
+    iget v3, v3, Landroid/util/DisplayMetrics;->heightPixels:I
+    mul-int/lit16 v3, v3, 0x9
+    div-int/lit16 v3, v3, 0xa    # height = 90% = 9/10
+
     invoke-virtual {v8, v4, v3}, Landroid/view/Window;->setLayout(II)V
 
     :cond_bh_nosize
