@@ -4,6 +4,14 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.4.2-beta6b — Fix IllegalAccessError on Apply/No Limit (2026-03-17)
+**Commit:** `41deadb`  |  **Tag:** v2.4.2-beta6b
+**What changed:** Crash: `IllegalAccessError: Field 'id' is inaccessible` — private backing fields on `DialogSettingListItemEntity` (classes12) cannot be set via `iput` from classes16 on ART 14. Fix: use the full Kotlin defaults constructor `invoke-direct/range {v7..v32}` with bitmask `0x3ffffa` (provide id+isSelected, default rest) — same pattern as PcGameSettingOperations. Also add `move-object/from16 v3/v6, p0` at method start: with `.locals 33`, p0=v33 which exceeds the 4-bit iget-object limit.
+**Root cause analysis:** Cross-dex private field access blocked by ART 14. Must use constructor or public setter — no public setters exist (Kotlin val/var with private backing), so full defaults ctor is the only option.
+**Files touched:** `patches/smali_classes16/.../CpuMultiSelectHelper{$2,$3}.smali` [MOD]
+
+---
+
 ## [beta] — v2.4.2-beta5 — Immediate UI refresh via DialogSettingListItemEntity (2026-03-17)
 **Commit:** `77c6cf2`  |  **Tag:** v2.4.2-beta5
 **What changed:** After saving, construct `new DialogSettingListItemEntity{id=newMask, isSelected=true}` and call `callback.invoke(entity)`. This matches the type the original `e()` passes to `u0.invoke()`. Settings row label now refreshes immediately after Apply/No Limit — no back-out required.
