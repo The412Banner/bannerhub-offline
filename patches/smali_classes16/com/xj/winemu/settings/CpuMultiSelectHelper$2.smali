@@ -102,8 +102,9 @@
 
     # No cores selected — show Toast and abort (don't save)
     if-nez v1, :cond_hasmask
-    check-cast p1, Landroid/app/Dialog;
-    invoke-virtual {p1}, Landroid/app/Dialog;->getContext()Landroid/content/Context;
+    move-object v4, p1
+    check-cast v4, Landroid/app/Dialog;
+    invoke-virtual {v4}, Landroid/app/Dialog;->getContext()Landroid/content/Context;
     move-result-object v4
     const-string v5, "Select at least one core"
     const/4 v6, 0x0
