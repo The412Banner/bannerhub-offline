@@ -1370,6 +1370,27 @@ Base APK asset was re-uploaded on 2026-03-17; needed a way to verify integrity v
 
 ---
 
+## Entry 033 — Unlock higher VRAM limits in PC game settings (2026-03-17)
+**Date:** 2026-03-17  |  **Commit:** `cb56d1b`  |  **Tag:** v2.3.8-pre  |  **CI:** pending
+
+### Files created / moved / deleted
+- `patches/smali_classes4/com/xj/winemu/settings/PcGameSettingOperations.smali` [NEW] — full copy of apktool_out version with VRAM entries appended
+
+### Methods added / changed
+**`PcGameSettingOperations.l0()`** — method that builds the VRAM limit dropdown options list. Added 4 new `DialogSettingListItemEntity` entries at the end of the method (before `return-object v1`), each following the exact constructor pattern of existing entries (`const v54, 0x3ffff2` mask, all secondary fields = 0):
+- 6 GB: `v31=0x1800`, `v34="6 GB"`, labels `:cond_6`/`:goto_6`
+- 8 GB: `v31=0x2000`, `v34="8 GB"`, labels `:cond_7`/`:goto_7`
+- 12 GB: `v31=0x3000`, `v34="12 GB"`, labels `:cond_8`/`:goto_8`
+- 16 GB: `v31=0x4000`, `v34="16 GB"`, labels `:cond_9`/`:goto_9`
+
+### Root cause / rationale
+VRAM options were hardcoded in `l0()` with a maximum of 4 GB (0x1000). High-end devices (12-16 GB RAM) need higher VRAM allocation for memory-intensive Windows games. The selected-state check for new entries is non-functional (v0 was clobbered by the final 4 GB entry's `move-object/from16 v0, v30`) but this only affects the checkmark display, not actual selection/storage of the value.
+
+### CI result
+Pending — v2.3.8-pre tag triggers build-quick.yml (Normal APK only)
+
+---
+
 ## Entry 032 — Offline fix: catch NoCacheException in GameSettingViewModel.fetchList (2026-03-17)
 **Date:** 2026-03-17  |  **Commit:** `36e0180`  |  **Tag:** v2.3.7-pre  |  **CI:** pending
 
