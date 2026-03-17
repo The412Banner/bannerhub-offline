@@ -1,6 +1,6 @@
 # BannerHub
 
-**GameHub 5.3.5 ReVanced** — enhanced with a full Component Manager, RTS touch controls, Steam offline launch, and more. Built with apktool — no root required.
+**GameHub 5.3.5 ReVanced** — enhanced with a full Component Manager, in-app component downloader, RTS touch controls, VRAM unlock, Steam offline launch, and more. Built with apktool — no root required.
 
 ## Video — Installation & Feature Showcase
 
@@ -24,6 +24,15 @@ Accessible via GameHub's left side menu → **Components**.
 - FEXCore: flat extraction to component root; all other types preserve `system32/` + `syswow64/` structure
 - Component folder cleared before every inject (no stale files); extraction runs on a background thread
 
+### In-App Component Downloader
+Inside the Component Manager type-selection menu, tap **↓ Download from Online Repos** to browse and download components directly from GitHub without leaving GameHub.
+
+- **3-level navigation:** repo → category (DXVK / VKD3D / Box64 / FEXCore / GPU Driver) → filtered asset list
+- **Two sources built-in:**
+  - **The412Banner Nightlies** — nightly builds of DXVK, VKD3D-Proton, Box64, FEXCore fetched via GitHub Releases API
+  - **Arihany WCPHub** — curated WCP component pack fetched via flat `pack.json`
+- Tap any asset to download it to cache and inject it as a new component automatically
+
 ### BCI Launcher Button
 Tap the icon in GameHub's top-right toolbar to open **BannersComponentInjector** (`com.banner.inject`) directly from inside GameHub. Shows a toast if it is not installed.
 
@@ -39,6 +48,12 @@ Enable via **Settings → Controls tab** in the in-game sidebar. Adds a full ges
 - **Two-finger pan** — camera pan (configurable)
 - **Pinch-to-zoom** — mouse wheel scroll (configurable)
 - **Gesture settings dialog** — tap the gear icon in the Controls tab to customize two-finger and pinch actions
+
+### VRAM Limit Unlock
+PC game settings → **VRAM Limit** now includes 6 GB, 8 GB, 12 GB, and 16 GB options in addition to the original 512 MB–4 GB range. The selected value is saved to MMKV and reflected in the settings summary immediately.
+
+### PC Game Settings: Offline Mode
+Opening PC game settings while offline no longer blocks the menus. Previously a `NoCacheException` from the remote API made all settings non-interactive. Both the container list and component list now fall back to empty data so the UI remains fully usable without a network connection.
 
 ### Offline Steam Launch
 When autoLogin fails and no network is available at cold start, the Steam login screen is skipped and the game launch pipeline proceeds using cached config. When network is available and autoLogin fails, the login screen is shown as normal.
