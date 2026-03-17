@@ -5,6 +5,7 @@ on:
     tags:
       - 'v*-pre*'
       - 'v*-beta*'
+  workflow_dispatch:
 
 jobs:
   build:
