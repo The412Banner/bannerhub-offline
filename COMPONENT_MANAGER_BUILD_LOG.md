@@ -1371,7 +1371,7 @@ Base APK asset was re-uploaded on 2026-03-17; needed a way to verify integrity v
 ---
 
 ## Entry 037 — Multi-select CPU core dialog (2026-03-17)
-**Date:** 2026-03-17  |  **Commit:** pending  |  **Tag:** v2.4.2-beta1  |  **CI:** pending
+**Date:** 2026-03-17  |  **Commit:** `fe2e2a1`  |  **Tag:** v2.4.2-beta1  |  **CI:** ✅ build-quick.yml run 23201415726 — 3m50s
 
 ### Files created / moved / deleted
 - `patches/smali_classes16/com/xj/winemu/settings/CpuMultiSelectHelper.smali` [NEW] — static `show()`: reads current mask, builds CharSequence[8] labels + boolean[8] checked, creates $1/$2/$3 listeners, shows `AlertDialog.setMultiChoiceItems()`
