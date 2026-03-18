@@ -76,7 +76,24 @@
 
 # ── mode=0: lists existing components + "Add New Component" at top ──
 .method public showComponents()V
-    .locals 9
+    .locals 10
+    # --- BannerHub: build sustained perf toggle label (v9) ---
+    const-string v0, "bh_prefs"
+    const/4 v1, 0x0
+    invoke-virtual {p0, v0, v1}, Landroid/app/Activity;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v0
+    const-string v1, "sustained_perf"
+    const/4 v2, 0x0
+    invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+    move-result v0
+    if-eqz v0, :bh_spm_off
+    const-string v9, "\u26a1 Sustained Perf: ON"
+    goto :bh_spm_label_done
+    :bh_spm_off
+    const-string v9, "\u26a1 Sustained Perf: OFF"
+    :bh_spm_label_done
+    # --- end BannerHub sustained perf label ---
+
     const/4 v0, 0x0
     iput v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->mode:I
     new-instance v1, Ljava/io/File;
@@ -116,10 +133,12 @@
     check-cast v5, [Ljava/io/File;
     iput-object v5, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->components:[Ljava/io/File;
 
-    # build display list: ["+ Add New Component", dir1, dir2, ...]
-    add-int/lit8 v6, v3, 0x1
+    # build display list: [toggle, "+ Add New Component", dir1, dir2, ...]
+    add-int/lit8 v6, v3, 0x2
     new-array v6, v6, [Ljava/lang/String;
     const/4 v7, 0x0
+    aput-object v9, v6, v7
+    const/4 v7, 0x1
     const-string v8, "+ Add New Component"
     aput-object v8, v6, v7
 
@@ -129,7 +148,7 @@
     aget-object v8, v5, v7
     invoke-virtual {v8}, Ljava/io/File;->getName()Ljava/lang/String;
     move-result-object v8
-    add-int/lit8 v4, v7, 0x1
+    add-int/lit8 v4, v7, 0x2
     aput-object v8, v6, v4
     add-int/lit8 v7, v7, 0x1
     goto :name_loop
@@ -143,15 +162,17 @@
     return-void
 
     :only_add_btn
-    # no components yet — still show Add New option
+    # no components yet — still show toggle + Add New option
     const/4 v0, 0x0
     const/4 v1, 0x0
     new-array v1, v1, [Ljava/io/File;
     iput-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->components:[Ljava/io/File;
-    const/4 v2, 0x1
+    const/4 v2, 0x2
     new-array v2, v2, [Ljava/lang/String;
-    const-string v3, "+ Add New Component"
-    aput-object v3, v2, v0
+    aput-object v9, v2, v0
+    const/4 v3, 0x1
+    const-string v4, "+ Add New Component"
+    aput-object v4, v2, v3
     new-instance v3, Landroid/widget/ArrayAdapter;
     sget v4, Landroid/R$layout;->simple_list_item_1:I
     invoke-direct {v3, p0, v4, v2}, Landroid/widget/ArrayAdapter;-><init>(Landroid/content/Context;I[Ljava/lang/Object;)V
@@ -224,17 +245,53 @@
 .end method
 
 .method public onItemClick(Landroid/widget/AdapterView;Landroid/view/View;IJ)V
-    .locals 2
+    .locals 3
     # p3=int position, p4+p5=long id (unused)
     iget v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->mode:I
 
     # mode=0: component list
     if-nez v0, :not0
-    if-nez p3, :existing_comp
+
+    # position 0 = toggle sustained perf
+    if-nez p3, :bh_pos_not0
+    const-string v0, "bh_prefs"
+    const/4 v1, 0x0
+    invoke-virtual {p0, v0, v1}, Landroid/app/Activity;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v0
+    const-string v1, "sustained_perf"
+    const/4 v2, 0x0
+    invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+    move-result v1
+    xor-int/lit8 v2, v1, 0x1
+    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+    move-result-object v1
+    const-string v0, "sustained_perf"
+    invoke-interface {v1, v0, v2}, Landroid/content/SharedPreferences$Editor;->putBoolean(Ljava/lang/String;Z)Landroid/content/SharedPreferences$Editor;
+    move-result-object v0
+    invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->apply()V
+    if-eqz v2, :bh_toast_off
+    const-string v0, "Sustained Performance: ON"
+    goto :bh_do_toast
+    :bh_toast_off
+    const-string v0, "Sustained Performance: OFF"
+    :bh_do_toast
+    const/4 v1, 0x0
+    invoke-static {p0, v0, v1}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
+    move-result-object v0
+    invoke-virtual {v0}, Landroid/widget/Toast;->show()V
+    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->showComponents()V
+    return-void
+
+    # position 1 = Add New Component
+    :bh_pos_not0
+    const/4 v0, 0x1
+    if-ne p3, v0, :bh_pos_existing
     invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->showTypeSelection()V
     return-void
-    :existing_comp
-    add-int/lit8 v1, p3, -0x1
+
+    # position 2+ = existing component
+    :bh_pos_existing
+    add-int/lit8 v1, p3, -0x2
     iput v1, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->selectedIndex:I
     invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->showOptions()V
     return-void

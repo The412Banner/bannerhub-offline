@@ -6035,6 +6035,25 @@
     invoke-virtual {v3, v4, v5}, Landroid/os/PerformanceHintManager$Session;->reportActualWorkDuration(J)V
 
     :cond_perf_1
+    # --- BannerHub: Sustained Performance Mode ---
+    sget v2, Landroid/os/Build$VERSION;->SDK_INT:I
+    const/16 v3, 0x18
+    if-lt v2, v3, :cond_bh_spm_skip
+    const-string v2, "bh_prefs"
+    const/4 v3, 0x0
+    invoke-virtual {v1, v2, v3}, Landroid/app/Activity;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v2
+    const-string v3, "sustained_perf"
+    const/4 v4, 0x0
+    invoke-interface {v2, v3, v4}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+    move-result v2
+    if-eqz v2, :cond_bh_spm_skip
+    invoke-virtual {v1}, Landroid/app/Activity;->getWindow()Landroid/view/Window;
+    move-result-object v2
+    const/4 v3, 0x1
+    invoke-virtual {v2, v3}, Landroid/view/Window;->setSustainedPerformanceMode(Z)V
+    :cond_bh_spm_skip
+    # --- end BannerHub Sustained Performance Mode ---
     .line 6
     .line 7
     .line 8

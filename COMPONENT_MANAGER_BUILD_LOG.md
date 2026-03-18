@@ -1933,3 +1933,23 @@ Restored Html.fromHtml `<small>` labels, $1 OnMultiChoiceClickListener, setMulti
 
 ## Entry 048 — CPU core dialog: no divider, centered title, right-aligned right col, buttons L/C/R (2026-03-17)
 **Date:** 2026-03-17  |  **Commit:** `6150954`  |  **Tag:** v2.4.2-beta11  |  **CI:** ✅
+
+---
+
+## Entry 049 — Sustained Performance Mode toggle (ComponentManagerActivity + WineActivity) (2026-03-18)
+**Date:** 2026-03-18  |  **Commit:** TBD  |  **Tag:** v2.4.4-pre  |  **CI:** pending
+
+### Files modified
+- `patches/smali_classes16/com/xj/landscape/launcher/ui/menu/ComponentManagerActivity.smali`
+- `patches/smali_classes15/com/xj/winemu/WineActivity.smali`
+
+### What changed
+- `ComponentManagerActivity.showComponents()`: added `⚡ Sustained Perf: ON/OFF` as index-0 item in the component list; all existing items shifted by 1. Reads `bh_prefs` SharedPreferences key `sustained_perf` to display current state.
+- `ComponentManagerActivity.onItemClick()` mode=0: position 0 toggles `sustained_perf` boolean in `bh_prefs`, shows Toast ("Sustained Performance: ON/OFF"), refreshes list; position 1 now maps to Add New Component (was 0); position 2+ maps to existing component (selectedIndex = position−2).
+- `WineActivity.onCreate()`: injected after `:cond_perf_1` (existing perf block); checks SDK_INT ≥ 24, reads `bh_prefs/sustained_perf` boolean, calls `getWindow().setSustainedPerformanceMode(true)` if enabled.
+
+### Root cause / rationale
+`Window.setSustainedPerformanceMode(true)` prevents thermal throttling from dropping GPU/CPU clocks mid-session. Non-root approach — no sysfs writes. OEM decides the actual clock floor but sustained mode ensures clocks don't drop below the "gaming" tier during prolonged load.
+
+### CI result
+Pending
