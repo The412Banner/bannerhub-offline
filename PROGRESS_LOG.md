@@ -4,6 +4,24 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [pre] — v2.4.7-pre — Fix: restore R$id.smali (iv_bci_launcher) (2026-03-18)
+**Commit:** `cbf3efa`  |  **Tag:** v2.4.7-pre
+**What changed:** App crashed on launch with `java.lang.NoSuchFieldError: No field iv_bci_launcher of type I in class Lcom/xj/landscape/launcher/R$id`. Caused by `rm -rf patches/smali_classes9/` (intended to remove failed SidebarPerformanceFragment patch) which also deleted `R$id.smali` — the patch that adds `iv_bci_launcher` to the R$id class, required by BciLauncherClickListener and LandscapeLauncherMainActivity. Restored from git history (commit `4fbf4d9`).
+**Root cause analysis:** `rm -rf` on smali_classes9 removed both the bad SidebarPerformanceFragment patch AND the critical R$id patch. Should have removed only the specific file.
+**Files touched:** `patches/smali_classes9/com/xj/landscape/launcher/R$id.smali` [RESTORED]
+**CI result:** ✅ build-quick.yml run 23267370887 — Normal APK built successfully
+
+---
+
+## [pre] — v2.4.6-pre — Sustained Perf + Max Adreno Clocks toggles in Performance sidebar (2026-03-18)
+**Commit:** `5835d3c`  |  **Tag:** v2.4.6-pre
+**What changed:** Moved Sustained Performance toggle from ComponentManagerActivity to the in-game Performance sidebar tab. Added Max Adreno Clocks (Root) toggle below it. Both use BhPerfSetupDelegate pattern (self-wiring View in layout XML, wires siblings in onAttachedToWindow) to avoid touching smali_classes9 (at dex limit). WineActivity gains toggleSustainedPerf() and toggleMaxAdreno() static methods. Max adreno command: locks kgsl-3d0 min_freq = max_freq via su.
+**Root cause analysis:** smali_classes9 is at 65535 method reference limit — adding any new methods causes build failure. BhPerfSetupDelegate puts all new code in smali_classes16 with zero additions to classes9.
+**Files touched:** `patches/smali_classes16/com/xj/winemu/sidebar/BhPerfSetupDelegate.smali` [NEW], `patches/smali_classes16/com/xj/winemu/sidebar/MaxAdrenoClickListener.smali` [NEW], `patches/smali_classes16/com/xj/winemu/sidebar/SustainedPerfSwitchClickListener.smali` [NEW], `patches/smali_classes15/com/xj/winemu/WineActivity.smali` [MOD], `patches/res/layout/winemu_sidebar_hub_type_fragment.xml` [NEW patch], `patches/res/values/strings.xml` [MOD], `patches/res/values/ids.xml` [MOD], `patches/res/values/public.xml` [MOD]
+**CI result:** ✅ build-quick.yml — Normal APK built successfully
+
+---
+
 ## [beta] — v2.4.2-beta6b — Fix IllegalAccessError on Apply/No Limit (2026-03-17)
 **Commit:** `41deadb`  |  **Tag:** v2.4.2-beta6b
 **What changed:** Crash: `IllegalAccessError: Field 'id' is inaccessible` — private backing fields on `DialogSettingListItemEntity` (classes12) cannot be set via `iput` from classes16 on ART 14. Fix: use the full Kotlin defaults constructor `invoke-direct/range {v7..v32}` with bitmask `0x3ffffa` (provide id+isSelected, default rest) — same pattern as PcGameSettingOperations. Also add `move-object/from16 v3/v6, p0` at method start: with `.locals 33`, p0=v33 which exceeds the 4-bit iget-object limit.
