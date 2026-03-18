@@ -1084,6 +1084,17 @@ GameHub's APK already contains `commons-compress`, `zstd-jni` (`libzstd-jni-1.5.
 
 ---
 
+### [feat] — CPU core dialog: 2×4 grid (TableLayout, row 0=Eff, row 1=Perf/Prime) — v2.4.2-beta9 (2026-03-17)
+**Commit:** `158d98c`  |  **Tag:** v2.4.2-beta9  |  **CI:** ✅
+#### What changed
+- **`CpuMultiSelectHelper.smali`**: Replaced `setMultiChoiceItems` (vertical list) with `setView(tableLayout)`. TableLayout has 2 TableRows of 4 CheckBoxes. `setStretchAllColumns(true)` for equal column widths. Each CheckBox inits from `checked[]` and gets a `$4` listener.
+- **`CpuMultiSelectHelper$4.smali`** (new): `CompoundButton.OnCheckedChangeListener` capturing `(boolean[], int)`. `onCheckedChanged` stores the new boolean into `a[b]` — keeps `checked[]` in sync for `$2` Apply to read.
+#### Files touched
+- `patches/smali_classes16/com/xj/winemu/settings/CpuMultiSelectHelper.smali`
+- `patches/smali_classes16/com/xj/winemu/settings/CpuMultiSelectHelper$4.smali` (new)
+
+---
+
 ### [feat] — CPU core dialog: warn if no cores selected on Apply — v2.4.2-beta8c (2026-03-17)
 **Commit:** `23e8470`  |  **Tag:** v2.4.2-beta8c  |  **CI:** ✅
 #### What changed

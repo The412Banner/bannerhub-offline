@@ -1370,6 +1370,22 @@ Base APK asset was re-uploaded on 2026-03-17; needed a way to verify integrity v
 
 ---
 
+## Entry 045 — CPU core dialog: 2×4 grid layout (TableLayout + $4 CheckBox listener) (2026-03-17)
+**Date:** 2026-03-17  |  **Commit:** `158d98c`  |  **Tag:** v2.4.2-beta9  |  **CI:** ✅ build-quick.yml — success
+
+### Files created / moved / deleted
+- `patches/smali_classes16/com/xj/winemu/settings/CpuMultiSelectHelper.smali` [MOD]
+- `patches/smali_classes16/com/xj/winemu/settings/CpuMultiSelectHelper$4.smali` [NEW]
+
+### Methods added / changed
+**`CpuMultiSelectHelper.show()`** — Replaced `CharSequence[8]` labels + `$1` + `setMultiChoiceItems()` with a `TableLayout` containing 2 `TableRow`s of 4 `CheckBox` each. `setView(tableLayout)` used instead of `setMultiChoiceItems`. `setStretchAllColumns(true)` distributes columns equally. Each CheckBox initialized from `checked[]`, gets a `$4` listener. `$2` (Apply) and `$3` (No Limit) still read from the shared `checked[]` reference — updated live by $4.
+**`CpuMultiSelectHelper$4.onCheckedChanged()`** — New class. Captures `a:[Z` (checked array) and `b:I` (index). `onCheckedChanged` does `aput-boolean p2, v0, v1` — stores the new boolean state into the array at the stored index.
+
+### Root cause / rationale
+`setMultiChoiceItems` produces a ListView — one item per row. User requested 2 rows of 4 checkboxes (Efficiency cores / Performance+Prime cores). `TableLayout` with `TableRow` is the natural Android view for fixed grids and requires no RecyclerView/GridView adapter complexity. The `$4` listener pattern uses a single reusable class (one instance per checkbox, different index captured in constructor) rather than 8 separate inner classes.
+
+---
+
 ## Entry 044 — CPU core dialog: warn if no cores selected on Apply (2026-03-17)
 **Date:** 2026-03-17  |  **Commit:** `23e8470`  |  **Tag:** v2.4.2-beta8c  |  **CI:** ✅ build-quick.yml — success
 
