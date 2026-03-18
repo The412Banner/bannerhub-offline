@@ -1,21 +1,27 @@
 .class public final Lcom/xj/winemu/settings/CpuMultiSelectHelper;
 .super Ljava/lang/Object;
 
-# BannerHub: multi-select CPU core dialog — 2×4 grid layout.
+# BannerHub: multi-select CPU core dialog — 4×2 grid layout.
 # p0 = View (anchor — getContext() for dialog; must be non-null)
 # p1 = String gameId
 # p2 = int contentType (CONTENT_TYPE_CORE_LIMIT)
 # p3 = Function1 callback
 #
+# Grid layout (4 rows × 2 columns):
+#   Core 0 (Eff)  | Core 4 (Perf)
+#   Core 1 (Eff)  | Core 5 (Perf)
+#   Core 2 (Eff)  | Core 6 (Perf)
+#   Core 3 (Eff)  | Core 7 (Prime)
+#
 # Register map:
 #  v0  = Context
-#  v1  = TableLayout (2×4 grid)
+#  v1  = TableLayout
 #  v2  = boolean[8] checked (shared with $4 listeners and $2 Apply)
 #  v3  = SPUtils → temp string
-#  v4  = key String → temp (null for NeutralButton)
+#  v4  = key String → temp
 #  v5  = currentMask → TableRow → $2 (Apply)
-#  v6  = CheckBox (per-core loop) → $3 (No Limit)
-#  v7  = $4 listener (per-core loop)
+#  v6  = left CheckBox → $3 (No Limit)
+#  v7  = right CheckBox / $4 listener
 #  v8  = temp bool / text / AlertDialog.Builder / Window
 
 .method public static show(Landroid/view/View;Ljava/lang/String;ILkotlin/jvm/functions/Function1;)V
@@ -47,7 +53,6 @@
     const/4 v1, 0x1
     invoke-static {v2, v5, v1, v5}, Lcom/xj/winemu/settings/PcGameSettingOperations;->C(Lcom/xj/winemu/settings/PcGameSettingOperations;IILjava/lang/Object;)I
     move-result v5
-    # v1 and v2 (ops) now free
 
     # --- Build boolean[8] checked ---
     const/16 v2, 0x8
@@ -150,17 +155,17 @@
     aput-boolean v7, v2, v6
     # v2 = checked, v5/v6/v7 free
 
-    # --- Build 2×4 CheckBox grid ---
+    # --- Build 4×2 CheckBox grid ---
+    # Columns: left=Cores 0-3 (Efficiency), right=Cores 4-7 (Perf/Prime)
     new-instance v1, Landroid/widget/TableLayout;
     invoke-direct {v1, v0}, Landroid/widget/TableLayout;-><init>(Landroid/content/Context;)V
     const/4 v8, 0x1
     invoke-virtual {v1, v8}, Landroid/widget/TableLayout;->setStretchAllColumns(Z)V
 
-    # ---- Row 0: Cores 0–3 (Efficiency) ----
+    # ---- Row 0: Core 0 | Core 4 ----
     new-instance v5, Landroid/widget/TableRow;
     invoke-direct {v5, v0}, Landroid/widget/TableRow;-><init>(Landroid/content/Context;)V
 
-    # Core 0
     new-instance v6, Landroid/widget/CheckBox;
     invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
     const-string v8, "Core 0\n(Eff)"
@@ -174,55 +179,6 @@
     invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
     invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
 
-    # Core 1
-    new-instance v6, Landroid/widget/CheckBox;
-    invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
-    const-string v8, "Core 1\n(Eff)"
-    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    const/4 v8, 0x1
-    aget-boolean v8, v2, v8
-    invoke-virtual {v6, v8}, Landroid/widget/CompoundButton;->setChecked(Z)V
-    new-instance v7, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;
-    const/4 v8, 0x1
-    invoke-direct {v7, v2, v8}, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;-><init>([ZI)V
-    invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
-    invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
-
-    # Core 2
-    new-instance v6, Landroid/widget/CheckBox;
-    invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
-    const-string v8, "Core 2\n(Eff)"
-    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    const/4 v8, 0x2
-    aget-boolean v8, v2, v8
-    invoke-virtual {v6, v8}, Landroid/widget/CompoundButton;->setChecked(Z)V
-    new-instance v7, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;
-    const/4 v8, 0x2
-    invoke-direct {v7, v2, v8}, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;-><init>([ZI)V
-    invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
-    invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
-
-    # Core 3
-    new-instance v6, Landroid/widget/CheckBox;
-    invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
-    const-string v8, "Core 3\n(Eff)"
-    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-    const/4 v8, 0x3
-    aget-boolean v8, v2, v8
-    invoke-virtual {v6, v8}, Landroid/widget/CompoundButton;->setChecked(Z)V
-    new-instance v7, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;
-    const/4 v8, 0x3
-    invoke-direct {v7, v2, v8}, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;-><init>([ZI)V
-    invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
-    invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
-
-    invoke-virtual {v1, v5}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
-
-    # ---- Row 1: Cores 4–7 (Performance / Prime) ----
-    new-instance v5, Landroid/widget/TableRow;
-    invoke-direct {v5, v0}, Landroid/widget/TableRow;-><init>(Landroid/content/Context;)V
-
-    # Core 4
     new-instance v6, Landroid/widget/CheckBox;
     invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
     const-string v8, "Core 4\n(Perf)"
@@ -236,7 +192,25 @@
     invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
     invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
 
-    # Core 5
+    invoke-virtual {v1, v5}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
+
+    # ---- Row 1: Core 1 | Core 5 ----
+    new-instance v5, Landroid/widget/TableRow;
+    invoke-direct {v5, v0}, Landroid/widget/TableRow;-><init>(Landroid/content/Context;)V
+
+    new-instance v6, Landroid/widget/CheckBox;
+    invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
+    const-string v8, "Core 1\n(Eff)"
+    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const/4 v8, 0x1
+    aget-boolean v8, v2, v8
+    invoke-virtual {v6, v8}, Landroid/widget/CompoundButton;->setChecked(Z)V
+    new-instance v7, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;
+    const/4 v8, 0x1
+    invoke-direct {v7, v2, v8}, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;-><init>([ZI)V
+    invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
+    invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
+
     new-instance v6, Landroid/widget/CheckBox;
     invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
     const-string v8, "Core 5\n(Perf)"
@@ -250,7 +224,25 @@
     invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
     invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
 
-    # Core 6
+    invoke-virtual {v1, v5}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
+
+    # ---- Row 2: Core 2 | Core 6 ----
+    new-instance v5, Landroid/widget/TableRow;
+    invoke-direct {v5, v0}, Landroid/widget/TableRow;-><init>(Landroid/content/Context;)V
+
+    new-instance v6, Landroid/widget/CheckBox;
+    invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
+    const-string v8, "Core 2\n(Eff)"
+    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const/4 v8, 0x2
+    aget-boolean v8, v2, v8
+    invoke-virtual {v6, v8}, Landroid/widget/CompoundButton;->setChecked(Z)V
+    new-instance v7, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;
+    const/4 v8, 0x2
+    invoke-direct {v7, v2, v8}, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;-><init>([ZI)V
+    invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
+    invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
+
     new-instance v6, Landroid/widget/CheckBox;
     invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
     const-string v8, "Core 6\n(Perf)"
@@ -264,7 +256,25 @@
     invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
     invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
 
-    # Core 7
+    invoke-virtual {v1, v5}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
+
+    # ---- Row 3: Core 3 | Core 7 ----
+    new-instance v5, Landroid/widget/TableRow;
+    invoke-direct {v5, v0}, Landroid/widget/TableRow;-><init>(Landroid/content/Context;)V
+
+    new-instance v6, Landroid/widget/CheckBox;
+    invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
+    const-string v8, "Core 3\n(Eff)"
+    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const/4 v8, 0x3
+    aget-boolean v8, v2, v8
+    invoke-virtual {v6, v8}, Landroid/widget/CompoundButton;->setChecked(Z)V
+    new-instance v7, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;
+    const/4 v8, 0x3
+    invoke-direct {v7, v2, v8}, Lcom/xj/winemu/settings/CpuMultiSelectHelper$4;-><init>([ZI)V
+    invoke-virtual {v6, v7}, Landroid/widget/CompoundButton;->setOnCheckedChangeListener(Landroid/widget/CompoundButton$OnCheckedChangeListener;)V
+    invoke-virtual {v5, v6}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
+
     new-instance v6, Landroid/widget/CheckBox;
     invoke-direct {v6, v0}, Landroid/widget/CheckBox;-><init>(Landroid/content/Context;)V
     const-string v8, "Core 7\n(Prime)"
