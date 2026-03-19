@@ -6132,6 +6132,7 @@
 
     :cond_perf_1
     # --- BannerHub: Sustained Performance Mode (no-root API + root governor) ---
+    :try_start_bh_perf
     const-string v2, "bh_prefs"
     const/4 v3, 0x0
     invoke-virtual {v1, v2, v3}, Landroid/app/Activity;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
@@ -6188,6 +6189,10 @@
     invoke-virtual {v3, v2}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;
     :cond_bh_adreno_skip
     # --- end BannerHub Max Adreno on launch ---
+    :try_end_bh_perf
+    .catch Ljava/lang/Exception; {:try_start_bh_perf .. :try_end_bh_perf} :catch_bh_perf
+    :catch_bh_perf
+    # BannerHub: exception swallowed — unsupported device or no root; container launch continues
     .line 6
     .line 7
     .line 8
