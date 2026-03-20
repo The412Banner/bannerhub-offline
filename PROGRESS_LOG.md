@@ -4,6 +4,24 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [pre] — v2.6.2-pre — Component Manager UI redesign: RecyclerView cards + search + swipe (2026-03-20)
+**Commit:** `56851cd`  |  **Tag:** v2.6.2-pre  |  **CI:** pending
+**What changed:** Complete overhaul of ComponentManagerActivity UI. Replaces basic ListView with card-based RecyclerView. Each card shows component name + color-coded type badge (DXVK/VKD3D/Box64/FEX/GPU/WCP) with colored left accent strip. Live search bar (TextWatcher) filters cards in real time. Swipe LEFT removes, Swipe RIGHT backs up (ItemTouchHelper). Header has ← back, title, install count badge, "✕ All" remove-all. Bottom bar has "+ Add New" (blue) and "↓ Download" (green) buttons. Empty state shows 📦 emoji + help text when no components installed. Fully programmatic UI (no XML layouts).
+**Files touched:**
+- `patches/smali_classes16/.../ComponentManagerActivity.smali` [REWRITE — new fields: recyclerView, adapter, emptyState, countBadge; new methods: dp(), buildUI(), buildHeader(), buildSearchBar(), buildContent(), buildEmptyState(), buildBottomBar(), makeBtn(), showComponents(), updateEmptyState(), onSearchChanged(), showOptionsDialog(), showTypeDialog(), removeFiltered(), backupFiltered(), getFileName()]
+- `patches/smali_classes16/.../BhComponentAdapter.smali` [NEW — RecyclerView.Adapter: updateComponents(), filter(), getFiltered(), onItemTapped(), getTypeName(), getTypeColor(), onCreateViewHolder(), onBindViewHolder(), getItemCount()]
+- `patches/smali_classes16/.../BhComponentAdapter$ViewHolder.smali` [NEW — ViewHolder with onClick delegation to adapter.onItemTapped()]
+- `patches/smali_classes16/.../BhSwipeCallback.smali` [NEW — ItemTouchHelper.SimpleCallback(0,12): LEFT→removeFiltered, RIGHT→backupFiltered]
+- `patches/smali_classes16/.../ComponentManagerActivity$5.smali` [NEW — options dialog: Inject/Backup/Remove]
+- `patches/smali_classes16/.../ComponentManagerActivity$6.smali` [NEW — type dialog: DXVK/VKD3D/Box64/FEX/GPU]
+- `patches/smali_classes16/.../ComponentManagerActivity$7.smali` [NEW — TextWatcher → onSearchChanged()]
+- `patches/smali_classes16/.../ComponentManagerActivity$BhBackListener.smali` [NEW — finish()]
+- `patches/smali_classes16/.../ComponentManagerActivity$BhRemoveAllListener.smali` [NEW — confirmRemoveAll()]
+- `patches/smali_classes16/.../ComponentManagerActivity$BhAddListener.smali` [NEW — showTypeDialog()]
+- `patches/smali_classes16/.../ComponentManagerActivity$BhDownloadListener.smali` [NEW — start ComponentDownloadActivity]
+
+---
+
 ## [stable] — v2.6.0 — Stable release (2026-03-20)
 **Commit:** `1fc4505` (code) / `4948e7b` (README)  |  **Tag:** v2.6.0
 **What changed:** Stable release of v2.5.2-pre through v2.5.6-pre line. Grant Root Access (Settings → Advanced); fix VerifyError on root grant; fix perf toggles staying grey after root grant; component descriptions in game settings picker; download progress indicator in ComponentDownloadActivity.

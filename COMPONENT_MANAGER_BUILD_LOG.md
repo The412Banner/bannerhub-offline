@@ -2179,6 +2179,36 @@ Click listeners always have a `SidebarSwitchItemView` reference (`field a`) whic
 
 ---
 
+## Entry 61 — v2.6.2-pre — Component Manager UI redesign: RecyclerView cards + search + swipe (2026-03-20)
+
+**Commit:** `56851cd` | **Tag:** v2.6.2-pre | **CI:** pending
+
+### Summary
+Complete overhaul of ComponentManagerActivity from a basic ListView to a modern card-based RecyclerView UI. 11 smali files added or rewritten. Swipe gestures, live search, type badges, empty state — all programmatic (no XML).
+
+### Root cause / motivation
+Old UI was a plain ListView with no search, no visual distinction between component types, no swipe-to-remove. User requested a modern redesign.
+
+### Files created [NEW]
+- `patches/smali_classes16/.../BhComponentAdapter.smali` — RecyclerView.Adapter: updateComponents(), filter(), getFiltered(), onItemTapped(), getTypeName(), getTypeColor(), onCreateViewHolder(), onBindViewHolder(), getItemCount()
+- `patches/smali_classes16/.../BhComponentAdapter$ViewHolder.smali` — ViewHolder extends RecyclerView$ViewHolder, implements View$OnClickListener; onClick → adapter.onItemTapped()
+- `patches/smali_classes16/.../BhSwipeCallback.smali` — extends ItemTouchHelper$SimpleCallback(0, 12); LEFT(4)→removeFiltered; RIGHT(8)→backupFiltered
+- `patches/smali_classes16/.../ComponentManagerActivity$5.smali` — options dialog listener: which=0→inject, 1→backup, 2→remove
+- `patches/smali_classes16/.../ComponentManagerActivity$6.smali` — type dialog listener: maps which 0-4 to type ints (DXVK/VKD3D/Box64/FEX/GPU)
+- `patches/smali_classes16/.../ComponentManagerActivity$7.smali` — TextWatcher: afterTextChanged → onSearchChanged()
+- `patches/smali_classes16/.../ComponentManagerActivity$BhBackListener.smali` — onClick → activity.finish()
+- `patches/smali_classes16/.../ComponentManagerActivity$BhRemoveAllListener.smali` — onClick → activity.confirmRemoveAll()
+- `patches/smali_classes16/.../ComponentManagerActivity$BhAddListener.smali` — onClick → activity.showTypeDialog()
+- `patches/smali_classes16/.../ComponentManagerActivity$BhDownloadListener.smali` — onClick → startActivity(ComponentDownloadActivity)
+
+### Files modified [MOD]
+- `patches/smali_classes16/.../ComponentManagerActivity.smali` — complete rewrite; new fields: recyclerView, adapter, emptyState, countBadge; new methods: dp(I)I, buildUI(), buildHeader(), buildSearchBar(), buildContent(), buildEmptyState(), buildBottomBar(), makeBtn(String,int), showComponents(), updateEmptyState(), onSearchChanged(), showOptionsDialog(I), showTypeDialog(), removeFiltered(I), backupFiltered(I), getFileName(Uri); bug fixed: spurious makeBtn() call without args removed from buildBottomBar()
+
+### CI result
+→ pending (build-quick.yml — Normal APK only)
+
+---
+
 ## Entry 60 — v2.6.1 stable — Promote perf toggle fix to stable (2026-03-20)
 
 **Commit:** `f334a2f` | **Tag:** v2.6.1 | **CI:** ✅ run 23361933312
