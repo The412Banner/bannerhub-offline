@@ -14,6 +14,7 @@
 .field mCurrentUrls:Ljava/util/ArrayList;
 .field mDownloadUrl:Ljava/lang/String;
 .field mDownloadFilename:Ljava/lang/String;
+.field mProgressBar:Landroid/widget/ProgressBar;
 
 .method public constructor <init>()V
     .locals 0
@@ -95,6 +96,18 @@
     invoke-direct {v4, v5, p1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
     invoke-virtual {v0, v1, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
 
+    # add ProgressBar: MATCH_PARENT x WRAP_CONTENT, initially GONE
+    new-instance v2, Landroid/widget/ProgressBar;
+    invoke-direct {v2, p0}, Landroid/widget/ProgressBar;-><init>(Landroid/content/Context;)V
+    iput-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/16 v5, 0x8
+    invoke-virtual {v2, v5}, Landroid/view/View;->setVisibility(I)V
+    new-instance v4, Landroid/widget/LinearLayout$LayoutParams;
+    const/4 v5, -0x1
+    const/4 p1, -0x2
+    invoke-direct {v4, v5, p1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+    invoke-virtual {v0, v2, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+
     # add listView: MATCH_PARENT x 0dp weight=1
     new-instance v4, Landroid/widget/LinearLayout$LayoutParams;
     const/4 v5, -0x1
@@ -111,6 +124,10 @@
 # ── mode=0: source repo list ─────────────────────────────────────────────────
 .method public showRepos()V
     .locals 4
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/16 v1, 0x8
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
+
     const/4 v0, 0x0
     iput v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mode:I
 
@@ -153,6 +170,10 @@
 # ── mode=1: component type categories ────────────────────────────────────────
 .method public showCategories()V
     .locals 4
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/16 v1, 0x8
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
+
     const/4 v0, 0x1
     iput v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mode:I
 
@@ -193,6 +214,10 @@
 .method public showAssets(I)V
     .locals 8
     # p1 = component type int to filter by
+
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/16 v1, 0x8
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
 
     # clear current lists
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mCurrentNames:Ljava/util/ArrayList;
@@ -311,8 +336,20 @@
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mListView:Landroid/widget/ListView;
     const/4 v1, 0x0
     invoke-virtual {v0, v1}, Landroid/widget/ListView;->setAdapter(Landroid/widget/ListAdapter;)V
+    # show ProgressBar
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
+    # set status: "Downloading: <filename>"
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
-    const-string v1, "Downloading..."
+    new-instance v1, Ljava/lang/StringBuilder;
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v2, "Downloading: "
+    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    iget-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mDownloadFilename:Ljava/lang/String;
+    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v1
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
     invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startDownload()V
     return-void
@@ -330,6 +367,9 @@
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
     const-string v1, "Fetching Arihany WCPHub..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
     const-string v0, "https://raw.githubusercontent.com/Arihany/WinlatorWCPHub/refs/heads/main/pack.json"
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchPackJson(Ljava/lang/String;)V
     return-void
@@ -343,6 +383,9 @@
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
     const-string v1, "Fetching Kimchi GPU Drivers..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
     const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/kimchi_drivers.json"
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
     return-void
@@ -356,6 +399,9 @@
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
     const-string v1, "Fetching StevenMXZ GPU Drivers..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
     const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/stevenmxz_drivers.json"
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
     return-void
@@ -369,6 +415,9 @@
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
     const-string v1, "Fetching MTR GPU Drivers..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
     const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/mtr_drivers.json"
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
     return-void
@@ -382,6 +431,9 @@
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
     const-string v1, "Fetching Whitebelyash GPU Drivers..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
     const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/white_drivers.json"
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchGpuDrivers(Ljava/lang/String;)V
     return-void
@@ -395,6 +447,9 @@
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mStatusText:Landroid/widget/TextView;
     const-string v1, "Fetching The412Banner Nightlies..."
     invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->mProgressBar:Landroid/widget/ProgressBar;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
     const-string v0, "https://raw.githubusercontent.com/The412Banner/Nightlies/refs/heads/main/nightlies_components.json"
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/ComponentDownloadActivity;->startFetchPackJson(Ljava/lang/String;)V
     return-void
