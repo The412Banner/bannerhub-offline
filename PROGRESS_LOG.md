@@ -4,8 +4,12 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [pre] — v2.6.5-pre — Component Manager UI redesign: RecyclerView cards + search + swipe (2026-03-20)
+**Commit:** `7b6284f`  |  **Tag:** v2.6.5-pre  |  **CI:** ✅ run 23365002056 (3m28s)
+**Fix commits:** `924c5ef` (register overflow), `a272740` (literal in invoke), `7b6284f` (const/4 range)
+
 ## [pre] — v2.6.2-pre — Component Manager UI redesign: RecyclerView cards + search + swipe (2026-03-20)
-**Commit:** `56851cd`  |  **Tag:** v2.6.2-pre  |  **CI:** pending
+**Commit:** `56851cd`  |  **Tag:** v2.6.2-pre  |  **CI:** ❌ (register v16/v17 overflow in BhComponentAdapter)
 **What changed:** Complete overhaul of ComponentManagerActivity UI. Replaces basic ListView with card-based RecyclerView. Each card shows component name + color-coded type badge (DXVK/VKD3D/Box64/FEX/GPU/WCP) with colored left accent strip. Live search bar (TextWatcher) filters cards in real time. Swipe LEFT removes, Swipe RIGHT backs up (ItemTouchHelper). Header has ← back, title, install count badge, "✕ All" remove-all. Bottom bar has "+ Add New" (blue) and "↓ Download" (green) buttons. Empty state shows 📦 emoji + help text when no components installed. Fully programmatic UI (no XML layouts).
 **Files touched:**
 - `patches/smali_classes16/.../ComponentManagerActivity.smali` [REWRITE — new fields: recyclerView, adapter, emptyState, countBadge; new methods: dp(), buildUI(), buildHeader(), buildSearchBar(), buildContent(), buildEmptyState(), buildBottomBar(), makeBtn(), showComponents(), updateEmptyState(), onSearchChanged(), showOptionsDialog(), showTypeDialog(), removeFiltered(), backupFiltered(), getFileName()]

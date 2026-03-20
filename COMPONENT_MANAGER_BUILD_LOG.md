@@ -2205,7 +2205,13 @@ Old UI was a plain ListView with no search, no visual distinction between compon
 - `patches/smali_classes16/.../ComponentManagerActivity.smali` — complete rewrite; new fields: recyclerView, adapter, emptyState, countBadge; new methods: dp(I)I, buildUI(), buildHeader(), buildSearchBar(), buildContent(), buildEmptyState(), buildBottomBar(), makeBtn(String,int), showComponents(), updateEmptyState(), onSearchChanged(), showOptionsDialog(I), showTypeDialog(), removeFiltered(I), backupFiltered(I), getFileName(Uri); bug fixed: spurious makeBtn() call without args removed from buildBottomBar()
 
 ### CI result
-→ pending (build-quick.yml — Normal APK only)
+→ ✅ run 23365002056 (v2.6.5-pre, after 3 fix commits) — PASSED — Normal APK built (3m28s)
+
+### Smali errors encountered and fixed
+1. `BhComponentAdapter.smali`: `.locals 15` in `onCreateViewHolder` → p1=v16, p2=v17 out of range. Fixed: `.locals 13` + full register remap using stable refs v7-v11, temp v12, final move-object to v0..v6 for range call.
+2. `BhComponentAdapter.smali`: `const/4 v14, 0x8` → literal 8 out of const/4 range. Fixed: `const/16`.
+3. `ComponentManagerActivity.smali`: `{v2, v3, v0, 0x1}` in addView invoke — literal 0x1 in register list. Fixed: `const/4 v4, 0x1` then `v4`.
+4. `ComponentManagerActivity.smali`: `const/4 v*, 0x8` (6 occurrences) → literal 8 out of range. Fixed: all to `const/16`.
 
 ---
 
