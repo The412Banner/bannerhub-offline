@@ -97,7 +97,7 @@
 
     invoke-virtual {v0, v1}, Landroid/view/View;->setBackgroundColor(I)V
 
-    const/4 v1, 0x11  # Gravity.CENTER
+    const/16 v1, 0x11  # Gravity.CENTER
 
     invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setGravity(I)V
 
@@ -126,7 +126,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/4 v3, 0x11  # Gravity.CENTER
+    const/16 v3, 0x11  # Gravity.CENTER
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setGravity(I)V
 
@@ -155,7 +155,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/4 v3, 0x11  # Gravity.CENTER
+    const/16 v3, 0x11  # Gravity.CENTER
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setGravity(I)V
 
@@ -225,7 +225,7 @@
 
     invoke-virtual {v0, v1}, Landroid/view/View;->setBackgroundColor(I)V
 
-    const/4 v1, 0x11  # Gravity.CENTER
+    const/16 v1, 0x11  # Gravity.CENTER
 
     invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setGravity(I)V
 
@@ -254,7 +254,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/4 v3, 0x11
+    const/16 v3, 0x11
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setGravity(I)V
 
@@ -283,7 +283,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/4 v3, 0x11
+    const/16 v3, 0x11
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setGravity(I)V
 
@@ -316,7 +316,7 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const/4 v3, 0x11
+    const/16 v3, 0x11
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setGravity(I)V
 
@@ -468,7 +468,7 @@
 
     invoke-virtual {v3, v4}, Landroid/view/View;->setVisibility(I)V
 
-    const/4 v4, 0x8  # GONE
+    const/16 v4, 0x8  # GONE
 
     invoke-virtual {v0, v4}, Landroid/view/View;->setVisibility(I)V
 
@@ -516,7 +516,7 @@
 
     invoke-virtual {v0, v4}, Landroid/view/View;->setVisibility(I)V
 
-    const/4 v4, 0x8  # GONE
+    const/16 v4, 0x8  # GONE
 
     invoke-virtual {v3, v4}, Landroid/view/View;->setVisibility(I)V
 
