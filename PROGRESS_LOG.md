@@ -8,7 +8,7 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 **Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta10
 **What changed:** Root cause of beta9 bug: `k3()`'s show/hide loop only processes `LazyFragment` instances. `GogGamesFragment` extended plain `Fragment`, so it was never hidden when switching back to My Games — its full-screen dark FrameLayout (MATCH_PARENT) covered all content permanently. Fix: change `.super` to `LazyFragment`, implement abstract `V()` = `refreshContent()` (initial load when tab first becomes visible), update `onResume()` super call. Removed premature `refreshContent()` from `onCreateView` (now handled by `V()` + `onResume()`).
 **Files touched:** `GogGamesFragment.smali`
-**CI result:** pending
+**CI result:** ✅ run 23387054135 — Normal APK built successfully
 
 ---
 

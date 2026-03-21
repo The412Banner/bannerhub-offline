@@ -51,7 +51,7 @@ Each entry covers one logical change unit (commit or closely related set of comm
 - `GogGamesFragment.onResume` — super target changed to `LazyFragment`
 - `GogGamesFragment.<init>` — super target changed to `LazyFragment`
 
-**CI result:** pending
+**CI result:** [CI✅] run 23387054135 — Normal APK built successfully
 
 ---
 
