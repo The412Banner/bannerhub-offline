@@ -73,7 +73,51 @@
     const/16 v5, 0xC8  # 200
     if-eq v4, v5, :ok_200
 
-    # Non-200 (e.g. 401 expired): clear token, post null
+    # Non-200 (e.g. 401 expired): try silent token refresh before clearing session
+    invoke-virtual {v3}, Ljava/net/HttpURLConnection;->disconnect()V
+
+    invoke-virtual {v0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+    move-result-object v4
+    if-eqz v4, :clear_tokens
+
+    # Attempt to refresh the access_token silently
+    invoke-static {v4}, Lcom/xj/landscape/launcher/ui/menu/GogTokenRefresh;->refresh(Landroid/content/Context;)Ljava/lang/String;
+    move-result-object v5  # new access_token or null
+    if-eqz v5, :clear_tokens
+
+    # Refresh succeeded — retry the library fetch with the new token
+    move-object v1, v5
+
+    new-instance v3, Ljava/net/URL;
+    const-string v6, "https://embed.gog.com/account/getFilteredProducts?mediaType=1&sortBy=title"
+    invoke-direct {v3, v6}, Ljava/net/URL;-><init>(Ljava/lang/String;)V
+    invoke-virtual {v3}, Ljava/net/URL;->openConnection()Ljava/net/URLConnection;
+    move-result-object v3
+    check-cast v3, Ljava/net/HttpURLConnection;
+
+    const/16 v6, 0x3a98
+    invoke-virtual {v3, v6}, Ljava/net/HttpURLConnection;->setConnectTimeout(I)V
+    invoke-virtual {v3, v6}, Ljava/net/HttpURLConnection;->setReadTimeout(I)V
+
+    const-string v6, "Authorization"
+    new-instance v7, Ljava/lang/StringBuilder;
+    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v8, "Bearer "
+    invoke-virtual {v7, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v7, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v7}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v7
+    invoke-virtual {v3, v6, v7}, Ljava/net/HttpURLConnection;->setRequestProperty(Ljava/lang/String;Ljava/lang/String;)V
+
+    invoke-virtual {v3}, Ljava/net/HttpURLConnection;->getResponseCode()I
+    move-result v6
+    const/16 v7, 0xC8
+    if-eq v6, v7, :ok_200
+
+    # Retry also non-200 — fall through to clear tokens
+    invoke-virtual {v3}, Ljava/net/HttpURLConnection;->disconnect()V
+
+    :clear_tokens
     invoke-virtual {v0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
     move-result-object v4
     if-eqz v4, :expired_disconnect
@@ -86,9 +130,11 @@
     const-string v6, "access_token"
     invoke-interface {v5, v6}, Landroid/content/SharedPreferences$Editor;->remove(Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
     move-result-object v5
+    const-string v6, "refresh_token"
+    invoke-interface {v5, v6}, Landroid/content/SharedPreferences$Editor;->remove(Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
+    move-result-object v5
     invoke-interface {v5}, Landroid/content/SharedPreferences$Editor;->apply()V
     :expired_disconnect
-    invoke-virtual {v3}, Ljava/net/HttpURLConnection;->disconnect()V
     const/4 v2, 0x0
     goto :post_ui
 
