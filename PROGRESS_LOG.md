@@ -8,7 +8,7 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 **Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta8
 **What changed:** beta7 `replace_all` matched `invoke-virtual {p0, v0}` and fixed the WebResourceRequest overload, but the String overload uses `invoke-direct {p0, v1}` — different register. Logcat confirmed only String variant still failing. Fixed: `invoke-virtual {p0, v1}` → `invoke-direct {p0, v1}` at line 162.
 **Files touched:** `GogLoginActivity$1.smali`
-**CI result:** pending
+**CI result:** ✅ run 23385707562 — Normal APK built successfully (3m38s)
 
 ---
 

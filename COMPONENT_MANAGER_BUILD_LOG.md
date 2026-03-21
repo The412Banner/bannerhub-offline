@@ -47,7 +47,7 @@ Changed `invoke-virtual {p0, v1}` → `invoke-direct {p0, v1}` at line 162 of `G
 - `shouldOverrideUrlLoading(WebView,String)` — `invoke-virtual {p0, v1}` → `invoke-direct {p0, v1}` for `handleImplicitRedirect`
 
 ### CI result
-→ pending
+[CI✅] build-quick.yml — run 23385707562 — Normal APK (3m38s)
 
 ---
 
