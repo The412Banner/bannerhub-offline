@@ -1,18 +1,22 @@
 .class public final Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;
 .super Ljava/lang/Object;
 
-# BannerHub: Runnable that exchanges the GOG authorization code for a token,
-# fetches the username from userData.json, saves everything to SharedPreferences,
-# then finishes GogLoginActivity on the main thread.
+# BannerHub: Runnable that fetches the GOG username from userData.json
+# using the access_token obtained via implicit flow (response_type=token).
+# No token exchange needed — tokens arrive in the redirect URL fragment.
+# Saves access_token, refresh_token, user_id, username to SharedPreferences
+# "bh_gog_prefs", then finishes GogLoginActivity on the main thread.
 
 .implements Ljava/lang/Runnable;
 
 
 .field public final a:Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;
-.field public final b:Ljava/lang/String;
+.field public final b:Ljava/lang/String;  # accessToken
+.field public final c:Ljava/lang/String;  # refreshToken (may be null)
+.field public final d:Ljava/lang/String;  # userId (may be null)
 
 
-.method public constructor <init>(Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;Ljava/lang/String;)V
+.method public constructor <init>(Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
     .locals 0
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -21,33 +25,33 @@
 
     iput-object p2, p0, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->b:Ljava/lang/String;
 
+    iput-object p3, p0, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->c:Ljava/lang/String;
+
+    iput-object p4, p0, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->d:Ljava/lang/String;
+
     return-void
 .end method
 
 
-# ── readHttpResponse(HttpURLConnection): read full response body as String ────
-# Uses getErrorStream() for 4xx/5xx to avoid IOException from getInputStream().
-# Logs "BH_GOG: HTTP NNN: <body>" via android.util.Log so we can see the response.
+# ── readHttpResponse: read response body, handles 4xx/5xx via getErrorStream ──
 .method public readHttpResponse(Ljava/net/HttpURLConnection;)Ljava/lang/String;
     .locals 7
 
-    # Check HTTP status code — must use getErrorStream() for 4xx/5xx
+    # Check HTTP status code — use getErrorStream() for 4xx/5xx
     invoke-virtual {p1}, Ljava/net/HttpURLConnection;->getResponseCode()I
 
-    move-result v5  # v5 = HTTP status code (e.g. 200, 400, ...)
+    move-result v5  # HTTP status code
 
     const/16 v6, 0x190  # 400
 
     if-lt v5, v6, :use_input_stream
 
-    # HTTP error: use getErrorStream() to read error body
     invoke-virtual {p1}, Ljava/net/HttpURLConnection;->getErrorStream()Ljava/io/InputStream;
 
     move-result-object v0
 
     if-nez v0, :got_stream
 
-    # getErrorStream() returned null — return empty JSON so parseJsonStringField returns null
     const-string v0, "{}"
 
     return-object v0
@@ -94,14 +98,14 @@
 
     move-result-object v0
 
-    # Log: D/BH_GOG: HTTP <code>: <body> — visible in logcat to diagnose server errors
+    # Log response for debugging
     const-string v2, "BH_GOG"
 
     new-instance v3, Ljava/lang/StringBuilder;
 
     invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
 
-    const-string v4, "HTTP "
+    const-string v4, "userData HTTP "
 
     invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
@@ -123,210 +127,118 @@
 .end method
 
 
-# ── run: token exchange + user info fetch ─────────────────────────────────────
+# ── run: fetch userData.json, save tokens to SP, finish activity ──────────────
 .method public run()V
-    .locals 11
+    .locals 8
 
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->a:Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;
 
     iget-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->b:Ljava/lang/String;
 
+    iget-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->c:Ljava/lang/String;
+
+    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->d:Ljava/lang/String;
+
     :try_start
 
-    # ── Step 1: build token request body ─────────────────────────────────────
-    new-instance v2, Ljava/lang/StringBuilder;
+    # ── Fetch username from userData.json ─────────────────────────────────────
+    new-instance v4, Ljava/net/URL;
 
-    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v5, "https://embed.gog.com/userData.json"
 
-    const-string v3, "client_id=46899977096215655&client_secret=9d85c43b1482497dbbce61f6e4aa173a&grant_type=authorization_code&code="
+    invoke-direct {v4, v5}, Ljava/net/URL;-><init>(Ljava/lang/String;)V
 
-    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    const-string v3, "&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient"
-
-    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object v2  # requestBody
-
-    # ── Step 2: POST to token endpoint ────────────────────────────────────────
-    new-instance v3, Ljava/net/URL;
-
-    const-string v4, "https://auth.gog.com/token"
-
-    invoke-direct {v3, v4}, Ljava/net/URL;-><init>(Ljava/lang/String;)V
-
-    invoke-virtual {v3}, Ljava/net/URL;->openConnection()Ljava/net/URLConnection;
-
-    move-result-object v3  # URLConnection
-
-    check-cast v3, Ljava/net/HttpURLConnection;
-
-    const-string v4, "POST"
-
-    invoke-virtual {v3, v4}, Ljava/net/HttpURLConnection;->setRequestMethod(Ljava/lang/String;)V
-
-    const/4 v4, 0x1
-
-    invoke-virtual {v3, v4}, Ljava/net/HttpURLConnection;->setDoOutput(Z)V
-
-    # Timeouts: 15 seconds (0x3A98 = 15000ms)
-    const/16 v4, 0x3a98
-
-    invoke-virtual {v3, v4}, Ljava/net/HttpURLConnection;->setConnectTimeout(I)V
-
-    invoke-virtual {v3, v4}, Ljava/net/HttpURLConnection;->setReadTimeout(I)V
-
-    const-string v4, "Content-Type"
-
-    const-string v5, "application/x-www-form-urlencoded"
-
-    invoke-virtual {v3, v4, v5}, Ljava/net/HttpURLConnection;->setRequestProperty(Ljava/lang/String;Ljava/lang/String;)V
-
-    # Write body
-    invoke-virtual {v3}, Ljava/net/HttpURLConnection;->getOutputStream()Ljava/io/OutputStream;
+    invoke-virtual {v4}, Ljava/net/URL;->openConnection()Ljava/net/URLConnection;
 
     move-result-object v4
 
-    const-string v5, "UTF-8"
+    check-cast v4, Ljava/net/HttpURLConnection;
 
-    invoke-virtual {v2, v5}, Ljava/lang/String;->getBytes(Ljava/lang/String;)[B
+    # Timeouts: 15 seconds
+    const/16 v5, 0x3a98
 
-    move-result-object v5
+    invoke-virtual {v4, v5}, Ljava/net/HttpURLConnection;->setConnectTimeout(I)V
 
-    invoke-virtual {v4, v5}, Ljava/io/OutputStream;->write([B)V
+    invoke-virtual {v4, v5}, Ljava/net/HttpURLConnection;->setReadTimeout(I)V
 
-    invoke-virtual {v4}, Ljava/io/OutputStream;->close()V
+    # Authorization: Bearer <accessToken>
+    const-string v5, "Authorization"
 
-    # Read response
-    invoke-virtual {p0, v3}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->readHttpResponse(Ljava/net/HttpURLConnection;)Ljava/lang/String;
+    new-instance v6, Ljava/lang/StringBuilder;
 
-    move-result-object v4  # tokenJson
+    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
 
-    invoke-virtual {v3}, Ljava/net/HttpURLConnection;->disconnect()V
+    const-string v7, "Bearer "
 
-    # ── Step 3: parse token response ─────────────────────────────────────────
-    const-string v5, "access_token"
+    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
-    invoke-static {v4, v5}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;->parseJsonStringField(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    invoke-virtual {v6, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
-    move-result-object v5  # accessToken
+    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
 
-    if-eqz v5, :failed
+    move-result-object v6
 
-    const-string v6, "refresh_token"
+    invoke-virtual {v4, v5, v6}, Ljava/net/HttpURLConnection;->setRequestProperty(Ljava/lang/String;Ljava/lang/String;)V
 
-    invoke-static {v4, v6}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;->parseJsonStringField(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    invoke-virtual {p0, v4}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->readHttpResponse(Ljava/net/HttpURLConnection;)Ljava/lang/String;
 
-    move-result-object v6  # refreshToken
+    move-result-object v5  # userDataJson
 
-    const-string v7, "user_id"
+    invoke-virtual {v4}, Ljava/net/HttpURLConnection;->disconnect()V
 
-    invoke-static {v4, v7}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;->parseJsonStringField(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    # ── Parse username ────────────────────────────────────────────────────────
+    const-string v6, "username"
 
-    move-result-object v7  # userId
+    invoke-static {v5, v6}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;->parseJsonStringField(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 
-    # ── Step 4: fetch username from userData.json ─────────────────────────────
-    new-instance v8, Ljava/net/URL;
+    move-result-object v6  # username
 
-    const-string v9, "https://embed.gog.com/userData.json"
+    if-nez v6, :got_username
 
-    invoke-direct {v8, v9}, Ljava/net/URL;-><init>(Ljava/lang/String;)V
-
-    invoke-virtual {v8}, Ljava/net/URL;->openConnection()Ljava/net/URLConnection;
-
-    move-result-object v8
-
-    check-cast v8, Ljava/net/HttpURLConnection;
-
-    # Timeouts on userData connection too
-    const/16 v9, 0x3a98
-
-    invoke-virtual {v8, v9}, Ljava/net/HttpURLConnection;->setConnectTimeout(I)V
-
-    invoke-virtual {v8, v9}, Ljava/net/HttpURLConnection;->setReadTimeout(I)V
-
-    # Set Bearer token header
-    const-string v9, "Authorization"
-
-    new-instance v10, Ljava/lang/StringBuilder;
-
-    invoke-direct {v10}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v4, "Bearer "
-
-    invoke-virtual {v10, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v10, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    invoke-virtual {v10}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object v10
-
-    invoke-virtual {v8, v9, v10}, Ljava/net/HttpURLConnection;->setRequestProperty(Ljava/lang/String;Ljava/lang/String;)V
-
-    invoke-virtual {p0, v8}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$2;->readHttpResponse(Ljava/net/HttpURLConnection;)Ljava/lang/String;
-
-    move-result-object v9  # userDataJson
-
-    invoke-virtual {v8}, Ljava/net/HttpURLConnection;->disconnect()V
-
-    # Parse username
-    const-string v10, "username"
-
-    invoke-static {v9, v10}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;->parseJsonStringField(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v9  # username
-
-    if-nez v9, :got_username
-
-    const-string v9, "Unknown"
+    const-string v6, "Unknown"
 
     :got_username
 
-    # ── Step 5: save to SharedPreferences ─────────────────────────────────────
-    const-string v10, "bh_gog_prefs"
+    # ── Save to SharedPreferences "bh_gog_prefs" ──────────────────────────────
+    const-string v7, "bh_gog_prefs"
 
-    const/4 v4, 0x0
+    const/4 v5, 0x0
 
-    invoke-virtual {v0, v10, v4}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    invoke-virtual {v0, v7, v5}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
 
-    move-result-object v4
+    move-result-object v5
 
-    invoke-interface {v4}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+    invoke-interface {v5}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
 
-    move-result-object v4
+    move-result-object v5
 
-    const-string v10, "access_token"
+    const-string v7, "access_token"
 
-    invoke-interface {v4, v10, v5}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
+    invoke-interface {v5, v7, v1}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
 
-    move-result-object v4
+    move-result-object v5
 
-    const-string v10, "refresh_token"
+    const-string v7, "refresh_token"
 
-    invoke-interface {v4, v10, v6}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
+    invoke-interface {v5, v7, v2}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
 
-    move-result-object v4
+    move-result-object v5
 
-    const-string v10, "user_id"
+    const-string v7, "user_id"
 
-    invoke-interface {v4, v10, v7}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
+    invoke-interface {v5, v7, v3}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
 
-    move-result-object v4
+    move-result-object v5
 
-    const-string v10, "username"
+    const-string v7, "username"
 
-    invoke-interface {v4, v10, v9}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
+    invoke-interface {v5, v7, v6}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
 
-    move-result-object v4
+    move-result-object v5
 
-    invoke-interface {v4}, Landroid/content/SharedPreferences$Editor;->apply()V
+    invoke-interface {v5}, Landroid/content/SharedPreferences$Editor;->apply()V
 
-    # ── Step 6: finish activity on main thread ────────────────────────────────
+    # ── Finish GogLoginActivity on main thread ────────────────────────────────
     new-instance v2, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$3;
 
     invoke-direct {v2, v0}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$3;-><init>(Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;)V
@@ -334,15 +246,6 @@
     invoke-virtual {v0, v2}, Landroid/app/Activity;->runOnUiThread(Ljava/lang/Runnable;)V
 
     goto :done
-
-    :failed
-
-    # Token exchange failed — show toast on UI thread
-    new-instance v2, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$4;
-
-    invoke-direct {v2, v0}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$4;-><init>(Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;)V
-
-    invoke-virtual {v0, v2}, Landroid/app/Activity;->runOnUiThread(Ljava/lang/Runnable;)V
 
     :done
 
@@ -354,7 +257,7 @@
 
     :catch_all
 
-    # On any network/parse error, reload the auth page
+    # Network/parse error — show error toast + reload auth page
     new-instance v2, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$4;
 
     invoke-direct {v2, v0}, Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity$4;-><init>(Lcom/xj/landscape/launcher/ui/menu/GogLoginActivity;)V

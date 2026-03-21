@@ -4,6 +4,14 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.7.0-beta6 — GOG implicit flow: bypass revoked client_secret (2026-03-21)
+**Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta6
+**What changed:** beta5 logcat confirmed `HTTP 400: {"error":"invalid_client","error_description":"The client credentials are invalid"}`. GOG has revoked `client_secret=9d85c43b1482497dbbce61f6e4aa173a` for third-party token exchanges. Fix: switch to OAuth2 implicit flow (`response_type=token`). Tokens arrive directly in the redirect URL fragment — no token exchange, no client_secret. `$1` now parses `#access_token=TOKEN&refresh_token=R&user_id=U` from the fragment using `Uri.parse("x://x?"+fragment)`. `$2` rewritten to 4-field constructor (activity, accessToken, refreshToken, userId); run() only fetches userData.json for username then saves all to SP. `$1` also extracted a `handleImplicitRedirect(Uri)` private helper to share logic between WebResourceRequest and deprecated String variants cleanly.
+**Files touched:** `GogLoginActivity.smali`, `GogLoginActivity$1.smali`, `GogLoginActivity$2.smali`
+**CI result:** pending
+
+---
+
 ## [beta] — v2.7.0-beta5 — Fix GOG login: handle HTTP error responses (getErrorStream) (2026-03-21)
 **Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta5
 **What changed:** Logcat from beta4 showed the GOG auth page reloading only 2 seconds after form submission — meaning the token exchange in $2 ran and failed almost immediately. Root cause: `readHttpResponse` called `getInputStream()` which throws `IOException` for HTTP 4xx/5xx responses; this jumped to catch_all → $4 error toast before we ever read the error body. Fix: check `getResponseCode()` first; if ≥ 400, use `getErrorStream()` to read the error body. Also added `Log.d("BH_GOG", "HTTP NNN: <body>")` so the next logcat will show exactly what GOG's token endpoint is returning, enabling final diagnosis.

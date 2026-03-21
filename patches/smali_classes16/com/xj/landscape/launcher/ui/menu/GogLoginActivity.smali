@@ -27,7 +27,7 @@
 .method public static buildAuthUrl()Ljava/lang/String;
     .locals 1
 
-    const-string v0, "https://auth.gog.com/auth?client_id=46899977096215655&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient&response_type=code&layout=client2"
+    const-string v0, "https://auth.gog.com/auth?client_id=46899977096215655&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient&response_type=token&layout=client2"
 
     return-object v0
 .end method

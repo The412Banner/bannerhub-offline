@@ -30,6 +30,40 @@ Each entry covers one logical change unit (commit or closely related set of comm
 
 ---
 
+## Entry 080 — GOG implicit flow: bypass revoked client_secret (v2.7.0-beta6, gog-beta)
+**Date:** 2026-03-21
+**Branch:** gog-beta  |  **Tag:** v2.7.0-beta6
+
+### Root-cause analysis
+beta5 logcat confirmed: `D/BH_GOG: HTTP 400: {"error":"invalid_client","error_description":"The client credentials are invalid"}`. GOG's token endpoint at `auth.gog.com/token` is explicitly rejecting `client_id=46899977096215655` / `client_secret=9d85c43b1482497dbbce61f6e4aa173a`. These are the GOG Galaxy desktop client credentials, historically used by reverse-engineered GOG clients, but GOG has now revoked or restricted them for third-party token exchanges.
+
+### Fix
+Switch to OAuth2 **implicit flow** (`response_type=token`). In implicit flow, GOG's server returns tokens directly in the redirect URL fragment instead of issuing an authorization code that requires a separate token exchange. The redirect URL becomes: `https://embed.gog.com/on_login_success?origin=client#access_token=TOKEN&refresh_token=REFRESH&user_id=UID&...`. No `client_secret` used anywhere.
+
+Fragment parsing trick: `Uri.parse("x://x?" + fragment)` treats the fragment string as a query string, allowing `getQueryParameter("access_token")` etc.
+
+### Files changed
+- `[MOD] patches/smali_classes16/com/xj/landscape/launcher/ui/menu/GogLoginActivity.smali`
+- `[MOD] patches/smali_classes16/com/xj/landscape/launcher/ui/menu/GogLoginActivity$1.smali`
+- `[MOD] patches/smali_classes16/com/xj/landscape/launcher/ui/menu/GogLoginActivity$2.smali`
+
+### Methods changed
+- **`GogLoginActivity.buildAuthUrl()`** — changed `response_type=code` → `response_type=token` (1 char change in URL string)
+- **`GogLoginActivity$1`** — complete rewrite:
+  - New private `handleImplicitRedirect(Uri)V` helper (`.locals 7`): extracts fragment via `getFragment()`, builds `"x://x?"+fragment` Uri, calls `getQueryParameter` for access_token/refresh_token/user_id, constructs `new $2(activity, accessToken, refreshToken, userId)`, starts thread, calls `webView.loadData("Logging in...")`.
+  - `shouldOverrideUrlLoading(WebView,WebResourceRequest)` simplified to `.locals 3`: calls `handleImplicitRedirect(uri)` when URL starts with on_login_success.
+  - `shouldOverrideUrlLoading(WebView,String)` simplified to `.locals 3`: parses URL string to Uri, delegates to same helper.
+- **`GogLoginActivity$2`** — complete rewrite:
+  - New 4-field constructor: `a=GogLoginActivity`, `b=String accessToken`, `c=String refreshToken`, `d=String userId`.
+  - `run()` (`.locals 8`): GET `embed.gog.com/userData.json` with `Authorization: Bearer <accessToken>` (15s timeouts); parse username; save all 4 fields to `bh_gog_prefs` SP; call $3 finish. Catch block runs $4 (toast + reload).
+  - `readHttpResponse()` kept with getErrorStream fix + `Log.d("BH_GOG", "userData HTTP NNN: ...")` for diagnostics.
+  - Token exchange POST completely removed — no more `client_id`/`client_secret` usage.
+
+### CI result
+→ pending
+
+---
+
 ## Entry 079 — Fix GOG token exchange: getErrorStream for HTTP errors + Log.d (v2.7.0-beta5, gog-beta)
 **Date:** 2026-03-21
 **Branch:** gog-beta  |  **Tag:** v2.7.0-beta5
