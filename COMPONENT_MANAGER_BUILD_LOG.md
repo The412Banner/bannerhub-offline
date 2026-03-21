@@ -30,6 +30,20 @@ Each entry covers one logical change unit (commit or closely related set of comm
 
 ---
 
+## Entry 087 — Fix: check-cast v8 to String in $2, dex verifier crash (v2.7.0-beta13, gog-beta)
+**Date:** 2026-03-21
+**Branch:** gog-beta  |  **Tag:** v2.7.0-beta13
+
+### Root-cause analysis
+`GogGamesFragment$2.run()` VerifyError at bytecode offset 0x5B: `register v8 has type Reference java.lang.Object but expected Reference: java.lang.String`. `ArrayList.get(I)` returns `Ljava/lang/Object;`. `move-object v8, v6` copies the reference but the verifier's static type for v8 remains `Object`. `GogGamesFragment$3.<init>(GogGamesFragment, String)V` declares p2 as `Ljava/lang/String;`. The verifier rejects the `invoke-direct {v6, v0, v8}` call because Object is not a subtype of String. Fix: `check-cast v8, Ljava/lang/String;` immediately after `move-object v8, v6` — changes the verifier's tracked type for v8 to String.
+
+### Files modified
+- `patches/smali_classes16/.../GogGamesFragment$2.smali` — added `check-cast v8, Ljava/lang/String;` after `move-object v8, v6` in loop body
+
+**CI result:** [CI✅] run 23387811737 — Normal APK built successfully
+
+---
+
 ## Entry 086 — Fix: top padding clears tab bar; game titles tappable (v2.7.0-beta12, gog-beta)
 **Date:** 2026-03-21
 **Branch:** gog-beta  |  **Tag:** v2.7.0-beta12

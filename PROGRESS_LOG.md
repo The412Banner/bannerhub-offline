@@ -4,6 +4,14 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.7.0-beta13 — Fix: check-cast v8 to String in $2, dex verifier crash (2026-03-21)
+**Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta13
+**What changed:** VerifyError crash on GOG Games tab selection. `GogGamesFragment$2.run()` rejected by verifier at the `GogGamesFragment$3.<init>` call: v8 had static type `Object` (from `ArrayList.get()` → `move-object v8, v6`) but `$3` constructor declares `Ljava/lang/String;`. Fix: add `check-cast v8, Ljava/lang/String;` immediately after `move-object v8, v6`.
+**Files touched:** `GogGamesFragment$2.smali`
+**CI result:** ✅ run 23387811737 — Normal APK built successfully
+
+---
+
 ## [beta] — v2.7.0-beta12 — Fix: top padding clears tab bar; game titles tappable (2026-03-21)
 **Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta12
 **What changed:** (1) Game list overlapped the tab bar — root FrameLayout starts at y=0 with FocusTabLayout overlaying on top; first game title was hidden behind the tab strip. Fix: compute 56dp via DisplayMetrics.density, call setPadding(0, topPad, 0, 0) on the root FrameLayout in onCreateView. (2) Game titles had no click listener — plain TextViews are not tappable. Fix: new GogGamesFragment$3 (View.OnClickListener) created per item in $2's loop; tap shows a Toast with the game title. Saved title to v8 before v6 was reused; increased $2 .locals 8→9.
