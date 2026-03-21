@@ -1408,6 +1408,7 @@ Please go to the system Bluetooth settings to clean up infrequently used devices
     <string name="llauncher_main_page_menu_dialog_view_detail">View game details</string>
     <string name="llauncher_main_page_title_explore">Free Games</string>
     <string name="llauncher_main_page_title_my">My Games</string>
+    <string name="bh_gog_games_tab">GOG Games</string>
     <string name="llauncher_main_page_title_platform">Find games</string>
     <string name="llauncher_main_page_top_button_goto_game">Continue Game</string>
     <string name="llauncher_main_page_top_button_open_detail">View Details</string>

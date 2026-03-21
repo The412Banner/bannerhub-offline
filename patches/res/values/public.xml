@@ -21228,6 +21228,7 @@
     <public type="string" name="yes" id="0x7f130e91" />
     <public type="string" name="zb1" id="0x7f130e92" />
     <public type="string" name="zb2" id="0x7f130e93" />
+    <public type="string" name="bh_gog_games_tab" id="0x7f130e94" />
     <public type="style" name="ActivityTranslucent" id="0x7f140000" />
     <public type="style" name="AlertDialog.AppCompat" id="0x7f140001" />
     <public type="style" name="AlertDialog.AppCompat.Light" id="0x7f140002" />

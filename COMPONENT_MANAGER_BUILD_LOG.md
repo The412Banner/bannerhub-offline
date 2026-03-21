@@ -54,7 +54,7 @@ Login was confirmed working (beta8, HTTP 200, 14 games). `GogMainActivity` only 
 - `GogGamesFragment$1.run` — `.locals 10`, HTTP fetch + JSON title parse loop
 - `GogGamesFragment$2.run` — `.locals 8`, UI update on main thread
 
-**CI result:** [CI⏳] pending
+**CI result:** [CI❌] run 23386175453 — DEX overflow in classes11: method pool hit 65536 (was at 65535 before). Two new method refs added: `GogGamesFragment$TabFactory.<init>()V` and `TabItemData.<init>(ILjava/lang/String;Function0)V`. Fix: switch to `Class.forName().newInstance()` (already in pool) + existing resource-based `TabItemData.<init>(IIFunction0;IDefaultConstructorMarker;)V` + add `bh_gog_games_tab` string resource at 0x7f130e94. Net new method_ids = 0.
 
 ---
 
