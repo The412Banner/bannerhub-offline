@@ -31,9 +31,11 @@
 .method public run()V
     .locals 16
 
-    # v0 = fragment, v1 = accessToken, v2 = ArrayList<GogGame>
-    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$1;->a:Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment;
-    iget-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$1;->b:Ljava/lang/String;
+    # p0 = v16 with .locals 16 — too high for iget-object (4-bit limit).
+    # Move 'this' into v15 (free at start), iget from v15, then v15 is reused.
+    move-object/from16 v15, p0
+    iget-object v0, v15, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$1;->a:Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment;
+    iget-object v1, v15, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$1;->b:Ljava/lang/String;
 
     new-instance v2, Ljava/util/ArrayList;
     invoke-direct {v2}, Ljava/util/ArrayList;-><init>()V
