@@ -4,6 +4,13 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [pre] — v2.7.7-pre — Fix header stuck at vertical center of screen (2026-03-21)
+**Commit:** `6266731`  |  **Tag:** v2.7.7-pre  |  **CI:** ✅ run 23369636270
+**What changed:** buildUI() layout fix. Removed setFitsSystemWindows(true) from root LinearLayout — was interfering with AppCompat subDecor's insets handling, offsetting the view to center. Changed setContentView(View) → setContentView(View, ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)) to guarantee root fills window regardless of MeasureSpec from subDecor.
+**Files touched:** `patches/smali_classes16/.../ComponentManagerActivity.smali` [MOD — removed setFitsSystemWindows call; setContentView now passes MATCH_PARENT×MATCH_PARENT LayoutParams]
+
+---
+
 ## [pre] — v2.6.6-pre — Fix VerifyError crash on Component Manager open (2026-03-20)
 **Commit:** `495a264`  |  **Tag:** v2.6.6-pre  |  **CI:** ✅ run 23365366484 (3m34s)
 **What changed:** ART VerifyError crash fixed (from logcat). Two causes: (1) helper methods declared private but called via invoke-virtual — changed to public; (2) getFileName() overwrote Uri register with String[] before ContentResolver.query range call — fixed register ordering with move-object v1, p1 before array allocation.

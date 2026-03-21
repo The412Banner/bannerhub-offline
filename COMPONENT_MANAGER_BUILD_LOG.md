@@ -2437,3 +2437,19 @@ Same root cause as Entry 67: `GradientDrawable.setStroke(II)V` in `onCreateViewH
 
 ### CI result
 → ✅ run 23369306581 — Normal APK built
+
+---
+
+## Entry 71 — v2.7.7-pre — Fix header stuck at vertical center of screen (2026-03-21)
+
+### Files changed
+- `patches/smali_classes16/.../ComponentManagerActivity.smali`
+
+### Methods changed
+- `ComponentManagerActivity.buildUI()` — (1) removed `invoke-virtual {v0, v1}, Landroid/view/View;->setFitsSystemWindows(Z)V`; (2) changed final `setContentView(View)` → `setContentView(View, ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT))` (3 new lines: new-instance v1, const/4 v2 -0x1, invoke-direct v1 v2 v2, invoke-virtual p0 v0 v1)
+
+### Root-cause / design
+`setFitsSystemWindows(true)` on the root LinearLayout was interacting with AppCompat's subDecor insets pass, offsetting content to the vertical center of the window instead of the top. Additionally, `setContentView(View)` without explicit LayoutParams leaves sizing to the subDecor; if the subDecor provides WRAP_CONTENT MeasureSpec the weight=1 content won't expand. Fix: remove setFitsSystemWindows; pass MATCH_PARENT×MATCH_PARENT LayoutParams to guarantee root fills the window.
+
+### CI result
+→ ✅ run 23369636270 — Normal APK built
