@@ -111,12 +111,12 @@ jobs:
             --v1-signing-enabled true \
             --v2-signing-enabled true \
             --v3-signing-enabled true \
-            --out "Bannerhub-5.3.5-Revanced-PuBG-CrossFire.apk" \
+            --out "BannerHub-${GITHUB_REF_NAME}-PuBG-CrossFire.apk" \
             rebuilt-aligned.apk
-          echo "Done: Bannerhub-5.3.5-Revanced-PuBG-CrossFire.apk ($(du -sh Bannerhub-5.3.5-Revanced-PuBG-CrossFire.apk | cut -f1))"
+          echo "Done: BannerHub-${GITHUB_REF_NAME}-PuBG-CrossFire.apk ($(du -sh BannerHub-${GITHUB_REF_NAME}-PuBG-CrossFire.apk | cut -f1))"
 
       - name: Upload to v2.3.0 release
         run: |
-          gh release upload v2.3.0 Bannerhub-5.3.5-Revanced-PuBG-CrossFire.apk --clobber
+          gh release upload v2.3.0 BannerHub-${GITHUB_REF_NAME}-PuBG-CrossFire.apk --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
