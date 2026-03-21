@@ -123,11 +123,24 @@
     const/4 v14, 0x1
     invoke-virtual {v7, v14}, Landroid/view/View;->setClickable(Z)V
 
+    # Touch ripple foreground (selectableItemBackground resolved from theme)
+    new-instance v12, Landroid/util/TypedValue;
+    invoke-direct {v12}, Landroid/util/TypedValue;-><init>()V
+    invoke-virtual {v3}, Landroid/content/Context;->getTheme()Landroid/content/res/Resources$Theme;
+    move-result-object v13
+    const v14, 0x0101009d  # android.R.attr.selectableItemBackground
+    const/4 v15, 0x1
+    invoke-virtual {v13, v14, v12, v15}, Landroid/content/res/Resources$Theme;->resolveAttribute(ILandroid/util/TypedValue;Z)Z
+    iget v13, v12, Landroid/util/TypedValue;->resourceId:I
+    invoke-virtual {v3, v13}, Landroid/content/Context;->getDrawable(I)Landroid/graphics/drawable/Drawable;
+    move-result-object v13
+    invoke-virtual {v7, v13}, Landroid/view/View;->setForeground(Landroid/graphics/drawable/Drawable;)V
+
     # ── Thumbnail ImageView (60dp × 60dp) ────────────────────────────────────
     new-instance v8, Landroid/widget/ImageView;
     invoke-direct {v8, v3}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
 
-    const v14, 0xFF262626  # placeholder dark grey
+    const v14, 0xFF333333  # placeholder grey (visible against #1A1A1A card bg)
     invoke-virtual {v8, v14}, Landroid/view/View;->setBackgroundColor(I)V
 
     sget-object v14, Landroid/widget/ImageView$ScaleType;->CENTER_CROP:Landroid/widget/ImageView$ScaleType;

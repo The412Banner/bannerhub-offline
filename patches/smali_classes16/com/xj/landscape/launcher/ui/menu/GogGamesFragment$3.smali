@@ -55,6 +55,36 @@
     const v7, 0xFF0D0D0D
     invoke-virtual {v2, v7}, Landroid/view/View;->setBackgroundColor(I)V
 
+    # ── Game title TextView (inside dark view — no AlertDialog system title bar) ──
+    new-instance v4, Landroid/widget/TextView;
+    invoke-direct {v4, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+
+    iget-object v9, v1, Lcom/xj/landscape/launcher/ui/menu/GogGame;->title:Ljava/lang/String;
+    if-eqz v9, :no_dialog_title_tv
+    invoke-virtual {v4, v9}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    :no_dialog_title_tv
+
+    const v9, 0xFFFFFFFF
+    invoke-virtual {v4, v9}, Landroid/widget/TextView;->setTextColor(I)V
+
+    const/high16 v9, 0x41900000  # 18.0f sp
+    invoke-virtual {v4, v9}, Landroid/widget/TextView;->setTextSize(F)V
+
+    sget-object v9, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
+    invoke-virtual {v4, v9}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
+
+    const/high16 v9, 0x41800000  # 16.0f
+    mul-float v9, v8, v9
+    float-to-int v9, v9  # 16dp px
+
+    const/high16 v10, 0x41000000  # 8.0f
+    mul-float v10, v8, v10
+    float-to-int v10, v10  # 8dp px
+
+    invoke-virtual {v4, v9, v9, v9, v10}, Landroid/widget/TextView;->setPadding(IIII)V
+
+    invoke-virtual {v2, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
     # ── Cover art ImageView (MATCH_PARENT × 200dp) ───────────────────────────
     new-instance v3, Landroid/widget/ImageView;
     invoke-direct {v3, v0}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
@@ -106,7 +136,7 @@
     const-string v10, "\nRating: "
     invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     invoke-virtual {v5, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    const-string v10, "/100"
+    const-string v10, "%"
     invoke-virtual {v5, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     :info_no_rating
 
@@ -153,6 +183,8 @@
     iget-object v9, v1, Lcom/xj/landscape/launcher/ui/menu/GogGame;->storeUrl:Ljava/lang/String;
     if-eqz v9, :skip_store
 
+    move-object v6, v9  # save storeUrl before v9 gets overwritten by color/padding temps
+
     new-instance v5, Landroid/widget/TextView;
     invoke-direct {v5, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
 
@@ -175,17 +207,18 @@
 
     invoke-virtual {v2, v5}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
+    # Make store URL tappable — opens in browser
+    new-instance v9, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$5;
+    invoke-direct {v9, v0, v6}, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$5;-><init>(Landroid/content/Context;Ljava/lang/String;)V
+    invoke-virtual {v5, v9}, Landroid/view/View;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+    const/4 v9, 0x1
+    invoke-virtual {v5, v9}, Landroid/view/View;->setClickable(Z)V
+
     :skip_store
 
     # ── AlertDialog ───────────────────────────────────────────────────────────
     new-instance v6, Landroid/app/AlertDialog$Builder;
     invoke-direct {v6, v0}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
-
-    # Set title to game title
-    iget-object v9, v1, Lcom/xj/landscape/launcher/ui/menu/GogGame;->title:Ljava/lang/String;
-    if-eqz v9, :no_dialog_title
-    invoke-virtual {v6, v9}, Landroid/app/AlertDialog$Builder;->setTitle(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
-    :no_dialog_title
 
     invoke-virtual {v6, v2}, Landroid/app/AlertDialog$Builder;->setView(Landroid/view/View;)Landroid/app/AlertDialog$Builder;
 
