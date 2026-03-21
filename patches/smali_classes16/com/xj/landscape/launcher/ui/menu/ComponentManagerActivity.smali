@@ -51,12 +51,11 @@
 .method public buildUI()V
     .locals 6
 
-    # Root: vertical LinearLayout, black bg, fitsSystemWindows
+    # Root: vertical LinearLayout, black bg
     new-instance v0, Landroid/widget/LinearLayout;
     invoke-direct {v0, p0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
     const/4 v1, 0x1
     invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setOrientation(I)V
-    invoke-virtual {v0, v1}, Landroid/view/View;->setFitsSystemWindows(Z)V
     const v1, 0xFF0D0D0D
     invoke-virtual {v0, v1}, Landroid/view/View;->setBackgroundColor(I)V
 
@@ -77,7 +76,11 @@
     invoke-direct {v4, v2, v3, v5}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
     invoke-virtual {v0, v1, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
 
-    invoke-virtual {p0, v0}, Landroidx/appcompat/app/AppCompatActivity;->setContentView(Landroid/view/View;)V
+    # Pass MATCH_PARENT x MATCH_PARENT to guarantee root fills the window
+    new-instance v1, Landroid/view/ViewGroup$LayoutParams;
+    const/4 v2, -0x1   # MATCH_PARENT
+    invoke-direct {v1, v2, v2}, Landroid/view/ViewGroup$LayoutParams;-><init>(II)V
+    invoke-virtual {p0, v0, v1}, Landroidx/appcompat/app/AppCompatActivity;->setContentView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
     return-void
 .end method
 
