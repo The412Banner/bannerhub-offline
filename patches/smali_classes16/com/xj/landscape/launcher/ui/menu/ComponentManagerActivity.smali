@@ -51,45 +51,40 @@
 .method public buildUI()V
     .locals 6
 
-    # Root: RelativeLayout avoids LinearLayout weight/MeasureSpec issues
-    new-instance v0, Landroid/widget/RelativeLayout;
-    invoke-direct {v0, p0}, Landroid/widget/RelativeLayout;-><init>(Landroid/content/Context;)V
+    # Root: vertical LinearLayout, black bg, fitsSystemWindows
+    new-instance v0, Landroid/widget/LinearLayout;
+    invoke-direct {v0, p0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
+    const/4 v1, 0x1
+    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setOrientation(I)V
+    invoke-virtual {v0, v1}, Landroid/view/View;->setFitsSystemWindows(Z)V
     const v1, 0xFF0D0D0D
     invoke-virtual {v0, v1}, Landroid/view/View;->setBackgroundColor(I)V
 
-    # Header: ID=1, MATCH_PARENT width, WRAP_CONTENT height, ALIGN_PARENT_TOP
+    # Header
     invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->buildHeader()Landroid/widget/LinearLayout;
     move-result-object v1
-    const/4 v2, 0x1
-    invoke-virtual {v1, v2}, Landroid/view/View;->setId(I)V
-    new-instance v3, Landroid/widget/RelativeLayout$LayoutParams;
-    const/4 v4, -0x1   # MATCH_PARENT
-    const/4 v5, -0x2   # WRAP_CONTENT
-    invoke-direct {v3, v4, v5}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-    const/16 v4, 0xa   # ALIGN_PARENT_TOP = 10
-    const/4 v5, -0x1   # RelativeLayout.TRUE = -1
-    invoke-virtual {v3, v4, v5}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(II)V
-    invoke-virtual {v0, v1, v3}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+    const/4 v2, -0x1   # MATCH_PARENT
+    const/4 v3, -0x2   # WRAP_CONTENT
+    invoke-virtual {v0, v1, v2, v3}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;II)V
 
-    # Content: MATCH_PARENT, below header (ID=1), aligned to parent bottom
+    # Content (RecyclerView + empty state in FrameLayout), weight=1
     invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->buildContent()Landroid/widget/FrameLayout;
     move-result-object v1
-    new-instance v3, Landroid/widget/RelativeLayout$LayoutParams;
-    const/4 v4, -0x1   # MATCH_PARENT
-    invoke-direct {v3, v4, v4}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-    const/4 v4, 0x3    # BELOW = 3
-    const/4 v5, 0x1    # anchor = header ID
-    invoke-virtual {v3, v4, v5}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(II)V
-    const/16 v4, 0xc   # ALIGN_PARENT_BOTTOM = 12
-    const/4 v5, -0x1   # TRUE
-    invoke-virtual {v3, v4, v5}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(II)V
-    invoke-virtual {v0, v1, v3}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+    new-instance v4, Landroid/widget/LinearLayout$LayoutParams;
+    const/4 v2, -0x1
+    const/4 v3, 0x0
+    const/high16 v5, 0x3f800000  # 1.0f
+    invoke-direct {v4, v2, v3, v5}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
+    invoke-virtual {v0, v1, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
 
-    # setContentView with explicit MATCH_PARENT x MATCH_PARENT
-    new-instance v1, Landroid/view/ViewGroup$LayoutParams;
-    const/4 v2, -0x1   # MATCH_PARENT
-    invoke-direct {v1, v2, v2}, Landroid/view/ViewGroup$LayoutParams;-><init>(II)V
-    invoke-virtual {p0, v0, v1}, Landroidx/appcompat/app/AppCompatActivity;->setContentView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+    # Bottom bar
+    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->buildBottomBar()Landroid/widget/LinearLayout;
+    move-result-object v1
+    const/4 v2, -0x1
+    const/4 v3, -0x2
+    invoke-virtual {v0, v1, v2, v3}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;II)V
+
+    invoke-virtual {p0, v0}, Landroidx/appcompat/app/AppCompatActivity;->setContentView(Landroid/view/View;)V
     return-void
 .end method
 
@@ -165,36 +160,6 @@
     invoke-direct {v3, p0}, Landroid/view/View;-><init>(Landroid/content/Context;)V
     const/4 v4, 0x1
     invoke-virtual {v2, v3, v0, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;II)V
-
-    # "+ Add" button in header (orange, compact)
-    const-string v3, "+ Add"
-    const v4, 0xFFFF9800
-    invoke-virtual {p0, v3, v4}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->makeBtn(Ljava/lang/String;I)Landroid/widget/TextView;
-    move-result-object v3
-    new-instance v4, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity$BhAddListener;
-    invoke-direct {v4, p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity$BhAddListener;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;)V
-    invoke-virtual {v3, v4}, Landroid/view/View;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-    invoke-virtual {v2, v3}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    # "↓ DL" button in header (orange, compact)
-    const-string v3, "\u2193 DL"
-    const v4, 0xFFFF9800
-    invoke-virtual {p0, v3, v4}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->makeBtn(Ljava/lang/String;I)Landroid/widget/TextView;
-    move-result-object v3
-    new-instance v4, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity$BhDownloadListener;
-    invoke-direct {v4, p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity$BhDownloadListener;-><init>(Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;)V
-    invoke-virtual {v3, v4}, Landroid/view/View;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-    invoke-virtual {v2, v3}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    # weight=0.5 flex spacer → shifts buttons toward center-right
-    new-instance v3, Landroid/view/View;
-    invoke-direct {v3, p0}, Landroid/view/View;-><init>(Landroid/content/Context;)V
-    new-instance v4, Landroid/widget/LinearLayout$LayoutParams;
-    const/4 v5, 0x0
-    const/4 v6, -0x2
-    const/high16 v7, 0x3f000000    # 0.5f
-    invoke-direct {v4, v5, v6, v7}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
-    invoke-virtual {v2, v3, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
 
     # "✕ All" button (remove all)
     new-instance v3, Landroid/widget/TextView;
@@ -449,11 +414,11 @@
     invoke-virtual {v1, v2}, Landroid/graphics/drawable/GradientDrawable;->setCornerRadius(F)V
     invoke-virtual {v0, v1}, Landroid/view/View;->setBackground(Landroid/graphics/drawable/Drawable;)V
 
-    # padding: 8dp H, 4dp V (compact for header)
-    const/16 v1, 0x8
+    # padding: 16dp H, 8dp V
+    const/16 v1, 0x10
     invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->dp(I)I
     move-result v1
-    const/4 v2, 0x4
+    const/16 v2, 0x8
     invoke-virtual {p0, v2}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->dp(I)I
     move-result v2
     invoke-virtual {v0, v1, v2, v1, v2}, Landroid/widget/TextView;->setPadding(IIII)V
