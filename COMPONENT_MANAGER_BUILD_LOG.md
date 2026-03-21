@@ -30,6 +30,44 @@ Each entry covers one logical change unit (commit or closely related set of comm
 
 ---
 
+## Entry 073 — Source badge + refresh + type badge fixes (v2.6.2-pre5)
+**Date:** 2026-03-21
+**Commit:** TBD  |  **Tag:** v2.6.2-pre5  |  **CI:** pending
+
+### Root cause analysis
+**Bug #1 (no refresh):** `ComponentManagerActivity` had no `onResume()` override. When `ComponentDownloadActivity.finish()` brought the manager to front, the adapter was never refreshed — new dirs invisible until full activity recreation.
+
+**Bug #2 (source badge invisible):** Two stacked issues:
+- `setMaxLines(1)` on nameText cut off the `"\n"+repo` second line entirely.
+- SP key mismatch: `$6` added URL filename ("FEXCore-2603.wcp") to `mAllNames`, not verName. Then `onItemClick` appended extension again → "FEXCore-2603.wcp.wcp". After stripping in `$5`, baseName = "FEXCore-2603.wcp" ≠ actual directory "2603" (from WCP profile.json).
+
+**Type badge "WCP":** Adapter's `getTypeName(dirName)` keyword-matched on "2603"/"2.4.1-..." — neither contains type keywords → "WCP" fallback.
+
+### Fixes applied
+
+**`ComponentManagerActivity.smali`** `[MOD]`
+- Added `onResume()` → calls `showComponents()` — list refreshes on return from download activity.
+
+**`BhComponentAdapter.smali`** `[MOD]`
+- `onCreateViewHolder`: `setMaxLines(1)` → `setMaxLines(2)` — source badge now visible.
+- `onBindViewHolder`: after `getTypeName()`/`getTypeColor()`, look up `dirName+":type"` in SP; if found, override typeName and recompute color.
+
+**`ComponentDownloadActivity.smali`** `[MOD]`
+- `onItemClick`: added `endsWith()` check before appending URL extension → prevents "FEXCore-2603.wcp.wcp" double extension.
+
+**`ComponentDownloadActivity$5.smali`** `[MOD — full rewrite]`
+- Records `System.currentTimeMillis()` before `injectComponent()`.
+- After injection: scans `getFilesDir()/usr/home/components` for dirs with `lastModified() > timestamp`. Uses newest dir's name as SP key (correct regardless of WCP profile.json naming).
+- Falls back to filename-based baseName if scan finds no new dir.
+- Maps `val$type` int → type name string (0x5f=FEXCore, 0x5e=Box64, 0xd=VKD3D, 0xa=GPU, 0xc=DXVK); writes `dirName+":type"` → type name to SP.
+
+### Methods modified
+- `ComponentManagerActivity.onResume()V` — new, `.locals 0`
+- `BhComponentAdapter.onCreateViewHolder()` — setMaxLines changed
+- `BhComponentAdapter.onBindViewHolder()` — type SP override added before badge display
+- `ComponentDownloadActivity.onItemClick()` — endsWith check added
+- `ComponentDownloadActivity$5.run()V` — full rewrite, `.locals 7` → `.locals 12`
+
 ---
 
 # PHASE 1 — Core Component Manager (v1.0.6 → v2.1.1)

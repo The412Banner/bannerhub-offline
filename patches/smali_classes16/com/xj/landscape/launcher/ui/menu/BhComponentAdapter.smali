@@ -352,7 +352,7 @@
     invoke-virtual {v9, v2}, Landroid/widget/TextView;->setTextSize(F)V
     const v2, 0xFFFFFFFF
     invoke-virtual {v9, v2}, Landroid/widget/TextView;->setTextColor(I)V
-    const/4 v2, 0x1
+    const/4 v2, 0x2
     invoke-virtual {v9, v2}, Landroid/widget/TextView;->setMaxLines(I)V
     sget-object v2, Landroid/text/TextUtils$TruncateAt;->END:Landroid/text/TextUtils$TruncateAt;
     invoke-virtual {v9, v2}, Landroid/widget/TextView;->setEllipsize(Landroid/text/TextUtils$TruncateAt;)V
@@ -441,6 +441,24 @@
 
     invoke-static {v2}, Lcom/xj/landscape/launcher/ui/menu/BhComponentAdapter;->getTypeColor(Ljava/lang/String;)I
     move-result v3    # typeColor
+
+    # Override typeName from SP if we stored it at download time (key = dirName + ":type")
+    new-instance v0, Ljava/lang/StringBuilder;
+    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    const-string v4, ":type"
+    invoke-virtual {v0, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v0
+    iget-object v5, p0, Lcom/xj/landscape/launcher/ui/menu/BhComponentAdapter;->prefs:Landroid/content/SharedPreferences;
+    const/4 v4, 0x0
+    invoke-interface {v5, v0, v4}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    move-result-object v0
+    if-eqz v0, :no_type_override
+    move-object v2, v0
+    invoke-static {v2}, Lcom/xj/landscape/launcher/ui/menu/BhComponentAdapter;->getTypeColor(Ljava/lang/String;)I
+    move-result v3
+    :no_type_override
 
     # Set name — then overlay with "name\nrepoSource" if this was a BannerHub download
     iget-object v4, p1, Lcom/xj/landscape/launcher/ui/menu/BhComponentAdapter$ViewHolder;->nameText:Landroid/widget/TextView;

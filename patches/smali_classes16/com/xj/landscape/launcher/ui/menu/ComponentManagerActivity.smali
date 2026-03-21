@@ -47,6 +47,13 @@
     return-void
 .end method
 
+.method protected onResume()V
+    .locals 0
+    invoke-super {p0}, Landroidx/appcompat/app/AppCompatActivity;->onResume()V
+    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/ComponentManagerActivity;->showComponents()V
+    return-void
+.end method
+
 # ── buildUI: assemble the whole screen programmatically ───────────────────────
 .method public buildUI()V
     .locals 6
