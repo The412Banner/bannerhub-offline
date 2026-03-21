@@ -30,6 +30,33 @@ Each entry covers one logical change unit (commit or closely related set of comm
 
 ---
 
+## Entry 094 — feat: store loginTime + expires_in on every token save (v2.7.0-beta23, gog-beta)
+**Date:** 2026-03-21
+**Branch:** gog-beta  |  **Tag:** v2.7.0-beta23
+
+### Root-cause analysis
+Neither `GogLoginActivity$2` nor `GogTokenRefresh` stored `loginTime` or `expires_in` in `bh_gog_prefs` after saving tokens. Without these values, proactive token expiry detection (`currentTimeMillis()/1000 >= loginTime + expiresIn`) is impossible.
+
+### Changes
+
+**GogLoginActivity$2.smali (initial login):**
+- `.locals 8` → `.locals 12` (needs v8+v9 wide pair for millis, v10+v11 for 1000L divisor)
+- After username putString: `System.currentTimeMillis()` → div by 1000 → long-to-int → `putInt("bh_gog_login_time", intSeconds)`
+- `putInt("bh_gog_expires_in", 3600)` — GOG access tokens are always 1 hour
+
+**GogTokenRefresh.smali (silent refresh):**
+- `.locals 11` → `.locals 13`
+- After `:skip_refresh_save`: same two putInt calls using v5+v6 wide pair, v9+v10 divisor — clock resets to now after every successful refresh
+
+### Files modified
+- `patches/smali_classes16/.../GogLoginActivity$2.smali` — loginTime + expires_in on initial login
+- `patches/smali_classes16/.../GogTokenRefresh.smali` — loginTime + expires_in on silent refresh
+
+**Commit:** `3227d69`
+**CI result:** [CI✅] run 23390773183
+
+---
+
 ## Entry 093 — fix: GOG token refresh GET not POST, fix full client_secret (v2.7.0-beta22, gog-beta)
 **Date:** 2026-03-21
 **Branch:** gog-beta  |  **Tag:** v2.7.0-beta22

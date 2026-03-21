@@ -4,6 +4,14 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.7.0-beta23 — feat: store loginTime + expires_in in bh_gog_prefs (2026-03-21)
+**Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta23
+**What changed:** Both initial login (`GogLoginActivity$2`) and silent refresh (`GogTokenRefresh`) now write `bh_gog_login_time` (int, unix seconds) and `bh_gog_expires_in` (int, 3600) to `bh_gog_prefs`. Enables upcoming proactive expiry check: `currentTimeMillis()/1000 >= loginTime + expiresIn`. `.locals` bumped in both files to accommodate wide long registers for `System.currentTimeMillis()` division.
+**Files touched:** `GogLoginActivity$2.smali`, `GogTokenRefresh.smali`
+**CI result:** ✅ run 23390773183
+
+---
+
 ## [beta] — v2.7.0-beta22 — fix: GOG token refresh GET not POST, fix full client_secret (2026-03-21)
 **Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta22
 **What changed:** `GogTokenRefresh.smali` was sending the refresh grant as a POST with a form body. The GOG token endpoint uses GET with query params. Fix: remove `setDoOutput`, `Content-Type` header, `getOutputStream`/write; build full URL with params as query string. Also fixed truncated `client_secret` (last 32 hex chars were missing). `.locals` reduced 12→11.
