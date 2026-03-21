@@ -191,7 +191,38 @@
     move-result v11
     if-eq v11, v15, :parse_done
     invoke-virtual {v7, v10, v11}, Ljava/lang/String;->substring(II)Ljava/lang/String;
+    move-result-object v13  # raw image path
+
+    # Unescape JSON forward-slash escaping: "\/" -> "/"
+    # (GOG's API may serialize image URLs as "\/\/images-4.gog.com\/..." )
+    const-string v12, "\\/"
+    const-string v14, "/"
+    invoke-virtual {v13, v12, v14}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+    move-result-object v13  # v13 = unescaped path
+
+    # Append GOG thumbnail suffix if no file extension present.
+    # GOG CDN needs e.g. _product_card_v2_mobile_slider_639.jpg on the hash path.
+    const-string v12, ".jpg"
+    invoke-virtual {v13, v12}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v14
+    if-nez v14, :img_has_ext
+    const-string v12, ".webp"
+    invoke-virtual {v13, v12}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v14
+    if-nez v14, :img_has_ext
+    const-string v12, ".png"
+    invoke-virtual {v13, v12}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v14
+    if-nez v14, :img_has_ext
+    new-instance v14, Ljava/lang/StringBuilder;
+    invoke-direct {v14}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-virtual {v14, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    const-string v12, "_product_card_v2_mobile_slider_639.jpg"
+    invoke-virtual {v14, v12}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v14}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
     move-result-object v13
+    :img_has_ext
+
     new-instance v14, Ljava/lang/StringBuilder;
     invoke-direct {v14}, Ljava/lang/StringBuilder;-><init>()V
     const-string v12, "https:"
