@@ -81,6 +81,7 @@
     invoke-virtual {v1, v5}, Ljava/util/ArrayList;->get(I)Ljava/lang/Object;
     move-result-object v6  # title string
     move-object v8, v6  # save title for click listener (v6 is reused below)
+    check-cast v8, Ljava/lang/String;  # verifier needs String type, not Object
 
     new-instance v7, Landroid/widget/TextView;
     invoke-direct {v7, v3}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
