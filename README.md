@@ -1,6 +1,6 @@
 # BannerHub
 
-**GameHub 5.3.5 ReVanced** — enhanced with a full Component Manager, in-app component downloader with download progress, in-game Performance toggles, RTS touch controls, VRAM unlock, per-game CPU core affinity, root access management, Steam offline launch, and more. Built with apktool — no root required for most features.
+**GameHub 5.3.5 ReVanced** — enhanced with a full Component Manager, in-app component downloader with source tracking, in-game Performance toggles, RTS touch controls, VRAM unlock, per-game CPU core affinity, root access management, Steam offline launch, and more. Built with apktool — no root required for most features.
 
 ## Video — Installation & Feature Showcase
 
@@ -15,19 +15,26 @@
 ### Component Manager
 Accessible via GameHub's left side menu → **Components**.
 
-- Lists all installed components from `files/usr/home/components/`
+- **Card-based RecyclerView UI** — each installed component shown as a compact card with:
+  - Color-coded type badge (DXVK / VKD3D / Box64 / FEXCore / GPU Driver / WCP) with matching left accent strip
+  - Source badge — components downloaded via BannerHub show the repo name they came from (e.g. "Arihany WCPHub", "Nightlies")
+  - Install count badge in the header
+- **Live search** — type to filter component cards in real time
+- **Swipe LEFT** to remove a component; **Swipe RIGHT** to back it up
 - **Add New Component** — inject a WCP or ZIP file as a brand new component slot; it appears in GameHub's DXVK / VKD3D / Box64 / FEXCore / GPU Driver selection menus immediately and persists across restarts
 - **Inject file** — replace an existing component's contents with a new WCP or ZIP file
 - **Backup** — copies a component folder to `Downloads/BannerHub/{name}/`
-- **Remove** — unregisters the component from GameHub's in-memory map and deletes the folder
+- **Remove** — unregisters the component from GameHub's in-memory map and deletes the folder; clears the ✓ downloaded indicator in the online repo list
+- **Remove All** — removes only BannerHub-managed components (those injected or downloaded via the Component Manager); shows the correct count in the confirmation dialog
 - Supports ZIP (Turnip / adrenotools GPU drivers), zstd tar (DXVK, VKD3D, Box64), and XZ tar (FEXCore nightlies)
 - FEXCore: flat extraction to component root; all other types preserve `system32/` + `syswow64/` structure
 - Component folder cleared before every inject (no stale files); extraction runs on a background thread
 
 ### In-App Component Downloader
-Inside the Component Manager type-selection menu, tap **↓ Download from Online Repos** to browse and download components directly from GitHub without leaving GameHub.
+Inside the Component Manager, tap **↓ Download from Online Repos** to browse and download components directly from GitHub without leaving GameHub.
 
 - **3-level navigation:** repo → category (DXVK / VKD3D / Box64 / FEXCore / GPU Driver) → filtered asset list
+- **✓ downloaded indicator** — assets already installed via BannerHub are marked ✓ in the asset list; the mark clears when the component is removed
 - **6 sources built-in:**
 
 | Source | What it provides |
@@ -38,8 +45,9 @@ Inside the Component Manager type-selection menu, tap **↓ Download from Online
 | **StevenMXZ GPU Drivers** | GPU Drivers only |
 | **MTR GPU Drivers** | GPU Drivers only (MaxesTechReview) |
 | **Whitebelyash GPU Drivers** | GPU Drivers only |
+
 - Tap any asset to download it to cache and inject it as a new component automatically
-- **Download progress screen** — while fetching repo metadata or downloading a file, an indeterminate spinner is shown with "Downloading: `<filename>`" status text (same as BannerHub Lite)
+- **Download progress screen** — while fetching repo metadata or downloading a file, an indeterminate spinner is shown with "Downloading: `<filename>`" status text
 
 ### BCI Launcher Button
 Tap the icon in GameHub's top-right toolbar to open **BannersComponentInjector** (`com.banner.inject`) directly from inside GameHub. Shows a toast if it is not installed.
