@@ -4,6 +4,14 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.7.0-beta11 — Fix: detect expired GOG token, clear SP, show re-login prompt (2026-03-21)
+**Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta11
+**What changed:** Previously an expired `access_token` caused `GogGamesFragment$1` to get a non-200 response (HTTP 401) which was treated identically to an empty game library — UI showed "No GOG games found" with no indication of why. Fix: `$1.run()` now calls `getResponseCode()` after connecting; on non-200, clears `access_token` from `bh_gog_prefs` SharedPreferences and posts `null` to UI instead of an empty ArrayList. `$2.run()` null-checks the list before calling `size()`: null → "Session expired - sign in again via the GOG side menu"; empty ArrayList → "No GOG games found" (unchanged).
+**Files touched:** `GogGamesFragment$1.smali`, `GogGamesFragment$2.smali`
+**CI result:** ✅ run 23387323126 — Normal APK built successfully
+
+---
+
 ## [beta] — v2.7.0-beta10 — Fix GOG Games tab: extend LazyFragment so show/hide works (2026-03-21)
 **Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta10
 **What changed:** Root cause of beta9 bug: `k3()`'s show/hide loop only processes `LazyFragment` instances. `GogGamesFragment` extended plain `Fragment`, so it was never hidden when switching back to My Games — its full-screen dark FrameLayout (MATCH_PARENT) covered all content permanently. Fix: change `.super` to `LazyFragment`, implement abstract `V()` = `refreshContent()` (initial load when tab first becomes visible), update `onResume()` super call. Removed premature `refreshContent()` from `onCreateView` (now handled by `V()` + `onResume()`).

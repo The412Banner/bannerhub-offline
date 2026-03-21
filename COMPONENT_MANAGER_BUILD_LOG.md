@@ -30,6 +30,33 @@ Each entry covers one logical change unit (commit or closely related set of comm
 
 ---
 
+## Entry 085 — Fix: detect expired GOG token, clear SP, show re-login prompt (v2.7.0-beta11, gog-beta)
+**Date:** 2026-03-21
+**Branch:** gog-beta  |  **Tag:** v2.7.0-beta11
+
+### Root-cause analysis
+After re-installing the beta (fresh token from initial login now expired), the GOG Games tab showed "No GOG games found" with no indication of why. `GogGamesFragment$1` sent the expired `access_token` as `Authorization: Bearer <token>`, GOG API returned HTTP 401 Unauthorized. `getInputStream()` threw on non-200 (caught by `catch_all`), falling through to `:post_ui` with the same empty ArrayList as a genuine empty library. No logcat output was visible — the exception was silently swallowed.
+
+### Files modified
+- `patches/smali_classes16/.../GogGamesFragment$1.smali`
+  - Added `getResponseCode()` call after `setRequestProperty` in `run()`
+  - On non-200: calls `getContext()`, opens `bh_gog_prefs`, calls `edit().remove("access_token").apply()`, disconnects, sets `v2 = null`, `goto :post_ui`
+  - Added `:expired_disconnect` label (null-context guard), `:ok_200` label (continue normal path)
+  - `.locals` unchanged (10)
+
+- `patches/smali_classes16/.../GogGamesFragment$2.smali`
+  - Added `if-eqz v1, :session_expired` before `ArrayList.size()` call
+  - Added `:session_expired` block: sets statusView text to "Session expired - sign in again via the GOG side menu", sets VISIBLE, `goto :done`
+  - `.locals` unchanged (8)
+
+### Methods changed
+- `GogGamesFragment$1.run()V` — added response code check + SP clear path; 39 new instructions
+- `GogGamesFragment$2.run()V` — added null-list guard + session_expired label; 7 new instructions
+
+**CI result:** [CI✅] run 23387323126 — Normal APK built successfully
+
+---
+
 ## Entry 084 — Fix GOG tab show/hide: extend LazyFragment instead of Fragment (v2.7.0-beta10, gog-beta)
 **Date:** 2026-03-21
 **Branch:** gog-beta  |  **Tag:** v2.7.0-beta10
