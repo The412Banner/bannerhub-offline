@@ -1580,6 +1580,14 @@
     invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
     goto :goto_1
 
+    # BannerHub: GOG menu item
+    :pswitch_10
+    new-instance p0, Landroid/content/Intent;
+    const-class p1, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;
+    invoke-direct {p0, p2, p1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+    invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+    goto :goto_1
+
     :cond_2
     :goto_1
     sget-object p0, Lkotlin/Unit;->a:Lkotlin/Unit;
@@ -1603,6 +1611,7 @@
         :pswitch_1
         :pswitch_0
         :pswitch_9
+        :pswitch_10
     .end packed-switch
 .end method
 
@@ -3880,6 +3889,18 @@
     const/16 v10, 0x18
     const/4 v11, 0x0
     const/16 v5, 0x9
+    const/4 v8, 0x0
+    const/4 v9, 0x0
+    invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {p0, v4}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+
+    # BannerHub: GOG menu item (id=10)
+    new-instance v4, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;
+    sget v6, Lcom/xj/landscape/launcher/R$drawable;->menu_setting_normal:I
+    const-string v7, "GOG"
+    const/16 v10, 0x18
+    const/4 v11, 0x0
+    const/16 v5, 0xa
     const/4 v8, 0x0
     const/4 v9, 0x0
     invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V

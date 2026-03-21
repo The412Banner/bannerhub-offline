@@ -30,6 +30,46 @@ Each entry covers one logical change unit (commit or closely related set of comm
 
 ---
 
+## Entry 077 — GOG via side menu (DEX overflow fix) (v2.7.0-beta3, gog-beta)
+**Date:** 2026-03-21
+**Branch:** gog-beta  |  **Tag:** v2.7.0-beta3
+
+### Root-cause analysis
+beta1 and beta2 failed with `Unsigned short value out of range: 65536` from dexlib2. `smali_classes11` was already at exactly 65535 pool entries (unsigned short max). Adding even 1 new type/string/method ref pushes it over. New pool entries from the tab approach: type ref `BhGogTabCallback`, method ref `BhGogTabCallback.<init>`, method ref `TabItemData.<init>(I,String,Function0)`, string `"GOG"` = 4 new entries (65539 → fail). Reflection approach also fails: even 1 new class-name string overflows. Solution: move GOG to the side menu (HomeLeftMenuDialog, classes5, no overflow risk).
+
+### Files created
+| Path | Description |
+|------|-------------|
+| `[NEW]` `patches/smali_classes16/…/GogMainActivity.smali` | Activity: login/signed-in UI, dp(), isLoggedIn(), buildLoginCard(), buildLoggedInCard(), onCreate(), onResume(), refreshView() |
+| `[NEW]` `patches/smali_classes16/…/GogMainActivity$1.smali` | OnClickListener: login button → startActivity(GogLoginActivity) |
+| `[NEW]` `patches/smali_classes16/…/GogMainActivity$2.smali` | OnClickListener: sign out → clear bh_gog_prefs SP, refreshView() |
+
+### Files deleted
+| Path | Reason |
+|------|--------|
+| `[DEL]` `patches/smali_classes16/…/BhGogTabCallback.smali` | Tab approach abandoned |
+| `[DEL]` `patches/smali_classes16/…/GogFragment.smali` | Replaced by GogMainActivity |
+| `[DEL]` `patches/smali_classes16/…/GogFragment$1.smali` | Replaced by GogMainActivity$1 |
+| `[DEL]` `patches/smali_classes16/…/GogFragment$2.smali` | Replaced by GogMainActivity$2 |
+
+### Files modified
+| Path | Change |
+|------|--------|
+| `[MOD]` `patches/smali_classes5/…/HomeLeftMenuDialog.smali` | Add GOG MenuItem (id=10, icon=menu_setting_normal, title="GOG") at end of menu list; add :pswitch_10 case in o1() → startActivity(GogMainActivity); extend packed-switch data to include :pswitch_10 |
+| `[MOD]` `patches/smali_classes11/…/LandscapeLauncherMainActivity.smali` | Removed GOG tab injection from both branches (classes11 overflow fix) |
+| `[MOD]` `patches/AndroidManifest.xml` | Added GogMainActivity declaration |
+
+### Key methods
+- `GogMainActivity.onCreate(Bundle)` — .locals 4; builds FrameLayout, adds loginCard+loggedInCard, setContentView, calls refreshView
+- `GogMainActivity.onResume()` — .locals 0; super.onResume, refreshView
+- `GogMainActivity.refreshView()` — .locals 5; toggles card visibility based on bh_gog_prefs/access_token; updates usernameView text
+- `HomeLeftMenuDialog.o1()` — packed-switch extended from 10 to 11 entries (0x0–0xa)
+
+### CI result
+pending
+
+---
+
 ## Entry 076 — GOG tab Phase 1: login + token exchange (v2.7.0-beta1, gog-beta)
 **Date:** 2026-03-21
 **Branch:** gog-beta  |  **Tag:** v2.7.0-beta1

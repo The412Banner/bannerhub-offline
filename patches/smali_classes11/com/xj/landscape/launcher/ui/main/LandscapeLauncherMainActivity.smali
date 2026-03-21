@@ -5903,14 +5903,6 @@
     .line 113
     invoke-interface {v2, v3}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    # BannerHub: GOG tab (branch 1 — default path)
-    new-instance v3, Lcom/xj/landscape/launcher/ui/main/TabItemData;
-    const/4 v4, 0x0
-    const-string v5, "GOG"
-    new-instance v6, Lcom/xj/landscape/launcher/ui/main/BhGogTabCallback;
-    invoke-direct {v6}, Lcom/xj/landscape/launcher/ui/main/BhGogTabCallback;-><init>()V
-    invoke-direct {v3, v4, v5, v6}, Lcom/xj/landscape/launcher/ui/main/TabItemData;-><init>(ILjava/lang/String;Lkotlin/jvm/functions/Function0;)V
-    invoke-interface {v2, v3}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
     .line 114
     .line 115
@@ -6113,14 +6105,6 @@
     .line 214
     invoke-interface {v2, v3}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    # BannerHub: GOG tab (branch 2 — cond_1 path)
-    new-instance v3, Lcom/xj/landscape/launcher/ui/main/TabItemData;
-    const/4 v4, 0x0
-    const-string v5, "GOG"
-    new-instance v6, Lcom/xj/landscape/launcher/ui/main/BhGogTabCallback;
-    invoke-direct {v6}, Lcom/xj/landscape/launcher/ui/main/BhGogTabCallback;-><init>()V
-    invoke-direct {v3, v4, v5, v6}, Lcom/xj/landscape/launcher/ui/main/TabItemData;-><init>(ILjava/lang/String;Lkotlin/jvm/functions/Function0;)V
-    invoke-interface {v2, v3}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
     .line 215
     .line 216

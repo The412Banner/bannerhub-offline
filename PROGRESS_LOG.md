@@ -4,11 +4,13 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
-## [beta] — v2.7.0-beta1 — GOG tab Phase 1 (gog-beta branch) (2026-03-21)
-**Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta1
-**What changed:** Added GOG tab next to "My Games" in the main tab bar. Tapping GOG opens a Fragment showing a "Login with GOG" button. Login opens a WebView-based OAuth2 flow (auth.gog.com), intercepts the redirect, exchanges the code for a token, fetches the username from userData.json, and stores the session. Fragment refreshes on resume — shows "Signed in as [username]" + "Sign Out" when authenticated.
-**New files:** `BhGogTabCallback`, `GogFragment` (+$1 login, +$2 sign-out), `GogLoginActivity` (+$1 WebViewClient, +$2 TokenExchange, +$3 Finish, +$4 ErrorToast)
-**Patched:** `LandscapeLauncherMainActivity` (both tab branches), `AndroidManifest.xml` (GogLoginActivity registered)
+## [beta] — v2.7.0-beta3 — GOG via side menu (DEX overflow fix) (2026-03-21)
+**Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta3
+**What changed:** Moved GOG from the main tab bar (classes11, at DEX limit) to the left side menu (classes5, safe). beta1/beta2 failed: tab approach pushed classes11 to 65536 pool entries (unsigned short overflow). New approach: "GOG" item added as id=10 in HomeLeftMenuDialog side menu; clicking it opens new GogMainActivity (Activity, not Fragment). GogMainActivity shows login card or signed-in card; login opens WebView OAuth2 via GogLoginActivity.
+**New files:** `GogMainActivity` (+$1 login, +$2 sign-out), `GogLoginActivity` (+$1 WebViewClient, +$2 TokenExchange, +$3 Finish, +$4 ErrorToast)
+**Removed:** `BhGogTabCallback`, `GogFragment` (+$1 +$2) — no longer needed
+**Patched:** `HomeLeftMenuDialog` (id=10 menu item + pswitch_10 → start GogMainActivity), `AndroidManifest.xml` (+GogMainActivity)
+**Reverted:** `LandscapeLauncherMainActivity` — GOG tab injection removed (classes11 overflow risk)
 **CI result:** pending
 
 ---

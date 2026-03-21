@@ -1,13 +1,12 @@
-.class public Lcom/xj/landscape/launcher/ui/menu/GogFragment;
-.super Landroidx/fragment/app/Fragment;
+.class public Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;
+.super Landroid/app/Activity;
 
-# BannerHub: GOG Games tab fragment
-# Shows login card or signed-in card based on stored token.
-# Auth state stored in SharedPreferences "bh_gog_prefs":
-#   access_token, refresh_token, user_id, username
+# BannerHub: GOG integration — launched from the side menu.
+# Shows a login card (WebView OAuth2 via GogLoginActivity) or a
+# signed-in card based on SharedPreferences "bh_gog_prefs".
 
 
-# Saved views for refreshView()
+# Saved view refs for refreshView()
 .field public loginCard:Landroid/widget/LinearLayout;
 .field public loggedInCard:Landroid/widget/LinearLayout;
 .field public usernameView:Landroid/widget/TextView;
@@ -16,7 +15,7 @@
 .method public constructor <init>()V
     .locals 0
 
-    invoke-direct {p0}, Landroidx/fragment/app/Fragment;-><init>()V
+    invoke-direct {p0}, Landroid/app/Activity;-><init>()V
 
     return-void
 .end method
@@ -26,7 +25,7 @@
 .method public dp(I)I
     .locals 3
 
-    invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getResources()Landroid/content/res/Resources;
+    invoke-virtual {p0}, Landroid/app/Activity;->getResources()Landroid/content/res/Resources;
 
     move-result-object v0
 
@@ -103,7 +102,7 @@
 
     const/16 v1, 0x28  # 40dp
 
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
 
     move-result v1
 
@@ -160,13 +159,13 @@
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setGravity(I)V
 
     const/16 v1, 0x10  # 16dp top margin
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
     move-result v1
     new-instance v3, Landroid/widget/LinearLayout$LayoutParams;
     const/4 v1, -0x2  # WRAP_CONTENT
     invoke-direct {v3, v1, v1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
     const/16 v1, 0x10  # 16dp top margin
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
     move-result v1
     iput v1, v3, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
 
@@ -189,9 +188,9 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    new-instance v3, Lcom/xj/landscape/launcher/ui/menu/GogFragment$1;
+    new-instance v3, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity$1;
 
-    invoke-direct {v3, p0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment$1;-><init>(Lcom/xj/landscape/launcher/ui/menu/GogFragment;)V
+    invoke-direct {v3, p0}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity$1;-><init>(Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;)V
 
     invoke-virtual {v2, v3}, Landroid/view/View;->setOnClickListener(Landroid/view/View$OnClickListener;)V
 
@@ -199,7 +198,7 @@
     const/4 v1, -0x2  # WRAP_CONTENT
     invoke-direct {v3, v1, v1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
     const/16 v1, 0x18  # 24dp top margin
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
     move-result v1
     iput v1, v3, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
 
@@ -231,7 +230,7 @@
 
     const/16 v1, 0x28  # 40dp
 
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
 
     move-result v1
 
@@ -287,13 +286,13 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setGravity(I)V
 
-    iput-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->usernameView:Landroid/widget/TextView;
+    iput-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->usernameView:Landroid/widget/TextView;
 
     new-instance v3, Landroid/widget/LinearLayout$LayoutParams;
     const/4 v1, -0x2
     invoke-direct {v3, v1, v1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
     const/16 v1, 0x10
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
     move-result v1
     iput v1, v3, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
 
@@ -324,7 +323,7 @@
     const/4 v1, -0x2
     invoke-direct {v3, v1, v1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
     const/16 v1, 0x18
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
     move-result v1
     iput v1, v3, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
 
@@ -347,9 +346,9 @@
 
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    new-instance v3, Lcom/xj/landscape/launcher/ui/menu/GogFragment$2;
+    new-instance v3, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity$2;
 
-    invoke-direct {v3, p0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment$2;-><init>(Lcom/xj/landscape/launcher/ui/menu/GogFragment;)V
+    invoke-direct {v3, p0}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity$2;-><init>(Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;)V
 
     invoke-virtual {v2, v3}, Landroid/view/View;->setOnClickListener(Landroid/view/View$OnClickListener;)V
 
@@ -357,7 +356,7 @@
     const/4 v1, -0x2
     invoke-direct {v3, v1, v1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
     const/16 v1, 0x28
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->dp(I)I
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->dp(I)I
     move-result v1
     iput v1, v3, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
 
@@ -367,44 +366,44 @@
 .end method
 
 
-# ── onCreateView ─────────────────────────────────────────────────────────────
-.method public onCreateView(Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+# ── onCreate: build UI and call refreshView ───────────────────────────────────
+.method public onCreate(Landroid/os/Bundle;)V
     .locals 4
 
-    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->getContext()Landroid/content/Context;
+    invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
 
-    move-result-object v0  # Context
+    # p0 = this (Activity and Context)
 
-    # Root frame (FrameLayout fills the tab, dark bg)
+    # Root FrameLayout with dark background
     new-instance v1, Landroid/widget/FrameLayout;
 
-    invoke-direct {v1, v0}, Landroid/widget/FrameLayout;-><init>(Landroid/content/Context;)V
+    invoke-direct {v1, p0}, Landroid/widget/FrameLayout;-><init>(Landroid/content/Context;)V
 
     const v2, 0xFF0D0D0D
 
     invoke-virtual {v1, v2}, Landroid/view/View;->setBackgroundColor(I)V
 
-    # Build both cards
-    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->buildLoginCard(Landroid/content/Context;)Landroid/widget/LinearLayout;
+    # Build both cards (passing p0 as Context)
+    invoke-virtual {p0, p0}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->buildLoginCard(Landroid/content/Context;)Landroid/widget/LinearLayout;
 
     move-result-object v2
 
-    iput-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->loginCard:Landroid/widget/LinearLayout;
+    iput-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->loginCard:Landroid/widget/LinearLayout;
 
-    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->buildLoggedInCard(Landroid/content/Context;)Landroid/widget/LinearLayout;
+    invoke-virtual {p0, p0}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->buildLoggedInCard(Landroid/content/Context;)Landroid/widget/LinearLayout;
 
     move-result-object v3
 
-    iput-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->loggedInCard:Landroid/widget/LinearLayout;
+    iput-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->loggedInCard:Landroid/widget/LinearLayout;
 
-    # Add both cards — visibility set in refreshView()
+    # Add both cards to frame
     new-instance v2, Landroid/widget/FrameLayout$LayoutParams;
 
     const/4 v0, -0x1  # MATCH_PARENT
 
     invoke-direct {v2, v0, v0}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
 
-    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->loginCard:Landroid/widget/LinearLayout;
+    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->loginCard:Landroid/widget/LinearLayout;
 
     invoke-virtual {v1, v3, v2}, Landroid/widget/FrameLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
 
@@ -414,28 +413,27 @@
 
     invoke-direct {v2, v0, v0}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
 
-    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->loggedInCard:Landroid/widget/LinearLayout;
+    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->loggedInCard:Landroid/widget/LinearLayout;
 
     invoke-virtual {v1, v3, v2}, Landroid/widget/FrameLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
 
-    # Set initial visibility
-    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->getContext()Landroid/content/Context;
+    # Set as content view
+    invoke-virtual {p0, v1}, Landroid/app/Activity;->setContentView(Landroid/view/View;)V
 
-    move-result-object v0
+    # Set initial card visibility
+    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->refreshView()V
 
-    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->refreshView()V
-
-    return-object v1
+    return-void
 .end method
 
 
-# ── onResume ─────────────────────────────────────────────────────────────────
+# ── onResume: refresh visibility after returning from GogLoginActivity ────────
 .method public onResume()V
     .locals 0
 
-    invoke-super {p0}, Landroidx/fragment/app/Fragment;->onResume()V
+    invoke-super {p0}, Landroid/app/Activity;->onResume()V
 
-    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->refreshView()V
+    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->refreshView()V
 
     return-void
 .end method
@@ -445,21 +443,15 @@
 .method public refreshView()V
     .locals 5
 
-    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->loginCard:Landroid/widget/LinearLayout;
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->loginCard:Landroid/widget/LinearLayout;
 
     if-eqz v0, :skip
 
-    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->getContext()Landroid/content/Context;
-
-    move-result-object v1
-
-    if-eqz v1, :skip
-
-    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->isLoggedIn(Landroid/content/Context;)Z
+    invoke-virtual {p0, p0}, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->isLoggedIn(Landroid/content/Context;)Z
 
     move-result v2
 
-    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->loggedInCard:Landroid/widget/LinearLayout;
+    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->loggedInCard:Landroid/widget/LinearLayout;
 
     if-eqz v2, :show_login
 
@@ -477,7 +469,7 @@
 
     const/4 v0, 0x0
 
-    invoke-virtual {v1, v4, v0}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    invoke-virtual {p0, v4, v0}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
 
     move-result-object v0
 
@@ -503,7 +495,7 @@
 
     move-result-object v0
 
-    iget-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/GogFragment;->usernameView:Landroid/widget/TextView;
+    iget-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/GogMainActivity;->usernameView:Landroid/widget/TextView;
 
     invoke-virtual {v1, v0}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
