@@ -55,7 +55,7 @@ Root cause: `readHttpResponse` called `getInputStream()` which throws `java.io.I
 - `GogLoginActivity$2.readHttpResponse(HttpURLConnection)`: `.locals 7` unchanged (v5=code, v6=400 threshold already available). Replaced single `getInputStream()` call with: `getResponseCode()→v5`, branch on v5 < 400, `:use_input_stream` vs `:got_stream` after `getErrorStream()→v0`. Added `Log.d` block at end using v2-v5 (all unused after stream close). The read loop (v1-v4) is unchanged.
 
 ### CI result
-→ pending
+→ ✅ run 23385165117 — Normal APK built successfully (3m41s)
 
 ---
 
