@@ -103,14 +103,14 @@
     invoke-virtual {v7, v14}, Landroid/widget/LinearLayout;->setOrientation(I)V
 
     # Rounded dark background via GradientDrawable
-    new-instance v12, Landroid/graphics/GradientDrawable;
-    invoke-direct {v12}, Landroid/graphics/GradientDrawable;-><init>()V
+    new-instance v12, Landroid/graphics/drawable/GradientDrawable;
+    invoke-direct {v12}, Landroid/graphics/drawable/GradientDrawable;-><init>()V
     const v14, 0xFF1A1A1A
-    invoke-virtual {v12, v14}, Landroid/graphics/GradientDrawable;->setColor(I)V
+    invoke-virtual {v12, v14}, Landroid/graphics/drawable/GradientDrawable;->setColor(I)V
     # corner radius = 10dp (float, not converted to int)
     const/high16 v14, 0x41200000  # 10.0f
     mul-float v14, v2, v14
-    invoke-virtual {v12, v14}, Landroid/graphics/GradientDrawable;->setCornerRadius(F)V
+    invoke-virtual {v12, v14}, Landroid/graphics/drawable/GradientDrawable;->setCornerRadius(F)V
     invoke-virtual {v7, v12}, Landroid/view/View;->setBackground(Landroid/graphics/drawable/Drawable;)V
 
     # Card padding: 12dp all sides
