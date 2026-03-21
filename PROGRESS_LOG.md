@@ -4,6 +4,14 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [beta] — v2.7.0-beta5 — Fix GOG login: handle HTTP error responses (getErrorStream) (2026-03-21)
+**Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta5
+**What changed:** Logcat from beta4 showed the GOG auth page reloading only 2 seconds after form submission — meaning the token exchange in $2 ran and failed almost immediately. Root cause: `readHttpResponse` called `getInputStream()` which throws `IOException` for HTTP 4xx/5xx responses; this jumped to catch_all → $4 error toast before we ever read the error body. Fix: check `getResponseCode()` first; if ≥ 400, use `getErrorStream()` to read the error body. Also added `Log.d("BH_GOG", "HTTP NNN: <body>")` so the next logcat will show exactly what GOG's token endpoint is returning, enabling final diagnosis.
+**Files touched:** `GogLoginActivity$2.smali`
+**CI result:** pending
+
+---
+
 ## [beta] — v2.7.0-beta4 — Fix GOG login: timeouts, retry on fail, loading feedback (2026-03-21)
 **Branch:** `gog-beta`  |  **Tag:** v2.7.0-beta4
 **What changed:** Four GOG login fixes based on logcat analysis (43s hang, blank screen after intercept, no retry on failure, UA mismatch).

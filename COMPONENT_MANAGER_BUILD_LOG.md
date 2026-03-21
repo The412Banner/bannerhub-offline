@@ -30,6 +30,35 @@ Each entry covers one logical change unit (commit or closely related set of comm
 
 ---
 
+## Entry 079 — Fix GOG token exchange: getErrorStream for HTTP errors + Log.d (v2.7.0-beta5, gog-beta)
+**Date:** 2026-03-21
+**Branch:** gog-beta  |  **Tag:** v2.7.0-beta5
+
+### Root-cause analysis
+Logcat from beta4 (`logcat-2026-03-21_13-39-59.txt`) showed:
+- `13:38:20.218` — "Unknown message: formSubmission" — user submitted login form
+- `13:38:22.336` — GOG auth page reloaded ("recaptcha-setup" + "firstIframeLoad" fired again)
+- `13:38:25` — GogLoginActivity closed
+
+Page reloaded only 2 seconds after form submission → `$2` completed fast → the GOG server responded almost immediately (not a timeout). The 2-second round trip is consistent with a normal HTTP response (200 or 400).
+
+Root cause: `readHttpResponse` called `getInputStream()` which throws `java.io.IOException` when the HTTP status code is 4xx or 5xx. When GOG's token endpoint (`auth.gog.com/token`) returns an error (e.g. HTTP 400 `invalid_grant`), `getInputStream()` throws immediately. This is caught by `:try_start`/`:try_end` catch block → `catch_all` → runs `$4` (error toast + auth page reload). We never read the error body, so we have no visibility into what GOG actually said.
+
+### Fix
+- `readHttpResponse(HttpURLConnection)`: call `getResponseCode()` first (stores in v5). If code ≥ 400 (0x190), call `getErrorStream()` instead of `getInputStream()`. If `getErrorStream()` returns null, return `"{}"` (empty JSON). Otherwise read and return the error body string. `parseJsonStringField(body, "access_token")` will return null for an error response → `:failed` branch.
+- Added `Log.d("BH_GOG", "HTTP " + code + ": " + body)` after reading (using v2,v3,v4,v5 which are all freed by that point). This will appear in logcat as `D/BH_GOG` and reveal the exact server response for diagnosis in the next test session.
+
+### Files changed
+- `[MOD] patches/smali_classes16/com/xj/landscape/launcher/ui/menu/GogLoginActivity$2.smali`
+
+### Methods changed
+- `GogLoginActivity$2.readHttpResponse(HttpURLConnection)`: `.locals 7` unchanged (v5=code, v6=400 threshold already available). Replaced single `getInputStream()` call with: `getResponseCode()→v5`, branch on v5 < 400, `:use_input_stream` vs `:got_stream` after `getErrorStream()→v0`. Added `Log.d` block at end using v2-v5 (all unused after stream close). The read loop (v1-v4) is unchanged.
+
+### CI result
+→ pending
+
+---
+
 ## Entry 078 — GOG login fixes: timeouts, loading feedback, retry on fail, UA (v2.7.0-beta4, gog-beta)
 **Date:** 2026-03-21
 **Branch:** gog-beta  |  **Tag:** v2.7.0-beta4

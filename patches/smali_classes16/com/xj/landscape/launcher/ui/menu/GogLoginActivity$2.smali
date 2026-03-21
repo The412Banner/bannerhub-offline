@@ -26,12 +26,39 @@
 
 
 # ── readHttpResponse(HttpURLConnection): read full response body as String ────
+# Uses getErrorStream() for 4xx/5xx to avoid IOException from getInputStream().
+# Logs "BH_GOG: HTTP NNN: <body>" via android.util.Log so we can see the response.
 .method public readHttpResponse(Ljava/net/HttpURLConnection;)Ljava/lang/String;
     .locals 7
+
+    # Check HTTP status code — must use getErrorStream() for 4xx/5xx
+    invoke-virtual {p1}, Ljava/net/HttpURLConnection;->getResponseCode()I
+
+    move-result v5  # v5 = HTTP status code (e.g. 200, 400, ...)
+
+    const/16 v6, 0x190  # 400
+
+    if-lt v5, v6, :use_input_stream
+
+    # HTTP error: use getErrorStream() to read error body
+    invoke-virtual {p1}, Ljava/net/HttpURLConnection;->getErrorStream()Ljava/io/InputStream;
+
+    move-result-object v0
+
+    if-nez v0, :got_stream
+
+    # getErrorStream() returned null — return empty JSON so parseJsonStringField returns null
+    const-string v0, "{}"
+
+    return-object v0
+
+    :use_input_stream
 
     invoke-virtual {p1}, Ljava/net/HttpURLConnection;->getInputStream()Ljava/io/InputStream;
 
     move-result-object v0
+
+    :got_stream
 
     new-instance v1, Ljava/io/InputStreamReader;
 
@@ -66,6 +93,31 @@
     invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
 
     move-result-object v0
+
+    # Log: D/BH_GOG: HTTP <code>: <body> — visible in logcat to diagnose server errors
+    const-string v2, "BH_GOG"
+
+    new-instance v3, Ljava/lang/StringBuilder;
+
+    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
+
+    const-string v4, "HTTP "
+
+    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    invoke-virtual {v3, v5}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+
+    const-string v4, ": "
+
+    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    invoke-virtual {v3, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v3
+
+    invoke-static {v2, v3}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
 
     return-object v0
 .end method
