@@ -283,6 +283,51 @@
 
     :ck_done
 
+    # ── Gen 1 / Gen 2 badge (10sp, orange=Gen1, blue=Gen2, skip if 0=unknown) ──
+    iget-object v13, v6, Lcom/xj/landscape/launcher/ui/menu/GogGame;->gameId:Ljava/lang/String;
+    if-eqz v13, :gen_badge_done
+
+    new-instance v14, Ljava/lang/StringBuilder;
+    invoke-direct {v14}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v15, "gog_gen_"
+    invoke-virtual {v14, v15}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v14, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v14}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v13
+
+    const-string v14, "bh_gog_prefs"
+    const/4 v15, 0x0
+    invoke-virtual {v3, v14, v15}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v14
+
+    const/4 v15, 0x0
+    invoke-interface {v14, v13, v15}, Landroid/content/SharedPreferences;->getInt(Ljava/lang/String;I)I
+    move-result v13  # 0=unknown, 1=Gen1, 2=Gen2
+
+    if-eqz v13, :gen_badge_done  # 0 = not yet synced, skip
+
+    new-instance v11, Landroid/widget/TextView;
+    invoke-direct {v11, v3}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+
+    const/4 v14, 0x2
+    if-ne v13, v14, :gen_badge_1
+    const-string v14, "Gen 2"
+    const v15, 0xFF4FC3F7  # light blue
+    goto :gen_badge_set
+
+    :gen_badge_1
+    const-string v14, "Gen 1"
+    const v15, 0xFFFF9800  # orange
+
+    :gen_badge_set
+    invoke-virtual {v11, v14}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    invoke-virtual {v11, v15}, Landroid/widget/TextView;->setTextColor(I)V
+    const/high16 v15, 0x41200000  # 10.0f sp
+    invoke-virtual {v11, v15}, Landroid/widget/TextView;->setTextSize(F)V
+    invoke-virtual {v9, v11}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    :gen_badge_done
+
     # ── Install Button (VISIBLE — full width in right section) ────────────────
     new-instance v8, Landroid/widget/Button;
     invoke-direct {v8, v3}, Landroid/widget/Button;-><init>(Landroid/content/Context;)V

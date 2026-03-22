@@ -535,6 +535,114 @@
 
     invoke-virtual {v2, v11}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
 
+    # ── Gen 1 vs Gen 2 detection: probe builds?generation=2 per game ──────────
+    # Stores gog_gen_{gameId} = 2 (Gen 2 available) or 1 (Gen 1 only)
+    const/16 v11, 0x1  # default = Gen 1
+    const/4 v4, 0x0    # null connection guard
+
+    :try_gen_start
+    new-instance v3, Ljava/lang/StringBuilder;
+    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v5, "https://api.gog.com/v2/games/"
+    invoke-virtual {v3, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v3, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    const-string v5, "/builds?generation=2&system=windows"
+    invoke-virtual {v3, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v3
+
+    new-instance v5, Ljava/net/URL;
+    invoke-direct {v5, v3}, Ljava/net/URL;-><init>(Ljava/lang/String;)V
+    invoke-virtual {v5}, Ljava/net/URL;->openConnection()Ljava/net/URLConnection;
+    move-result-object v4
+    check-cast v4, Ljava/net/HttpURLConnection;
+
+    const/16 v3, 0x3a98
+    invoke-virtual {v4, v3}, Ljava/net/HttpURLConnection;->setConnectTimeout(I)V
+    invoke-virtual {v4, v3}, Ljava/net/HttpURLConnection;->setReadTimeout(I)V
+
+    const-string v3, "Authorization"
+    new-instance v5, Ljava/lang/StringBuilder;
+    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v6, "Bearer "
+    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v5, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v5
+    invoke-virtual {v4, v3, v5}, Ljava/net/HttpURLConnection;->setRequestProperty(Ljava/lang/String;Ljava/lang/String;)V
+
+    invoke-virtual {v4}, Ljava/net/HttpURLConnection;->getResponseCode()I
+    move-result v3
+    const/16 v5, 0xC8
+    if-ne v3, v5, :gen_parse_done  # non-200 → keep Gen 1
+
+    invoke-virtual {v4}, Ljava/net/HttpURLConnection;->getInputStream()Ljava/io/InputStream;
+    move-result-object v5
+    new-instance v6, Ljava/io/InputStreamReader;
+    const-string v3, "UTF-8"
+    invoke-direct {v6, v5, v3}, Ljava/io/InputStreamReader;-><init>(Ljava/io/InputStream;Ljava/lang/String;)V
+    new-instance v5, Ljava/io/BufferedReader;
+    invoke-direct {v5, v6}, Ljava/io/BufferedReader;-><init>(Ljava/io/Reader;)V
+    new-instance v6, Ljava/lang/StringBuilder;
+    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+
+    :gen_read
+    invoke-virtual {v5}, Ljava/io/BufferedReader;->readLine()Ljava/lang/String;
+    move-result-object v3
+    if-eqz v3, :gen_read_done
+    invoke-virtual {v6, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    goto :gen_read
+
+    :gen_read_done
+    invoke-virtual {v5}, Ljava/io/BufferedReader;->close()V
+    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v7
+
+    new-instance v3, Lorg/json/JSONObject;
+    invoke-direct {v3, v7}, Lorg/json/JSONObject;-><init>(Ljava/lang/String;)V
+    const-string v5, "items"
+    invoke-virtual {v3, v5}, Lorg/json/JSONObject;->optJSONArray(Ljava/lang/String;)Lorg/json/JSONArray;
+    move-result-object v3
+    if-eqz v3, :gen_parse_done
+    invoke-virtual {v3}, Lorg/json/JSONArray;->length()I
+    move-result v3
+    if-lez v3, :gen_parse_done
+    const/16 v11, 0x2  # Gen 2 confirmed
+
+    :gen_parse_done
+    :try_gen_end
+
+    :gen_check_done
+    if-eqz v4, :gen_store
+    invoke-virtual {v4}, Ljava/net/HttpURLConnection;->disconnect()V
+
+    :gen_store
+    invoke-virtual {v0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+    move-result-object v3
+    if-eqz v3, :gen_store_done
+
+    const-string v5, "bh_gog_prefs"
+    const/4 v6, 0x0
+    invoke-virtual {v3, v5, v6}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v5
+
+    invoke-interface {v5}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+    move-result-object v5
+
+    new-instance v6, Ljava/lang/StringBuilder;
+    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v7, "gog_gen_"
+    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v6, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v6
+
+    invoke-interface {v5, v6, v11}, Landroid/content/SharedPreferences$Editor;->putInt(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;
+    move-result-object v5
+    invoke-interface {v5}, Landroid/content/SharedPreferences$Editor;->apply()V
+
+    :gen_store_done
+
     :loop_next
     add-int/lit8 v9, v9, 0x1
     goto :game_loop
@@ -562,6 +670,9 @@
 
     # Inner catch: bad product JSON -> skip that product, continue loop
     .catch Ljava/lang/Exception; {:try_product_start .. :try_product_end} :loop_next
+
+    # Inner catch: gen-check HTTP/JSON error -> skip gen store, continue loop
+    .catch Ljava/lang/Exception; {:try_gen_start .. :try_gen_end} :gen_check_done
 
     :catch_all
     goto :post_ui
