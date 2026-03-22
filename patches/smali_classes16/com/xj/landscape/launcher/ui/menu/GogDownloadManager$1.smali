@@ -16,11 +16,11 @@
 .field public final b:Lcom/xj/landscape/launcher/ui/menu/GogGame;
 .field public c:Ljava/lang/String;
 .field public d:Landroid/widget/ProgressBar;
-.field public e:Landroid/widget/TextView;
+.field public e:Landroid/widget/Button;
 .field public f:Landroid/os/Handler;
 
 
-.method public constructor <init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/TextView;)V
+.method public constructor <init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/Button;)V
     .locals 2
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -28,7 +28,7 @@
     iput-object p1, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->a:Landroid/content/Context;
     iput-object p2, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->b:Lcom/xj/landscape/launcher/ui/menu/GogGame;
     iput-object p3, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->d:Landroid/widget/ProgressBar;
-    iput-object p4, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->e:Landroid/widget/TextView;
+    iput-object p4, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->e:Landroid/widget/Button;
 
     # Create Handler on main looper for UI progress updates
     new-instance v0, Landroid/os/Handler;
@@ -49,8 +49,8 @@
     if-eqz v0, :pp_done
 
     new-instance v1, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;
-    iget-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->e:Landroid/widget/TextView;
-    invoke-direct {v1, v0, v2, p1, p2}, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;-><init>(Landroid/widget/ProgressBar;Landroid/widget/TextView;ILjava/lang/String;)V
+    iget-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->e:Landroid/widget/Button;
+    invoke-direct {v1, v0, v2, p1, p2}, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;-><init>(Landroid/widget/ProgressBar;Landroid/widget/Button;ILjava/lang/String;)V
 
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->f:Landroid/os/Handler;
     invoke-virtual {v0, v1}, Landroid/os/Handler;->post(Ljava/lang/Runnable;)Z

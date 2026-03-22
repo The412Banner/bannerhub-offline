@@ -1,19 +1,20 @@
 .class public final Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;
 .super Ljava/lang/Object;
 
-# BannerHub: View$OnClickListener set on the AlertDialog BUTTON_NEGATIVE after show().
-# Overriding it post-show() prevents the dialog from auto-dismissing when Install is tapped.
-# Disables the button, shows the ProgressBar, then calls GogDownloadManager.startDownload().
+# BannerHub: View$OnClickListener on the Download button in each GOG game card.
+# Disables the Download button, shows the card ProgressBar, then calls
+# GogDownloadManager.startDownload(). The launchButton ref is passed through so
+# GogDownloadManager$3 can enable it when download+install completes.
 
 .implements Landroid/view/View$OnClickListener;
 
 .field public final a:Landroid/content/Context;
 .field public final b:Lcom/xj/landscape/launcher/ui/menu/GogGame;
 .field public final c:Landroid/widget/ProgressBar;
-.field public final d:Landroid/widget/TextView;
+.field public final d:Landroid/widget/Button;
 
 
-.method public constructor <init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/TextView;)V
+.method public constructor <init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/Button;)V
     .locals 0
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -21,7 +22,7 @@
     iput-object p1, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;->a:Landroid/content/Context;
     iput-object p2, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;->b:Lcom/xj/landscape/launcher/ui/menu/GogGame;
     iput-object p3, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;->c:Landroid/widget/ProgressBar;
-    iput-object p4, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;->d:Landroid/widget/TextView;
+    iput-object p4, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;->d:Landroid/widget/Button;
 
     return-void
 .end method
@@ -45,10 +46,10 @@
     const/4 v3, 0x0  # VISIBLE
     invoke-virtual {v2, v3}, Landroid/view/View;->setVisibility(I)V
 
-    # v3 = StatusTextView
-    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;->d:Landroid/widget/TextView;
+    # v3 = Launch button (enabled by GogDownloadManager$3 on completion)
+    iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;->d:Landroid/widget/Button;
 
-    invoke-static {v0, v1, v2, v3}, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager;->startDownload(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/TextView;)V
+    invoke-static {v0, v1, v2, v3}, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager;->startDownload(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/Button;)V
 
     return-void
 .end method

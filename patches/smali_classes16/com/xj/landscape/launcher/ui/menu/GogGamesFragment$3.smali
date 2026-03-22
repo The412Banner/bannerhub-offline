@@ -2,16 +2,14 @@
 .super Ljava/lang/Object;
 
 # BannerHub: OnClickListener for each game card in GogGamesFragment.
-# Shows an AlertDialog with:
+# Shows a read-only info AlertDialog with:
 #   - title TextView (top)
-#   - ProgressBar (GONE initially, inserted at index 1 — always visible)
-#   - status TextView (GONE initially, inserted at index 2 — always visible)
 #   - cover art ImageView (200dp)
 #   - info TextView: Genre, Developer
 #   - description TextView (Html.fromHtml, max 5 lines, optional)
 #   - store URL TextView (blue, tappable, optional)
-# Dialog buttons: [Launch (neutral)] [Install (negative)] [Close (positive)]
-# Install button click listener is set after show() so dialog stays open during download.
+# Dialog button: [Close (positive)]
+# Download + Launch buttons are on the card itself, not in the dialog.
 
 .implements Landroid/view/View$OnClickListener;
 
@@ -229,28 +227,7 @@
 
     :skip_store
 
-    # ── ProgressBar (horizontal, GONE initially) — inserted at index 1 ────────
-    # Adding after all content then inserting at index 1 puts it just below the title.
-    new-instance v3, Landroid/widget/ProgressBar;
-    const v9, 0x0101020f  # android.R.attr.progressBarStyleHorizontal
-    const/4 v10, 0x0      # null AttributeSet
-    invoke-direct {v3, v0, v10, v9}, Landroid/widget/ProgressBar;-><init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V
-    const/16 v9, 0x64     # max = 100
-    invoke-virtual {v3, v9}, Landroid/widget/ProgressBar;->setMax(I)V
-    const/16 v9, 0x8      # GONE
-    invoke-virtual {v3, v9}, Landroid/view/View;->setVisibility(I)V
-    const/4 v9, 0x1       # insert at index 1 (just below title)
-    invoke-virtual {v2, v3, v9}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;I)V
-
-    # ── Status TextView (GONE initially) — inserted at index 2 ───────────────
-    new-instance v4, Landroid/widget/TextView;
-    invoke-direct {v4, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-    const/16 v9, 0x8      # GONE
-    invoke-virtual {v4, v9}, Landroid/view/View;->setVisibility(I)V
-    const/4 v9, 0x2       # insert at index 2
-    invoke-virtual {v2, v4, v9}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;I)V
-
-    # ── AlertDialog ───────────────────────────────────────────────────────────
+    # ── AlertDialog (info only — Download/Launch are on the card) ────────────
     new-instance v6, Landroid/app/AlertDialog$Builder;
     invoke-direct {v6, v0}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
 
@@ -260,28 +237,7 @@
     const/4 v10, 0x0
     invoke-virtual {v6, v9, v10}, Landroid/app/AlertDialog$Builder;->setPositiveButton(Ljava/lang/CharSequence;Landroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
 
-    # Install button in button bar (null listener — we override after show())
-    const-string v9, "Install"
-    const/4 v10, 0x0
-    invoke-virtual {v6, v9, v10}, Landroid/app/AlertDialog$Builder;->setNegativeButton(Ljava/lang/CharSequence;Landroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
-
-    # Launch button
-    new-instance v9, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$7;
-    invoke-direct {v9, v0, v1}, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$7;-><init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;)V
-    const-string v10, "Launch"
-    invoke-virtual {v6, v10, v9}, Landroid/app/AlertDialog$Builder;->setNeutralButton(Ljava/lang/CharSequence;Landroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
-
     invoke-virtual {v6}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
-    move-result-object v6  # v6 = AlertDialog
-
-    # Override Install button click listener to prevent auto-dismiss
-    const/4 v7, -0x2  # DialogInterface.BUTTON_NEGATIVE = -2
-    invoke-virtual {v6, v7}, Landroid/app/AlertDialog;->getButton(I)Landroid/widget/Button;
-    move-result-object v7  # v7 = Install Button
-
-    new-instance v8, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;
-    invoke-direct {v8, v0, v1, v3, v4}, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;-><init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/TextView;)V
-    invoke-virtual {v7, v8}, Landroid/widget/Button;->setOnClickListener(Landroid/view/View$OnClickListener;)V
 
     :done
     return-void

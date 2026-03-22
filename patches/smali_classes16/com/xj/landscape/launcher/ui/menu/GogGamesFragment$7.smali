@@ -1,12 +1,12 @@
 .class public final Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$7;
 .super Ljava/lang/Object;
 
-# BannerHub: Launch click listener for installed GOG games.
+# BannerHub: View$OnClickListener on the Launch button in each GOG game card.
 # Reads the stored exe path from bh_gog_prefs (gog_exe_{gameId}),
 # casts context to LandscapeLauncherMainActivity, and calls B3(exePath)
 # which triggers the built-in Import Game flow (EditImportedGameInfoDialog).
 
-.implements Landroid/content/DialogInterface$OnClickListener;
+.implements Landroid/view/View$OnClickListener;
 
 .field public final a:Landroid/content/Context;
 .field public final b:Lcom/xj/landscape/launcher/ui/menu/GogGame;
@@ -24,7 +24,7 @@
 .end method
 
 
-.method public onClick(Landroid/content/DialogInterface;I)V
+.method public onClick(Landroid/view/View;)V
     .locals 6
 
     # v0 = context
@@ -81,3 +81,4 @@
     :launch_done
     return-void
 .end method
+

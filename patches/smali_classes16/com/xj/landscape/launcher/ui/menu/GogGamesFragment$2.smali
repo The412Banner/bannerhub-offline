@@ -30,7 +30,7 @@
 
 
 .method public run()V
-    .locals 16
+    .locals 17
 
     # p0 = v16 with .locals 16 — too high for iget-object (4-bit limit).
     # Move this into v14 (free at start of method) for the two field reads.
@@ -189,8 +189,8 @@
     const/4 v15, 0x0
     invoke-virtual {v9, v14, v15, v15, v15}, Landroid/widget/LinearLayout;->setPadding(IIII)V
 
-    # Vertically centre the text block within the card
-    const/16 v14, 0x10  # Gravity.CENTER_VERTICAL
+    # Align content to top — button row + ProgressBar added below title/meta
+    const/16 v14, 0x30  # Gravity.TOP
     invoke-virtual {v9, v14}, Landroid/widget/LinearLayout;->setGravity(I)V
 
     # ── Title TextView ────────────────────────────────────────────────────────
@@ -244,6 +244,97 @@
     const/high16 v15, 0x41500000  # 13.0f
     invoke-virtual {v11, v15}, Landroid/widget/TextView;->setTextSize(F)V
 
+    invoke-virtual {v9, v11}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    # ── Button row (horizontal LL) inside right section ───────────────────────
+    new-instance v8, Landroid/widget/LinearLayout;
+    invoke-direct {v8, v3}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
+    const/4 v14, 0x0  # HORIZONTAL
+    invoke-virtual {v8, v14}, Landroid/widget/LinearLayout;->setOrientation(I)V
+
+    # ── ProgressBar (GONE — created before buttons so onclick closures can ref it) ─
+    new-instance v11, Landroid/widget/ProgressBar;
+    const v14, 0x0101020f  # progressBarStyleHorizontal
+    const/4 v15, 0x0
+    invoke-direct {v11, v3, v15, v14}, Landroid/widget/ProgressBar;-><init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V
+    const/16 v14, 0x64
+    invoke-virtual {v11, v14}, Landroid/widget/ProgressBar;->setMax(I)V
+    const/16 v14, 0x8  # GONE
+    invoke-virtual {v11, v14}, Landroid/view/View;->setVisibility(I)V
+
+    # ── Launch Button (created before Download so Download listener can ref it) ─
+    new-instance v12, Landroid/widget/Button;
+    invoke-direct {v12, v3}, Landroid/widget/Button;-><init>(Landroid/content/Context;)V
+    const-string v14, "Launch"
+    invoke-virtual {v12, v14}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
+
+    # Check gog_exe_{gameId} in bh_gog_prefs → enable Launch if already installed
+    iget-object v13, v6, Lcom/xj/landscape/launcher/ui/menu/GogGame;->gameId:Ljava/lang/String;
+    if-eqz v13, :launch_disabled
+
+    new-instance v14, Ljava/lang/StringBuilder;
+    invoke-direct {v14}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v15, "gog_exe_"
+    invoke-virtual {v14, v15}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v14, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v14}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v13  # v13 = "gog_exe_{gameId}"
+
+    const-string v14, "bh_gog_prefs"
+    const/4 v15, 0x0
+    invoke-virtual {v3, v14, v15}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v14
+
+    const-string v15, ""
+    invoke-interface {v14, v13, v15}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    move-result-object v13
+
+    invoke-virtual {v13}, Ljava/lang/String;->isEmpty()Z
+    move-result v13
+    if-nez v13, :launch_disabled
+
+    const/4 v13, 0x1
+    invoke-virtual {v12, v13}, Landroid/view/View;->setEnabled(Z)V
+    goto :set_launch_click
+
+    :launch_disabled
+    const/4 v13, 0x0
+    invoke-virtual {v12, v13}, Landroid/view/View;->setEnabled(Z)V
+
+    :set_launch_click
+    new-instance v13, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$7;
+    invoke-direct {v13, v3, v6}, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$7;-><init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;)V
+    invoke-virtual {v12, v13}, Landroid/view/View;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+
+    # ── Download Button ───────────────────────────────────────────────────────
+    new-instance v10, Landroid/widget/Button;
+    invoke-direct {v10, v3}, Landroid/widget/Button;-><init>(Landroid/content/Context;)V
+    const-string v14, "Download"
+    invoke-virtual {v10, v14}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
+
+    # Download click: (Context, GogGame, ProgressBar, Button launchBtn)
+    new-instance v13, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;
+    invoke-direct {v13, v3, v6, v11, v12}, Lcom/xj/landscape/launcher/ui/menu/GogGamesFragment$6;-><init>(Landroid/content/Context;Lcom/xj/landscape/launcher/ui/menu/GogGame;Landroid/widget/ProgressBar;Landroid/widget/Button;)V
+    invoke-virtual {v10, v13}, Landroid/view/View;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+
+    # Add Download (left, weight=1) to button row
+    new-instance v13, Landroid/widget/LinearLayout$LayoutParams;
+    const/4 v14, 0x0    # width=0 (weight-driven)
+    const/4 v15, -0x2   # WRAP_CONTENT
+    const/high16 v16, 0x3f800000  # 1.0f
+    invoke-direct/range {v13 .. v16}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
+    invoke-virtual {v8, v10, v13}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+
+    # Add Launch (right, weight=1) to button row
+    new-instance v13, Landroid/widget/LinearLayout$LayoutParams;
+    const/4 v14, 0x0    # width=0 (weight-driven)
+    const/4 v15, -0x2   # WRAP_CONTENT
+    const/high16 v16, 0x3f800000  # 1.0f
+    invoke-direct/range {v13 .. v16}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
+    invoke-virtual {v8, v12, v13}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+
+    # Add button row then ProgressBar to right section
+    invoke-virtual {v9, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
     invoke-virtual {v9, v11}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
     # ── Add right layout to card with weight=1 ────────────────────────────────
