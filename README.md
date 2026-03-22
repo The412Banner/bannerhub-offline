@@ -1,6 +1,6 @@
 # BannerHub
 
-**GameHub 5.3.5 ReVanced** — enhanced with a full Component Manager, in-app component downloader with source tracking, in-game Performance toggles, RTS touch controls, VRAM unlock, per-game CPU core affinity, root access management, Steam offline launch, and more. Built with apktool — no root required for most features.
+**GameHub 5.3.5 ReVanced** — enhanced with a full Component Manager, in-app component downloader with source tracking, GOG Games tab (OAuth2 login, library sync, download pipeline), in-game Performance toggles, RTS touch controls, VRAM unlock, per-game CPU core affinity, root access management, Steam offline launch, and more. Built with apktool — no root required for most features.
 
 ## Video — Installation & Feature Showcase
 
@@ -11,6 +11,21 @@
 ---
 
 ## Features
+
+### GOG Games Tab
+Accessible via GameHub's left side menu → **GOG**.
+
+- **OAuth2 login** — WebView-based login flow; access token, refresh token, and expiry stored securely in SharedPreferences
+- **Auto token refresh** — expired tokens are refreshed automatically before any API call; no manual re-login needed
+- **Library sync** — fetches your full GOG library (Gen 1 + Gen 2 games) with title, cover image, file size, developer, and description
+- **Game cards** — scrollable list; each card shows the game thumbnail, title, developer, Gen 1 / Gen 2 badge, and download size
+- **Install flow** — tapping "Install" shows a confirmation dialog with download size + available storage before anything downloads
+- **Download pipeline** — Gen 2: fetches build manifest → depot → file list, downloads with per-file progress (45%–85% band); Gen 1: legacy GOG downloader fallback
+- **Download progress** — ProgressBar + status text showing current filename and percentage in real time
+- **Post-install** — "✓ Installed" checkmark appears immediately on the card when download completes; "Add" button opens EditImportedGameInfoDialog to register the game with the launcher
+- **Persistent install state** — on next app open, cards for already-installed games show the checkmark and "Add" button automatically
+- **Uninstall** — detail dialog includes an Uninstall button that deletes the game directory, clears all prefs keys, and resets the card to its default state
+- **Gen 1 / Gen 2 badge** — shown on every card based on the GOG API product type
 
 ### Component Manager
 Accessible via GameHub's left side menu → **Components**.
@@ -58,7 +73,7 @@ Two toggles in the in-game **Performance sidebar tab** (above Dual Battery Mode)
 | | Sustained Perf (Root+) | Max Adreno Clocks (Root) |
 |---|---|---|
 | **What it targets** | CPU performance governor | GPU (Adreno/kgsl-3d0) clock speed |
-| **No-root support** | ✅ Partial — tries `Window.setSustainedPerformanceMode()` | ❌ None — sysfs write requires root |
+| **No-root support** | Partial — tries `Window.setSustainedPerformanceMode()` | None — sysfs write requires root |
 | **Root effect** | Sets all CPU cores to `performance` governor | Locks GPU `min_freq = max_freq` (no downclocking) |
 | **Disable effect** | Reverts CPU governor to `schedutil` | Resets GPU `min_freq` to 0 |
 | **Best for** | CPU-heavy workloads, frame time spikes | GPU-heavy games, GPU clock dips |
