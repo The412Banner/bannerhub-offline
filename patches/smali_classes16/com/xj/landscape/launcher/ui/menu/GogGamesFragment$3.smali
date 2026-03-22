@@ -253,13 +253,13 @@
     invoke-direct {v4, v0, v10, v9}, Landroid/widget/ProgressBar;-><init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V
     const/16 v9, 0x64     # max = 100
     invoke-virtual {v4, v9}, Landroid/widget/ProgressBar;->setMax(I)V
-    const/4 v9, 0x8       # GONE
+    const/16 v9, 0x8      # GONE
     invoke-virtual {v4, v9}, Landroid/view/View;->setVisibility(I)V
 
     # ── Status TextView (GONE initially — shows "✓ Complete" on finish) ───────
     new-instance v5, Landroid/widget/TextView;
     invoke-direct {v5, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-    const/4 v9, 0x8  # GONE
+    const/16 v9, 0x8  # GONE
     invoke-virtual {v5, v9}, Landroid/view/View;->setVisibility(I)V
 
     # Wire install button click listener via invoke-direct/range

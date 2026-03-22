@@ -51,7 +51,7 @@
     const/16 v0, 0x64
     if-lt v1, v0, :run_done
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;->a:Landroid/widget/ProgressBar;
-    const/4 v1, 0x8  # GONE
+    const/16 v1, 0x8  # GONE
     invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
 
     :run_done
