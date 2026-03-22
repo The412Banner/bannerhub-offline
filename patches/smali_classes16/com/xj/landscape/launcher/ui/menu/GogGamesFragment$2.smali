@@ -390,7 +390,7 @@
     # ── Launch Button (GONE — shown + enabled by GogDownloadManager$3 at 100%) ─
     new-instance v12, Landroid/widget/Button;
     invoke-direct {v12, v3}, Landroid/widget/Button;-><init>(Landroid/content/Context;)V
-    const-string v14, "Launch"
+    const-string v14, "Add"
     invoke-virtual {v12, v14}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
     const v14, 0xFFFFFFFF  # white text
     invoke-virtual {v12, v14}, Landroid/widget/TextView;->setTextColor(I)V
