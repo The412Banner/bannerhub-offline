@@ -45,19 +45,25 @@
 
 # ─── postProgress(progress, message) → void ─────────────────────────────────
 .method private postProgress(ILjava/lang/String;)V
-    .locals 4
+    .locals 6
 
-    # v0 = ProgressBar, v2 = statusTV, v3 = launchButton
-    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->d:Landroid/widget/ProgressBar;
-    if-eqz v0, :pp_done
+    # null-check ProgressBar (v1); with .locals 6, p0=v6 p1=v7 p2=v8 so
+    # {v0..v5} are 6 consecutive locals usable for invoke-direct/range
+    iget-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->d:Landroid/widget/ProgressBar;
+    if-eqz v1, :pp_done
 
-    new-instance v1, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;
+    # Build GogDownloadManager$3 with consecutive {v0..v5} for range invoke
+    new-instance v0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;
+    # v1 = ProgressBar (already loaded above)
     iget-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->g:Landroid/widget/TextView;
     iget-object v3, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->e:Landroid/widget/Button;
-    invoke-direct {v1, v0, v2, v3, p1, p2}, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;-><init>(Landroid/widget/ProgressBar;Landroid/widget/TextView;Landroid/widget/Button;ILjava/lang/String;)V
+    move v4, p1
+    move-object v5, p2
+    invoke-direct/range {v0 .. v5}, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$3;-><init>(Landroid/widget/ProgressBar;Landroid/widget/TextView;Landroid/widget/Button;ILjava/lang/String;)V
 
-    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->f:Landroid/os/Handler;
-    invoke-virtual {v0, v1}, Landroid/os/Handler;->post(Ljava/lang/Runnable;)Z
+    # v0 = $3 instance (still valid); load Handler into v1, post
+    iget-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/GogDownloadManager$1;->f:Landroid/os/Handler;
+    invoke-virtual {v1, v0}, Landroid/os/Handler;->post(Ljava/lang/Runnable;)Z
 
     :pp_done
     return-void
