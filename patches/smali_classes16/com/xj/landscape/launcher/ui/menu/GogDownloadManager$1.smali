@@ -683,15 +683,15 @@
     move-result-object v9
     if-eqz v9, :af_chunk_next
 
-    # Check compressedSize vs size
+    # Check compressedSize vs size (v6 is free here — cdnPath string was consumed at line 660)
     const-string v0, "compressedSize"
     invoke-virtual {v5, v0}, Lorg/json/JSONObject;->optInt(Ljava/lang/String;)I
     move-result v10
     const-string v0, "size"
     invoke-virtual {v5, v0}, Lorg/json/JSONObject;->optInt(Ljava/lang/String;)I
-    move-result v11
+    move-result v6  # NOT v11 — v11=p0=this; overwriting it causes type=Conflict on loop back-edge
 
-    if-eq v10, v11, :af_write  # same size = uncompressed, write directly
+    if-eq v10, v6, :af_write  # same size = uncompressed, write directly
 
     # Decompress with Inflater (zlib nowrap=false)
     # Free registers here: v0 (path done), v5 (chunkObj done), v6 (hash done), v8 (url done), v10 (size done)
