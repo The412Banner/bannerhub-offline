@@ -154,8 +154,8 @@
     sget-object v14, Landroid/widget/ImageView$ScaleType;->CENTER_CROP:Landroid/widget/ImageView$ScaleType;
     invoke-virtual {v8, v14}, Landroid/widget/ImageView;->setScaleType(Landroid/widget/ImageView$ScaleType;)V
 
-    # Fixed LP: 60dp × 60dp
-    const/high16 v14, 0x42700000  # 60.0f
+    # Fixed LP: 78dp × 78dp (60dp × 1.3 — card 30% taller)
+    const/high16 v14, 0x429C0000  # 78.0f
     mul-float v14, v2, v14
     float-to-int v14, v14
 
