@@ -1778,3 +1778,11 @@ ART 14 blocks cross-dex private field access. `DialogSettingListItemEntity` is i
 - `patches/smali_classes16/.../GogGamesFragment$3.smali`
 - `patches/smali_classes16/.../GogGamesFragment$7.smali`
 - `patches/smali_classes16/.../GogDownloadManager$1.smali`
+
+### [fix] — v2.7.0-beta39 — fix IncompatibleClassChangeError crash on install SP write (2026-03-22)
+**Commit:** `0abd6bc`  |  **Tag:** v2.7.0-beta39
+#### What changed
+- `GogDownloadManager$1.smali` line 1113: `invoke-virtual` → `invoke-interface` for `SharedPreferences.edit()`
+- SharedPreferences is a Java interface; invoke-virtual caused IncompatibleClassChangeError at runtime on every install completion
+#### Files touched
+- `patches/smali_classes16/.../GogDownloadManager$1.smali`

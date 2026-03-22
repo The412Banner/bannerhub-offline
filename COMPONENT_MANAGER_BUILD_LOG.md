@@ -3294,3 +3294,13 @@ The SP write had `if-eqz v13, :sp_skip` so if temp_executable was absent from th
 
 ### CI result
 → pending
+
+### Root-cause / design
+beta38 made the SP write unconditional, exposing a pre-existing bug: SharedPreferences.edit() was called via invoke-virtual. SharedPreferences is a Java interface — Dalvik requires invoke-interface for interface method calls; invoke-virtual on an interface throws IncompatibleClassChangeError at runtime. One-character fix: invoke-virtual → invoke-interface at line 1113.
+
+### CI result
+→ ✅ run completed — Normal APK built successfully
+
+### 402 — v2.7.0-beta39 — fix: invoke-interface for SharedPreferences.edit() (2026-03-22)
+**Files changed:**
+- `GogDownloadManager$1.smali` line 1113: `invoke-virtual` → `invoke-interface` for `SharedPreferences.edit()`
