@@ -3304,3 +3304,13 @@ beta38 made the SP write unconditional, exposing a pre-existing bug: SharedPrefe
 ### 402 — v2.7.0-beta39 — fix: invoke-interface for SharedPreferences.edit() (2026-03-22)
 **Files changed:**
 - `GogDownloadManager$1.smali` line 1113: `invoke-virtual` → `invoke-interface` for `SharedPreferences.edit()`
+
+### Root-cause / design
+Many GOG games do not include `products[0].temp_executable` in their build manifest (it's optional). When absent, `field c` stays null and the `gog_exe_` SP key is never written, so every Launch tap hits "Reinstall game to enable launch". Fix: after all depot manifests are collected (the DepotFile ArrayList is already built at this point), scan it for the first path ending in `.exe` and not containing "redist". This is a depot-manifest path relative to the install directory — same convention as `temp_executable` — so the SP write code works unchanged.
+
+### CI result
+→ pending
+
+### 403 — v2.7.0-beta40 — fix: exe fallback scan for missing temp_executable (2026-03-22)
+**Files changed:**
+- `GogDownloadManager$1.smali`: inserted exe_scan_loop block after depot_loop_done — scans ArrayList<JSONObject> for first .exe path (skipping redist), stores in field c

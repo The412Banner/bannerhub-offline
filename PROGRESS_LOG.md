@@ -1786,3 +1786,10 @@ ART 14 blocks cross-dex private field access. `DialogSettingListItemEntity` is i
 - SharedPreferences is a Java interface; invoke-virtual caused IncompatibleClassChangeError at runtime on every install completion
 #### Files touched
 - `patches/smali_classes16/.../GogDownloadManager$1.smali`
+
+### [fix] — v2.7.0-beta40 — exe fallback scan when temp_executable absent (2026-03-22)
+**Commit:** `0c07c55`  |  **Tag:** v2.7.0-beta40
+#### What changed
+- `GogDownloadManager$1.smali`: after depot_loop_done, if field c (temp_executable) is still null, scan all DepotFile JSONObjects for first path ending in `.exe` not containing `redist`; normalize backslashes; store in field c so SP write can record gog_exe_
+#### Files touched
+- `patches/smali_classes16/.../GogDownloadManager$1.smali`
