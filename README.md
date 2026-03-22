@@ -13,7 +13,7 @@
 ## Features
 
 ### GOG Games Tab
-Accessible via GameHub's left side menu → **GOG**.
+Accessible via GameHub's left side menu → **GOG**. For a full technical breakdown of the implementation see [GOG_IMPLEMENTATION.md](GOG_IMPLEMENTATION.md).
 
 - **OAuth2 login** — WebView-based login flow; access token, refresh token, and expiry stored securely in SharedPreferences
 - **Auto token refresh** — expired tokens are refreshed automatically before any API call; no manual re-login needed
