@@ -450,7 +450,7 @@
     # ── Add right layout to card with weight=1 ────────────────────────────────
     new-instance v13, Landroid/widget/LinearLayout$LayoutParams;
     const/4 v14, 0x0    # width = 0 (weight-driven)
-    const/4 v15, -0x1   # height = MATCH_PARENT
+    const/4 v15, -0x2   # height = WRAP_CONTENT (adapts to all card content)
     const/high16 v12, 0x3f800000  # weight = 1.0f
     invoke-direct {v13, v14, v15, v12}, Landroid/widget/LinearLayout$LayoutParams;-><init>(IIF)V
     invoke-virtual {v7, v9, v13}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
