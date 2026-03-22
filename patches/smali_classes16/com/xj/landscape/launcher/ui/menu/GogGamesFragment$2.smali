@@ -246,6 +246,43 @@
 
     invoke-virtual {v9, v11}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
+    # ── Installed checkmark ("✓ Installed", green 10sp) — only if gog_exe_ set ──
+    iget-object v13, v6, Lcom/xj/landscape/launcher/ui/menu/GogGame;->gameId:Ljava/lang/String;
+    if-eqz v13, :ck_done
+
+    new-instance v14, Ljava/lang/StringBuilder;
+    invoke-direct {v14}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v15, "gog_exe_"
+    invoke-virtual {v14, v15}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v14, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v14}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v13
+
+    const-string v14, "bh_gog_prefs"
+    const/4 v15, 0x0
+    invoke-virtual {v3, v14, v15}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+    move-result-object v14
+
+    const-string v15, ""
+    invoke-interface {v14, v13, v15}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    move-result-object v13
+
+    invoke-virtual {v13}, Ljava/lang/String;->isEmpty()Z
+    move-result v13
+    if-nez v13, :ck_done
+
+    new-instance v11, Landroid/widget/TextView;
+    invoke-direct {v11, v3}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+    const-string v15, "✓ Installed"
+    invoke-virtual {v11, v15}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const v15, 0xFF4CAF50
+    invoke-virtual {v11, v15}, Landroid/widget/TextView;->setTextColor(I)V
+    const/high16 v15, 0x41200000  # 10.0f sp
+    invoke-virtual {v11, v15}, Landroid/widget/TextView;->setTextSize(F)V
+    invoke-virtual {v9, v11}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    :ck_done
+
     # ── Install Button (VISIBLE — full width in right section) ────────────────
     new-instance v8, Landroid/widget/Button;
     invoke-direct {v8, v3}, Landroid/widget/Button;-><init>(Landroid/content/Context;)V
