@@ -39,6 +39,12 @@ jobs:
           echo "Decompiling: $APK"
           java -jar $HOME/bin/apktool.jar d "$APK" -o apktool_out_base -f
 
+      - name: Patch versionName
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          sed -i "s/^  versionName: .*/  versionName: '$TAG'/" apktool_out_base/apktool.yml
+          grep versionName apktool_out_base/apktool.yml
+
       - name: Remove uncompilable apktool artifacts
         run: |
           rm -f apktool_out_base/res/values/raws.xml
@@ -179,28 +185,28 @@ jobs:
         include:
           - variant: Normal
             package: gamehub.lite
-            label: "GameHub Revanced"
+            label: "BannerHub"
           - variant: PuBG
             package: com.tencent.ig
-            label: "GameHub Revanced PuBG"
+            label: "BannerHub PuBG"
           - variant: AnTuTu
             package: com.antutu.ABenchMark
-            label: "GameHub Revanced AnTuTu"
+            label: "BannerHub AnTuTu"
           - variant: alt-AnTuTu
             package: com.antutu.benchmark.full
-            label: "GameHub Revanced AnTuTu"
+            label: "BannerHub AnTuTu"
           - variant: PuBG-CrossFire
             package: com.tencent.tmgp.cf
-            label: "GameHub Revanced PuBG CrossFire"
+            label: "BannerHub PuBG CrossFire"
           - variant: Ludashi
             package: com.ludashi.aibench
-            label: "GameHub Revanced Ludashi"
+            label: "BannerHub Ludashi"
           - variant: Genshin
             package: com.mihoyo.genshinimpact
-            label: "GameHub Revanced Genshin"
+            label: "BannerHub Genshin"
           - variant: Original
             package: com.xiaoji.egggame
-            label: "GameHub Revanced"
+            label: "BannerHub Original"
 
     steps:
       - name: Checkout
@@ -244,8 +250,9 @@ jobs:
           ${ANDROID_SDK_ROOT}/build-tools/${BUILD_TOOLS}/zipalign -f -v 4 rebuilt-unsigned.apk rebuilt-aligned.apk
 
       - name: Sign
+        id: sign
         run: |
-          APK_NAME="BannerHub-${{ github.ref_name }}-${{ matrix.variant }}.apk"
+          APK_NAME="BannerHub-${GITHUB_REF_NAME}-${{ matrix.variant }}.apk"
           BUILD_TOOLS=$(ls ${ANDROID_SDK_ROOT}/build-tools | tail -1)
           ${ANDROID_SDK_ROOT}/build-tools/${BUILD_TOOLS}/apksigner sign \
             --key testkey.pk8 \
@@ -256,12 +263,13 @@ jobs:
             --out "$APK_NAME" \
             rebuilt-aligned.apk
           echo "Completed: $APK_NAME ($(du -sh "$APK_NAME" | cut -f1))"
+          echo "apk_name=$APK_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BannerHub-${{ github.ref_name }}-${{ matrix.variant }}.apk
-          path: BannerHub-${{ github.ref_name }}-${{ matrix.variant }}.apk
+          name: ${{ steps.sign.outputs.apk_name }}
+          path: ${{ steps.sign.outputs.apk_name }}
           retention-days: 1
 
   release:
