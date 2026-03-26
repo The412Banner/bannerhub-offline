@@ -1,30 +1,37 @@
-# BhQuickSetupActivity — one-tap install of essential components (Box64, DXVK, VKD3D)
-# Reads bundle.json from GitHub, shows install status per component, installs via
-# ComponentInjectorHelper. Does NOT require root. Works online only (offline zip planned).
-#
+# BhQuickSetupActivity — one-tap install of essential components (Box64, DXVK, VKD3D + GameHub)
+# Extracts bundled APK assets on device — no network required.
 # Side menu ID=11. Package: com.xj.landscape.launcher.ui.menu
 #
-# Components (hardcoded from bundle.json defaults):
+# WCP Components (hardcoded, index 0-2):
 #   [0] Box64          type=94  box64-0.4.1-fix
 #   [1] DXVK           type=12  dxvk-gplasync-arm64ec-2.7.1-1
 #   [2] VKD3D-Proton   type=13  vkd3d-proton-3.0b
+#
+# GameHub Components (index 0-6):
+#   [0] wine_proton10.0-arm64x-2.tar.zst
+#   [1] vkd3d-2.12.tzst
+#   [2] base.tzst
+#   [3] dxvk-v2.4.1-async.tzst
+#   [4] Fex-20251029.tzst
+#   [5] Turnip_v26.1.0_R4.tzst
+#   [6] steam_9866233.tar.zst
 
 .class public final Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;
 .super Landroidx/appcompat/app/AppCompatActivity;
 
 # ── Fields ────────────────────────────────────────────────────────────────────
-# Array of 3 install buttons (one per component)
+# Array of 3 install buttons (one per WCP component)
 .field private mBtns:[Landroid/widget/Button;
-# Array of 3 status TextViews (one per component — "✓ Installed" or hidden)
+# Array of 3 status TextViews (one per WCP component — "✓ Installed" or hidden)
 .field private mStatusTVs:[Landroid/widget/TextView;
 # Global status bar at bottom of screen
 .field private mGlobalStatus:Landroid/widget/TextView;
 # "Install All Missing" button
 .field private mInstallAllBtn:Landroid/widget/Button;
-
-# ── Component data arrays (parallel, index 0-2) ───────────────────────────────
-# These are initialised as static string arrays in static{} block, but smali
-# doesn't have convenient static initialisers, so we use helper methods.
+# GameHub extract button
+.field mGameHubBtn:Landroid/widget/Button;
+# GameHub status TextView
+.field mGameHubStatus:Landroid/widget/TextView;
 
 # ── Constructor ───────────────────────────────────────────────────────────────
 .method public constructor <init>()V
@@ -114,6 +121,7 @@
 .end method
 
 # ── getUrl(index) -> String ────────────────────────────────────────────────────
+# Returns Nightlies URL (used for SP key tracking in $2 success runnable)
 .method public getUrl(I)Ljava/lang/String;
     .locals 0
     packed-switch p1, :pswitch_data
@@ -134,6 +142,169 @@
     :pswitch_2
     const-string p1, "https://github.com/The412Banner/Nightlies/releases/download/Vkd3d-proton/vkd3d-proton-3.0b.wcp"
     return-object p1
+.end method
+
+# ── getBundlePath(index) -> String ────────────────────────────────────────────
+# Returns APK zip entry path for WCP component at given index
+.method public getBundlePath(I)Ljava/lang/String;
+    .locals 0
+    packed-switch p1, :pswitch_data
+    const-string p1, ""
+    return-object p1
+    :pswitch_data
+    .packed-switch 0x0
+        :pswitch_0
+        :pswitch_1
+        :pswitch_2
+    .end packed-switch
+    :pswitch_0
+    const-string p1, "bundled/wcp/box64-0.4.1-fix.wcp"
+    return-object p1
+    :pswitch_1
+    const-string p1, "bundled/wcp/dxvk-gplasync-arm64ec-2.7.1-1.wcp"
+    return-object p1
+    :pswitch_2
+    const-string p1, "bundled/wcp/vkd3d-proton-3.0b.wcp"
+    return-object p1
+.end method
+
+# ── getGhBundlePath(index) -> String ──────────────────────────────────────────
+# Returns APK zip entry path for GameHub component at given index
+.method public getGhBundlePath(I)Ljava/lang/String;
+    .locals 0
+    packed-switch p1, :pswitch_data
+    const-string p1, ""
+    return-object p1
+    :pswitch_data
+    .packed-switch 0x0
+        :pswitch_0
+        :pswitch_1
+        :pswitch_2
+        :pswitch_3
+        :pswitch_4
+        :pswitch_5
+        :pswitch_6
+    .end packed-switch
+    :pswitch_0
+    const-string p1, "bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
+    return-object p1
+    :pswitch_1
+    const-string p1, "bundled/xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1/vkd3d-2.12.tzst"
+    return-object p1
+    :pswitch_2
+    const-string p1, "bundled/xj_winemu/xj_downloads/component/base/1.0.0/base.tzst"
+    return-object p1
+    :pswitch_3
+    const-string p1, "bundled/xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
+    return-object p1
+    :pswitch_4
+    const-string p1, "bundled/xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
+    return-object p1
+    :pswitch_5
+    const-string p1, "bundled/xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
+    return-object p1
+    :pswitch_6
+    const-string p1, "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
+    return-object p1
+.end method
+
+# ── getGhRelPath(index) -> String ─────────────────────────────────────────────
+# Returns filesDir-relative destination path for GameHub component (strip "bundled/" prefix)
+.method public getGhRelPath(I)Ljava/lang/String;
+    .locals 0
+    packed-switch p1, :pswitch_data
+    const-string p1, ""
+    return-object p1
+    :pswitch_data
+    .packed-switch 0x0
+        :pswitch_0
+        :pswitch_1
+        :pswitch_2
+        :pswitch_3
+        :pswitch_4
+        :pswitch_5
+        :pswitch_6
+    .end packed-switch
+    :pswitch_0
+    const-string p1, "xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
+    return-object p1
+    :pswitch_1
+    const-string p1, "xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1/vkd3d-2.12.tzst"
+    return-object p1
+    :pswitch_2
+    const-string p1, "xj_winemu/xj_downloads/component/base/1.0.0/base.tzst"
+    return-object p1
+    :pswitch_3
+    const-string p1, "xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
+    return-object p1
+    :pswitch_4
+    const-string p1, "xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
+    return-object p1
+    :pswitch_5
+    const-string p1, "xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
+    return-object p1
+    :pswitch_6
+    const-string p1, "xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
+    return-object p1
+.end method
+
+# ── isGhInstalled(index) -> boolean ──────────────────────────────────────────
+# Checks if filesDir/<getGhRelPath(i)> exists
+.method public isGhInstalled(I)Z
+    .locals 3
+    invoke-virtual {p0, p1}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->getGhRelPath(I)Ljava/lang/String;
+    move-result-object v0
+    invoke-virtual {p0}, Landroid/content/Context;->getFilesDir()Ljava/io/File;
+    move-result-object v1
+    new-instance v2, Ljava/io/File;
+    invoke-direct {v2, v1, v0}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+    invoke-virtual {v2}, Ljava/io/File;->exists()Z
+    move-result v0
+    return v0
+.end method
+
+# ── isAllGhReady() -> boolean ─────────────────────────────────────────────────
+# Returns true if all 7 GameHub components are installed
+.method public isAllGhReady()Z
+    .locals 2
+    const/4 v0, 0x0
+    :loop
+    const/16 v1, 0x7
+    if-ge v0, v1, :all_ready
+    invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->isGhInstalled(I)Z
+    move-result v1
+    if-nez v1, :next
+    const/4 v0, 0x0
+    return v0
+    :next
+    add-int/lit8 v0, v0, 0x1
+    goto :loop
+    :all_ready
+    const/4 v0, 0x1
+    return v0
+.end method
+
+# ── startGameHubExtract() ─────────────────────────────────────────────────────
+# Disables mGameHubBtn, sets status text, starts $5 extraction thread
+.method public startGameHubExtract()V
+    .locals 3
+    # Disable button + set text
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->mGameHubBtn:Landroid/widget/Button;
+    const/4 v1, 0x0
+    invoke-virtual {v0, v1}, Landroid/widget/Button;->setEnabled(Z)V
+    const-string v1, "Extracting..."
+    invoke-virtual {v0, v1}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
+    # Set status text
+    iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->mGameHubStatus:Landroid/widget/TextView;
+    const-string v1, "Extracting GameHub components..."
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    # Start extraction thread
+    new-instance v0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$5;
+    invoke-direct {v0, p0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$5;-><init>(Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;)V
+    new-instance v1, Ljava/lang/Thread;
+    invoke-direct {v1, v0}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;)V
+    invoke-virtual {v1}, Ljava/lang/Thread;->start()V
+    return-void
 .end method
 
 # ── getType(index) -> int ──────────────────────────────────────────────────────
@@ -183,15 +354,15 @@
 .end method
 
 # ── startInstall(index) ────────────────────────────────────────────────────────
-# Starts background download+inject for component at given index.
+# Starts background extraction+inject for WCP component at given index.
 # Updates button text to "Installing..." and disables it.
 .method public startInstall(I)V
     .locals 4
     # p0=this  p1=index
 
-    # Get url and type for this index
-    invoke-virtual {p0, p1}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->getUrl(I)Ljava/lang/String;
-    move-result-object v0   # v0 = url
+    # Get bundlePath and type for this index
+    invoke-virtual {p0, p1}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->getBundlePath(I)Ljava/lang/String;
+    move-result-object v0   # v0 = bundlePath
 
     invoke-virtual {p0, p1}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->getType(I)I
     move-result v1          # v1 = type
@@ -210,7 +381,7 @@
     move-result-object v3
     invoke-virtual {v2, v3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    # Start $1 thread with (outer=p0, url=v0, type=v1, index=p1)
+    # Start $1 thread with (outer=p0, bundlePath=v0, type=v1, index=p1)
     new-instance v2, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$1;
     invoke-direct {v2, p0, v0, v1, p1}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$1;-><init>(Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;Ljava/lang/String;II)V
     new-instance v3, Ljava/lang/Thread;
@@ -312,7 +483,7 @@
     invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
     # v0=root still valid
 
-    # ── ScrollView containing 3 component cards ────────────────────────────────
+    # ── ScrollView containing component cards ──────────────────────────────────
     new-instance v1, Landroid/widget/ScrollView;
     invoke-direct {v1, p0}, Landroid/widget/ScrollView;-><init>(Landroid/content/Context;)V
     # LP: MATCH_PARENT width, 0 height, weight=1 (takes remaining space)
@@ -391,12 +562,130 @@
     return-void
 .end method
 
-# ── buildCards: create 3 component cards and add to parent ────────────────────
+# ── buildCards: create GameHub section + 3 WCP component cards ────────────────
 # p0=this  p1=parent(LinearLayout)
 .method buildCards(Landroid/widget/LinearLayout;)V
     .locals 14
     # v0-v13 locals; p0=v14=this; p1=v15=parent
 
+    # ══ GameHub System Components card ══════════════════════════════════════════
+    # Card outer LL: vertical, dark bg
+    new-instance v0, Landroid/widget/LinearLayout;
+    invoke-direct {v0, p0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
+    const/4 v1, 0x1   # VERTICAL
+    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setOrientation(I)V
+    const v1, 0xFF1E1E1E   # dark card bg
+    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setBackgroundColor(I)V
+    const/16 v1, 0x10   # 16dp padding
+    invoke-virtual {p0, v1}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->dp(I)I
+    move-result v1
+    invoke-virtual {v0, v1, v1, v1, v1}, Landroid/widget/LinearLayout;->setPadding(IIII)V
+    # Card LP: MATCH_PARENT x WRAP_CONTENT, margin bottom 8dp
+    new-instance v1, Landroid/widget/LinearLayout$LayoutParams;
+    const/4 v2, -0x1   # MATCH_PARENT
+    const/4 v3, -0x2   # WRAP_CONTENT
+    invoke-direct {v1, v2, v3}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+    const/16 v2, 0x8   # 8dp margin
+    invoke-virtual {p0, v2}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->dp(I)I
+    move-result v2
+    iput v2, v1, Landroid/widget/LinearLayout$LayoutParams;->bottomMargin:I
+    invoke-virtual {v0, v1}, Landroid/view/View;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+    # v0 = gh card
+
+    # Title row: horizontal LL with title + extract button
+    new-instance v1, Landroid/widget/LinearLayout;
+    invoke-direct {v1, p0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
+    const/4 v2, 0x0   # HORIZONTAL
+    invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->setOrientation(I)V
+
+    # Title TextView "GameHub System Components"
+    new-instance v2, Landroid/widget/TextView;
+    invoke-direct {v2, p0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+    const-string v3, "GameHub System Components"
+    invoke-virtual {v2, v3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const v3, 0xFFFFFFFF   # white
+    invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextColor(I)V
+    const/16 v3, 0x10   # 16sp
+    int-to-float v3, v3
+    invoke-virtual {v2, v3}, Landroid/widget/TextView;->setTextSize(F)V
+    const/4 v3, 0x0   # null Typeface
+    const/4 v4, 0x1   # BOLD
+    invoke-virtual {v2, v3, v4}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;I)V
+    # LP: 0 width, WRAP_CONTENT, weight=1
+    new-instance v3, Landroid/widget/LinearLayout$LayoutParams;
+    const/4 v4, 0x0
+    const/4 v5, -0x2   # WRAP_CONTENT
+    invoke-direct {v3, v4, v5}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+    const/high16 v4, 0x3f800000   # 1.0f
+    iput v4, v3, Landroid/widget/LinearLayout$LayoutParams;->weight:F
+    invoke-virtual {v2, v3}, Landroid/view/View;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+    invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    # Extract Button
+    new-instance v2, Landroid/widget/Button;
+    invoke-direct {v2, p0}, Landroid/widget/Button;-><init>(Landroid/content/Context;)V
+    # Check if all already installed → disabled gray, else orange
+    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->isAllGhReady()Z
+    move-result v3
+    if-eqz v3, :gh_not_ready
+    # Already all done
+    const/4 v3, 0x0
+    invoke-virtual {v2, v3}, Landroid/widget/Button;->setEnabled(Z)V
+    const v3, 0xFF555555
+    invoke-virtual {v2, v3}, Landroid/widget/Button;->setBackgroundColor(I)V
+    const-string v3, "\u2713"
+    invoke-virtual {v2, v3}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
+    goto :gh_btn_done
+    :gh_not_ready
+    const-string v3, "Extract"
+    invoke-virtual {v2, v3}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
+    const v3, 0xFFFFFFFF
+    invoke-virtual {v2, v3}, Landroid/widget/Button;->setTextColor(I)V
+    const v3, 0xFFFF9800
+    invoke-virtual {v2, v3}, Landroid/widget/Button;->setBackgroundColor(I)V
+    :gh_btn_done
+    # LP: WRAP_CONTENT x WRAP_CONTENT, gravity CENTER_VERTICAL
+    new-instance v3, Landroid/widget/LinearLayout$LayoutParams;
+    const/4 v4, -0x2   # WRAP_CONTENT
+    invoke-direct {v3, v4, v4}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+    const/16 v4, 0x10   # Gravity.CENTER_VERTICAL = 16
+    iput v4, v3, Landroid/widget/LinearLayout$LayoutParams;->gravity:I
+    invoke-virtual {v2, v3}, Landroid/view/View;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+    # Set listener
+    new-instance v3, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$BhGameHubListener;
+    invoke-direct {v3, p0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$BhGameHubListener;-><init>(Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;)V
+    invoke-virtual {v2, v3}, Landroid/widget/Button;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+    iput-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->mGameHubBtn:Landroid/widget/Button;
+    invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    # Add title row to gh card
+    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    # Status TextView below title
+    new-instance v1, Landroid/widget/TextView;
+    invoke-direct {v1, p0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+    # Show "✓ All installed" if ready, else description
+    invoke-virtual {p0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->isAllGhReady()Z
+    move-result v2
+    if-eqz v2, :gh_status_not_ready
+    const-string v2, "\u2713 All installed"
+    goto :gh_status_set
+    :gh_status_not_ready
+    const-string v2, "Wine, DXVK, VKD3D, FEX, Turnip, Steam (7 files)"
+    :gh_status_set
+    invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const v2, 0xFF888888   # gray
+    invoke-virtual {v1, v2}, Landroid/widget/TextView;->setTextColor(I)V
+    const/16 v2, 0xc   # 12sp
+    int-to-float v2, v2
+    invoke-virtual {v1, v2}, Landroid/widget/TextView;->setTextSize(F)V
+    iput-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->mGameHubStatus:Landroid/widget/TextView;
+    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    # Add gh card to parent
+    invoke-virtual {p1, v0}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    # ══ WCP Component cards loop (index 0-2) ════════════════════════════════════
     const/4 v13, 0x0   # loop index
     :card_loop
     const/4 v12, 0x3

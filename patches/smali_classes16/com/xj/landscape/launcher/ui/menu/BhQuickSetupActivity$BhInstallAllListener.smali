@@ -1,4 +1,6 @@
 # BhQuickSetupActivity$BhInstallAllListener — install all missing components on click
+# Also triggers GameHub extraction if not all GH components are ready.
+
 .class final Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$BhInstallAllListener;
 .super Ljava/lang/Object;
 .implements Landroid/view/View$OnClickListener;
@@ -16,7 +18,14 @@
     .locals 3
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$BhInstallAllListener;->this$0:Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;
 
-    # Install each component if not already installed
+    # If GameHub components not all ready, start extraction
+    invoke-virtual {v0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->isAllGhReady()Z
+    move-result v1
+    if-nez v1, :gh_skip
+    invoke-virtual {v0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->startGameHubExtract()V
+    :gh_skip
+
+    # Install each WCP component if not already installed
     const/4 v1, 0x0
     :loop
     const/4 v2, 0x3

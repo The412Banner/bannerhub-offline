@@ -59,6 +59,64 @@ jobs:
             echo "No patches to apply."
           fi
 
+      - name: Download and bundle components
+        run: |
+          # WCP components (bundled/wcp/)
+          mkdir -p bundled/wcp
+
+          echo "Downloading Box64..."
+          wget -q "https://github.com/The412Banner/Nightlies/releases/download/Box64/box64-0.4.1-fix.wcp" \
+            -O bundled/wcp/box64-0.4.1-fix.wcp
+
+          echo "Downloading DXVK..."
+          wget -q "https://github.com/The412Banner/Nightlies/releases/download/Dxvk-gplasync-arm64ec/dxvk-gplasync-arm64ec-2.7.1-1.wcp" \
+            -O bundled/wcp/dxvk-gplasync-arm64ec-2.7.1-1.wcp
+
+          echo "Downloading VKD3D-Proton..."
+          wget -q "https://github.com/The412Banner/Nightlies/releases/download/Vkd3d-proton/vkd3d-proton-3.0b.wcp" \
+            -O bundled/wcp/vkd3d-proton-3.0b.wcp
+
+          # GameHub components (bundled/xj_winemu/xj_downloads/...)
+          mkdir -p "bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/base/1.0.0"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/Fex-20251029/1.0.0"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0"
+
+          echo "Downloading Proton Wine..."
+          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/6dcb/13/70/wine_proton10.0-arm64x-2.tar.zst" \
+            -O "bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
+
+          echo "Downloading VKD3D 2.12..."
+          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/4f3e/99/43/vkd3d-2.12.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1/vkd3d-2.12.tzst"
+
+          echo "Downloading base..."
+          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3d5c/31/b1/base.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/component/base/1.0.0/base.tzst"
+
+          echo "Downloading DXVK async..."
+          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/d430/3a/db/dxvk-v2.4.1-async.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
+
+          echo "Downloading FEX..."
+          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6cc2/b3/29/6cc2b329633dfbc95f23ea702cf84bd2.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
+
+          echo "Downloading Turnip..."
+          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b21a/d1/44/b21ad144bf44a1783433dc2201ee6849.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
+
+          echo "Downloading Steam..."
+          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/250a/09/96/steam_9866233.tar.zst" \
+            -O "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
+
+          echo "--- Bundled file sizes ---"
+          du -sh bundled/wcp/* bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/* \
+            bundled/xj_winemu/xj_downloads/component/*/*/* 2>/dev/null || true
+
       - name: Apply Grant Root Access smali patches
         run: |
           python3 << 'PYEOF'
@@ -169,6 +227,13 @@ jobs:
           path: apktool_out_base/
           retention-days: 1
 
+      - name: Upload bundled components
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundled-components
+          path: bundled/
+          retention-days: 1
+
   build:
     needs: prepare
     runs-on: ubuntu-latest
@@ -224,6 +289,12 @@ jobs:
           name: apktool_out_base
           path: apktool_out
 
+      - name: Download bundled components
+        uses: actions/download-artifact@v4
+        with:
+          name: bundled-components
+          path: bundled
+
       - name: Patch package name and label
         run: |
           PKG="${{ matrix.package }}"
@@ -240,6 +311,9 @@ jobs:
 
           # Inject original classes12.dex (skipped smali reassembly due to dex index limit)
           zip rebuilt-unsigned.apk apktool_out/classes12.dex --junk-paths
+
+          # Inject bundled components with STORED compression (already compressed)
+          cd bundled && zip -0 ../rebuilt-unsigned.apk -r . && cd ..
 
       - name: Compile and inject GOG extension dex
         run: |

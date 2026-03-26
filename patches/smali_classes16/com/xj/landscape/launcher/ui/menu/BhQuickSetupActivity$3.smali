@@ -1,6 +1,7 @@
 # BhQuickSetupActivity$3 — ErrorRunnable
-# UI thread: re-enable button, show error in global status bar
+# UI thread: re-enable button (if index >= 0), show error in global status bar
 # Constructor: (outer, index, errorMsg)
+# index=-1 means GameHub error — skip button restore
 
 .class final Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$3;
 .super Ljava/lang/Object;
@@ -25,7 +26,10 @@
     iget v1, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$3;->val$index:I
     iget-object v2, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$3;->val$error:Ljava/lang/String;
 
-    # Re-enable button
+    # If index < 0 (GameHub error), skip button restore
+    if-ltz v1, :skip_btn_restore
+
+    # Re-enable WCP button
     iget-object v3, v0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->mBtns:[Landroid/widget/Button;
     aget-object v3, v3, v1
     const/4 v4, 0x1   # true = enabled
@@ -35,6 +39,7 @@
     const-string v4, "Install"
     invoke-virtual {v3, v4}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
 
+    :skip_btn_restore
     # Update global status: "Error: {msg}"
     iget-object v3, v0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->mGlobalStatus:Landroid/widget/TextView;
     new-instance v4, Ljava/lang/StringBuilder;
