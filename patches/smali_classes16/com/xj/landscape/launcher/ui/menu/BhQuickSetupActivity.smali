@@ -254,7 +254,7 @@
     const v2, 0xFFFF9800   # orange
     invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->setBackgroundColor(I)V
 
-    const/4 v2, 0x10   # 16dp padding
+    const/16 v2, 0x10   # 16dp padding
     invoke-virtual {p0, v2}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->dp(I)I
     move-result v2
     invoke-virtual {v1, v2, v2, v2, v2}, Landroid/widget/LinearLayout;->setPadding(IIII)V
@@ -330,7 +330,7 @@
     invoke-direct {v2, p0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
     const/4 v3, 0x1   # VERTICAL
     invoke-virtual {v2, v3}, Landroid/widget/LinearLayout;->setOrientation(I)V
-    const/4 v3, 0x8   # 8dp padding
+    const/16 v3, 0x8   # 8dp padding
     invoke-virtual {p0, v3}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->dp(I)I
     move-result v3
     invoke-virtual {v2, v3, v3, v3, v3}, Landroid/widget/LinearLayout;->setPadding(IIII)V
@@ -420,7 +420,7 @@
     const/4 v2, -0x1   # MATCH_PARENT
     const/4 v3, -0x2   # WRAP_CONTENT
     invoke-direct {v1, v2, v3}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-    const/4 v2, 0x8   # 8dp margin
+    const/16 v2, 0x8   # 8dp margin
     invoke-virtual {p0, v2}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->dp(I)I
     move-result v2
     iput v2, v1, Landroid/widget/LinearLayout$LayoutParams;->bottomMargin:I
@@ -499,7 +499,7 @@
     invoke-virtual {p0, v3}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->isInstalled(Ljava/lang/String;)Z
     move-result v3
     if-nez v3, :status_visible
-    const/4 v3, 0x8   # GONE
+    const/16 v3, 0x8   # GONE
     goto :set_status_vis
     :status_visible
     const/4 v3, 0x0   # VISIBLE
