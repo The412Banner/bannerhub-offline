@@ -158,13 +158,13 @@
         :pswitch_2
     .end packed-switch
     :pswitch_0
-    const-string p1, "bundled/wcp/box64-0.4.1-fix.wcp"
+    const-string p1, "wcp/box64-0.4.1-fix.wcp"
     return-object p1
     :pswitch_1
-    const-string p1, "bundled/wcp/dxvk-gplasync-arm64ec-2.7.1-1.wcp"
+    const-string p1, "wcp/dxvk-gplasync-arm64ec-2.7.1-1.wcp"
     return-object p1
     :pswitch_2
-    const-string p1, "bundled/wcp/vkd3d-proton-3.0b.wcp"
+    const-string p1, "wcp/vkd3d-proton-3.0b.wcp"
     return-object p1
 .end method
 
@@ -186,25 +186,25 @@
         :pswitch_6
     .end packed-switch
     :pswitch_0
-    const-string p1, "bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
+    const-string p1, "xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
     return-object p1
     :pswitch_1
-    const-string p1, "bundled/xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1/vkd3d-2.12.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1/vkd3d-2.12.tzst"
     return-object p1
     :pswitch_2
-    const-string p1, "bundled/xj_winemu/xj_downloads/component/base/1.0.0/base.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/base/1.0.0/base.tzst"
     return-object p1
     :pswitch_3
-    const-string p1, "bundled/xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
     return-object p1
     :pswitch_4
-    const-string p1, "bundled/xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
     return-object p1
     :pswitch_5
-    const-string p1, "bundled/xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
     return-object p1
     :pswitch_6
-    const-string p1, "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
+    const-string p1, "xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
     return-object p1
 .end method
 
