@@ -6,6 +6,29 @@ outcomes, and push records for every build.
 
 ---
 
+## #117 — feat: BhQuickSetupActivity — Quick Setup side menu (offline bundle) (2026-03-26)
+**Tag:** v2.7.3-pre  |  **Branch:** main (bannerhub-offline repo)
+**Root cause / motivation:** First-launch of GameHub downloads Box64, DXVK, VKD3D from network. Users with poor connectivity can't play. BhQuickSetupActivity lets users pre-install all 3 with one tap before launching any game.
+**Files created:**
+- `patches/smali_classes16/.../BhQuickSetupActivity.smali` — main Activity; fields: `mBtns:[Button`, `mStatusTVs:[TextView`, `mGlobalStatus:TextView`, `mInstallAllBtn:Button`; methods: `dp(I)I`, `isInstalled(String)Z` (checks `banners_sources` SP), `getName/getVersion/getUrl/getType/getDesc(I)` (hardcoded Box64/DXVK/VKD3D), `startInstall(I)V`, `buildCards(LinearLayout)V`, `onCreate`
+- `patches/smali_classes16/.../BhQuickSetupActivity$1.smali` — InstallRunnable; downloads WCP via HttpURLConnection (30s timeout, 8KB buf) to cacheDir → posts $2 on success or $3 on error
+- `patches/smali_classes16/.../BhQuickSetupActivity$2.smali` — SuccessRunnable; calls `ComponentInjectorHelper.injectComponent(ctx, uri, type)`; scans components dir for newest dir; writes `banners_sources` SP keys (dl:url→"1", dirName→"BannerHub", dirName:type→typeName, url_for:dirName→url); updates button (gray/✓) + statusTV (visible) + globalStatus
+- `patches/smali_classes16/.../BhQuickSetupActivity$3.smali` — ErrorRunnable; re-enables button (orange bg / "Install" text); sets globalStatus to "Error: {msg}"
+- `patches/smali_classes16/.../BhQuickSetupActivity$BhBackListener.smali` — back button onClick → `finish()`
+- `patches/smali_classes16/.../BhQuickSetupActivity$BhInstallListener.smali` — per-card install button onClick → `startInstall(index)`
+- `patches/smali_classes16/.../BhQuickSetupActivity$BhInstallAllListener.smali` — "Install All Missing" button; loops i=0..2, skips already-installed, calls `startInstall(i)`
+- `bundle.json` — component manifest (Box64 0x5e, DXVK 0x0c, VKD3D 0x0d) with URLs from Nightlies repo
+**Files modified:**
+- `patches/smali_classes5/.../HomeLeftMenuDialog.smali` — added ID=11 "Quick Setup" menu item; added `:pswitch_11` handler (startActivity BhQuickSetupActivity); extended packed-switch table from 11→12 entries
+- `patches/AndroidManifest.xml` — added `<activity android:name="...BhQuickSetupActivity" android:screenOrientation="sensorLandscape"/>`
+**Key smali fixes applied:**
+- `setTypeface(null, BOLD)` needs 2 args after `this` (`const/4 v3, 0x0` + `const/4 v4, 0x1`)
+- `OutputStream.write([BII)` not `write([BI)` — added offset register `v4=0`
+- Removed dead `addCard()` call in `onCreate` (method doesn't exist; cards built by `buildCards()`)
+**CI result:** pending
+
+---
+
 ## How this log works
 
 Each entry covers one logical change unit (commit or closely related set of commits):

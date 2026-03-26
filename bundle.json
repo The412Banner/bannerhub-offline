@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Box64",
+    "version": "box64-0.4.1-fix",
+    "type": 94,
+    "url": "https://github.com/The412Banner/Nightlies/releases/download/Box64/box64-0.4.1-fix.wcp",
+    "desc": "x64 emulator required for most Windows games"
+  },
+  {
+    "name": "DXVK",
+    "version": "dxvk-gplasync-arm64ec-2.7.1-1",
+    "type": 12,
+    "url": "https://github.com/The412Banner/Nightlies/releases/download/Dxvk-gplasync-arm64ec/dxvk-gplasync-arm64ec-2.7.1-1.wcp",
+    "desc": "DirectX 9-11 to Vulkan translation"
+  },
+  {
+    "name": "VKD3D-Proton",
+    "version": "vkd3d-proton-3.0b",
+    "type": 13,
+    "url": "https://github.com/The412Banner/Nightlies/releases/download/Vkd3d-proton/vkd3d-proton-3.0b.wcp",
+    "desc": "DirectX 12 to Vulkan translation"
+  }
+]

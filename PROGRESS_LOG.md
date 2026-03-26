@@ -4,6 +4,22 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [pre] — v2.7.3-pre — BhQuickSetupActivity: Quick Setup side menu (2026-03-26)
+**Branch:** `main`  |  **Tag:** v2.7.3-pre
+**What changed:**
+- New side menu item (ID=11) "Quick Setup" → BhQuickSetupActivity
+- One-tap pre-install of Box64, DXVK, VKD3D-Proton before first game launch
+- Cards UI: name + version + description + per-card Install button + ✓ status indicator
+- "Install All Missing" button skips already-installed components
+- SP tracking via `banners_sources` (same keys as ComponentDownloadActivity)
+- bundle.json manifest listing component URLs from Nightlies repo
+- HomeLeftMenuDialog: packed-switch extended to 12 entries (ID 0-11)
+- AndroidManifest: BhQuickSetupActivity registered (sensorLandscape)
+**Files touched:** 8 new smali files, HomeLeftMenuDialog.smali, AndroidManifest.xml, bundle.json, PROGRESS_LOG.md, COMPONENT_MANAGER_BUILD_LOG.md
+**CI result:** pending
+
+---
+
 ## [stable] — v2.7.1 — Restore Steam card, standalone Normal variant, Normal(GHL) (2026-03-24)
 **Branch:** `main`  |  **Tag:** v2.7.1
 **Commit:** `029ae6b`
