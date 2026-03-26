@@ -49,7 +49,7 @@
 
 # ── isInstalled(url) -> boolean ───────────────────────────────────────────────
 # Checks SharedPreferences("banners_sources") for "dl:{url}" key
-.method private isInstalled(Ljava/lang/String;)Z
+.method isInstalled(Ljava/lang/String;)Z
     .locals 3
     const-string v0, "banners_sources"
     const/4 v1, 0x0
@@ -393,7 +393,7 @@
 
 # ── buildCards: create 3 component cards and add to parent ────────────────────
 # p0=this  p1=parent(LinearLayout)
-.method private buildCards(Landroid/widget/LinearLayout;)V
+.method buildCards(Landroid/widget/LinearLayout;)V
     .locals 14
     # v0-v13 locals; p0=v14=this; p1=v15=parent
 
