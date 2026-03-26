@@ -4,6 +4,14 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [fix] — v2.7.3-pre — Fix: remove bundled/ prefix from zip entry paths (2026-03-26)
+**Commit:** `80661755c`  |  **Tag:** v2.7.3-pre
+**What changed:**
+- Root cause: CI injects via `cd bundled && zip -r .` so entries have no `bundled/` prefix in APK
+- BhQuickSetupActivity looked up `bundled/wcp/...` and `bundled/xj_winemu/...` — all null → NPE → "Extraction failed" error on every component
+- Fix: removed `bundled/` prefix from all 10 paths in `getBundlePath()` (3 WCP) and `getGhBundlePath()` (7 GameHub)
+**Files touched:** `BhQuickSetupActivity.smali`
+
 ## [pre] — v2.7.3-pre — Fully offline APK bundle: all 10 components pre-bundled (2026-03-26)
 **Commit:** `31d399515`  |  **Tag:** v2.7.3-pre
 **What changed:**

@@ -6,6 +6,18 @@ outcomes, and push records for every build.
 
 ---
 
+## #123 — fix: remove bundled/ prefix from APK zip entry paths (2026-03-26)
+**Commit:** `80661755c` | **Tag:** v2.7.3-pre | **CI:** queued
+
+**Root cause:** CI injects components with `cd bundled && zip -0 ../rebuilt-unsigned.apk -r .` — entries land as `wcp/box64-0.4.1-fix.wcp` and `xj_winemu/xj_downloads/...` (no `bundled/` prefix). BhQuickSetupActivity called `getBundlePath()` / `getGhBundlePath()` returning `bundled/wcp/...` and `bundled/xj_winemu/...`. `ZipFile.getEntry()` returned null for all 10 paths → `getInputStream(null)` threw NullPointerException → caught in $1/$5 catch block → "Extraction failed" error shown for every component.
+
+**Methods/changes:**
+- `getBundlePath()`: `bundled/wcp/box64-*`, `bundled/wcp/dxvk-*`, `bundled/wcp/vkd3d-*` → strip `bundled/` prefix
+- `getGhBundlePath()`: all 7 GameHub paths `bundled/xj_winemu/...` → strip `bundled/` prefix
+
+**Files touched:**
+- `patches/smali_classes16/com/xj/landscape/launcher/ui/menu/BhQuickSetupActivity.smali`
+
 ## #117 — feat: BhQuickSetupActivity — Quick Setup side menu (offline bundle) (2026-03-26)
 **Tag:** v2.7.3-pre  |  **Branch:** main (bannerhub-offline repo)
 **Root cause / motivation:** First-launch of GameHub downloads Box64, DXVK, VKD3D from network. Users with poor connectivity can't play. BhQuickSetupActivity lets users pre-install all 3 with one tap before launching any game.
