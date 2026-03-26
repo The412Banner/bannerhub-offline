@@ -21,13 +21,13 @@
 
 # ── Fields ────────────────────────────────────────────────────────────────────
 # Array of 3 install buttons (one per WCP component)
-.field private mBtns:[Landroid/widget/Button;
+.field mBtns:[Landroid/widget/Button;
 # Array of 3 status TextViews (one per WCP component — "✓ Installed" or hidden)
-.field private mStatusTVs:[Landroid/widget/TextView;
+.field mStatusTVs:[Landroid/widget/TextView;
 # Global status bar at bottom of screen
-.field private mGlobalStatus:Landroid/widget/TextView;
+.field mGlobalStatus:Landroid/widget/TextView;
 # "Install All Missing" button
-.field private mInstallAllBtn:Landroid/widget/Button;
+.field mInstallAllBtn:Landroid/widget/Button;
 # GameHub extract button
 .field mGameHubBtn:Landroid/widget/Button;
 # GameHub status TextView
