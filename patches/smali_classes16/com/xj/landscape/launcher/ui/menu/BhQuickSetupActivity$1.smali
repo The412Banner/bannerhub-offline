@@ -23,10 +23,10 @@
 .end method
 
 .method public run()V
-    .locals 9
+    .locals 11
     # v0=outer  v1=url  v2=filename  v3=destFile/reuse
     # v4=HttpURLConnection/reuse  v5=InputStream/FileOutputStream
-    # v6=buf  v7=bytesRead  v8=uri
+    # v6=buf  v7=bytesRead  v8=uri  v9=index(temp)  v10=type(temp)
 
     iget-object v0, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$1;->this$0:Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;
     iget-object v1, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$1;->val$url:Ljava/lang/String;
@@ -86,8 +86,20 @@
     iget v5, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$1;->val$type:I
     iget v6, p0, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$1;->val$index:I
 
+    # Shuffle into consecutive regs for invoke-direct/range {v4..v9}
+    # v4=this, v5=outer, v6=uri, v7=type, v8=filename, v9=index
+    move v10, v5         # save type
+    move v9, v6          # save index → final slot v9
+
     new-instance v4, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$2;
-    invoke-direct {v4, v0, v8, v5, v2, v6}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$2;-><init>(Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;Landroid/net/Uri;ILjava/lang/String;I)V
+
+    move-object v5, v0   # v5 = outer (v0 unchanged for runOnUiThread)
+    move-object v6, v8   # v6 = uri
+    move v7, v10         # v7 = type
+    move-object v8, v2   # v8 = filename
+    # v9 = index (already saved)
+
+    invoke-direct/range {v4 .. v9}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity$2;-><init>(Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;Landroid/net/Uri;ILjava/lang/String;I)V
     invoke-virtual {v0, v4}, Landroid/app/Activity;->runOnUiThread(Ljava/lang/Runnable;)V
 
     :try_end
