@@ -25,7 +25,7 @@ outcomes, and push records for every build.
 - `setTypeface(null, BOLD)` needs 2 args after `this` (`const/4 v3, 0x0` + `const/4 v4, 0x1`)
 - `OutputStream.write([BII)` not `write([BI)` — added offset register `v4=0`
 - Removed dead `addCard()` call in `onCreate` (method doesn't exist; cards built by `buildCards()`)
-**CI result:** pending
+**CI result:** ✅ run 23586531385 (after 3 fix commits: /range for $2 ctor, .end class removed, const/4→const/16 for 0x8/0x10)
 
 ---
 
