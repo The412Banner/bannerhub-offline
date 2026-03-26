@@ -36,7 +36,7 @@
 # ── dp: density-independent pixel helper ──────────────────────────────────────
 .method public dp(I)I
     .locals 2
-    invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/Resources;
+    invoke-virtual {p0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
     move-result-object v0
     invoke-virtual {v0}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
     move-result-object v0
