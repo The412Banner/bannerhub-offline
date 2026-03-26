@@ -4,6 +4,25 @@ Tracks every commit, patch, and change applied to the GameHub 5.3.5 ReVanced APK
 
 ---
 
+## [pre] — v2.7.3-pre — Fully offline APK bundle: all 10 components pre-bundled (2026-03-26)
+**Commit:** `31d399515`  |  **Tag:** v2.7.3-pre
+**What changed:**
+- All 10 components bundled inside APK as STORED ZIP entries — zero network required
+- 3 WCP components (Box64, DXVK, VKD3D-Proton) extracted to cacheDir → ComponentInjectorHelper
+- 7 GameHub internal components (Proton Wine, vkd3d-2.12, base, dxvk-async, FEX, Turnip, Steam) extracted to filesDir/xj_winemu/xj_downloads/ — GameHub finds them and skips download
+- $1: rewritten for ZipFile extraction (APK sourceDir) instead of HTTP download
+- $5 (new): GameHubExtractRunnable — loops 0-6, skips existing files, mkdirs, 8KB buffer copy
+- $6 (new): GameHubSuccessRunnable — marks GH btn ✓, updates status text
+- $BhGameHubListener (new): onClick → startGameHubExtract()
+- BhQuickSetupActivity: getGhBundlePath/getGhRelPath/isGhInstalled/isAllGhReady/startGameHubExtract; buildCards adds GameHub section card at top
+- $3: index<0 guard (GH errors skip WCP button restore)
+- $BhInstallAllListener: triggers GH extraction before WCP installs
+- CI (build-quick.yml + build.yml): download all 10 files, inject with zip -0
+**Files touched:** build-quick.yml, build.yml, BhQuickSetupActivity.smali, $1/$3/$5/$6/$BhGameHubListener/$BhInstallAllListener.smali
+**CI result:** queued run 23594448116
+
+---
+
 ## [pre] — v2.7.3-pre — BhQuickSetupActivity: Quick Setup side menu (2026-03-26)
 **Branch:** `main`  |  **Tag:** v2.7.3-pre
 **What changed:**
