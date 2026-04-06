@@ -89,6 +89,7 @@ jobs:
           mkdir -p "bundled/xj_winemu/xj_downloads/component/Fex-20260321/1.0.0"
           mkdir -p "bundled/xj_winemu/xj_downloads/component/Turnip_v26.1.0_R5/1.0.0"
           mkdir -p "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0"
+          mkdir -p "bundled/xj_winemu/xj_downloads/sd"
 
           echo "Downloading Proton Wine..."
           wget -q "$BASE/wine_proton10.0-arm64x-2.tar.zst" \
@@ -121,6 +122,10 @@ jobs:
           echo "Downloading Steam..."
           wget -q "$BIGEYES/ux-landscape/pc_zst/250a/09/96/steam_9866233.tar.zst" \
             -O "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
+
+          echo "Downloading Wine SD companion..."
+          wget -q "$BASE/6dcb13706c9c7720b074ee020ce39bbc.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/sd/6dcb13706c9c7720b074ee020ce39bbc.tzst"
 
           echo "--- Bundled file sizes ---"
           du -sh bundled/wcp/* \

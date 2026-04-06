@@ -7,7 +7,7 @@
 #   [1] DXVK           type=12  dxvk-gplasync-arm64ec-2.7.1-1
 #   [2] VKD3D-Proton   type=13  vkd3d-proton-3.0b
 #
-# GameHub Components (index 0-7):
+# GameHub Components (index 0-8):
 #   [0] wine_proton10.0-arm64x-2.tar.zst
 #   [1] vkd3d-2.12.tzst
 #   [2] base.tzst
@@ -16,6 +16,7 @@
 #   [5] Turnip_v26.1.0_R5.tzst
 #   [6] steam_9866233.tar.zst
 #   [7] imagefs.zst  (Firmware 1.3.3)
+#   [8] 6dcb13706c9c7720b074ee020ce39bbc.tzst  (sd/ wine companion)
 
 .class public final Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;
 .super Landroidx/appcompat/app/AppCompatActivity;
@@ -186,6 +187,7 @@
         :pswitch_5
         :pswitch_6
         :pswitch_7
+        :pswitch_8
     .end packed-switch
     :pswitch_0
     const-string p1, "xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
@@ -210,6 +212,9 @@
     return-object p1
     :pswitch_7
     const-string p1, "xj_winemu/xj_downloads/env/Firmware/1.3.3/imagefs.zst"
+    return-object p1
+    :pswitch_8
+    const-string p1, "xj_winemu/xj_downloads/sd/6dcb13706c9c7720b074ee020ce39bbc.tzst"
     return-object p1
 .end method
 
@@ -230,6 +235,7 @@
         :pswitch_5
         :pswitch_6
         :pswitch_7
+        :pswitch_8
     .end packed-switch
     :pswitch_0
     const-string p1, "xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
@@ -254,6 +260,9 @@
     return-object p1
     :pswitch_7
     const-string p1, "xj_winemu/xj_downloads/env/Firmware/1.3.3/imagefs.zst"
+    return-object p1
+    :pswitch_8
+    const-string p1, "xj_winemu/xj_downloads/sd/6dcb13706c9c7720b074ee020ce39bbc.tzst"
     return-object p1
 .end method
 
@@ -278,7 +287,7 @@
     .locals 2
     const/4 v0, 0x0
     :loop
-    const/16 v1, 0x8
+    const/16 v1, 0x9
     if-ge v0, v1, :all_ready
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->isGhInstalled(I)Z
     move-result v1
@@ -680,7 +689,7 @@
     const-string v2, "\u2713 All installed"
     goto :gh_status_set
     :gh_status_not_ready
-    const-string v2, "Wine, DXVK, VKD3D, FEX, Turnip, Steam, ImageFS (8 files)"
+    const-string v2, "Wine, DXVK, VKD3D, FEX, Turnip, Steam, ImageFS, WineSD (9 files)"
     :gh_status_set
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
     const v2, 0xFF888888   # gray
