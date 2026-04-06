@@ -43,7 +43,7 @@
 
     # Loop constants
     const/4 v10, 0x0    # write offset constant = 0
-    const/16 v11, 0x7   # loop limit = 7
+    const/16 v11, 0x8   # loop limit = 8
     const/4 v3, 0x0     # loop index = 0
 
     :gh_loop

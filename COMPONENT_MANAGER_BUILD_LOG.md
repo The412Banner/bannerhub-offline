@@ -6,41 +6,6 @@ outcomes, and push records for every build.
 
 ---
 
-## #123 — fix: remove bundled/ prefix from APK zip entry paths (2026-03-26)
-**Commit:** `80661755c` | **Tag:** v2.7.3-pre | **CI:** queued
-
-**Root cause:** CI injects components with `cd bundled && zip -0 ../rebuilt-unsigned.apk -r .` — entries land as `wcp/box64-0.4.1-fix.wcp` and `xj_winemu/xj_downloads/...` (no `bundled/` prefix). BhQuickSetupActivity called `getBundlePath()` / `getGhBundlePath()` returning `bundled/wcp/...` and `bundled/xj_winemu/...`. `ZipFile.getEntry()` returned null for all 10 paths → `getInputStream(null)` threw NullPointerException → caught in $1/$5 catch block → "Extraction failed" error shown for every component.
-
-**Methods/changes:**
-- `getBundlePath()`: `bundled/wcp/box64-*`, `bundled/wcp/dxvk-*`, `bundled/wcp/vkd3d-*` → strip `bundled/` prefix
-- `getGhBundlePath()`: all 7 GameHub paths `bundled/xj_winemu/...` → strip `bundled/` prefix
-
-**Files touched:**
-- `patches/smali_classes16/com/xj/landscape/launcher/ui/menu/BhQuickSetupActivity.smali`
-
-## #117 — feat: BhQuickSetupActivity — Quick Setup side menu (offline bundle) (2026-03-26)
-**Tag:** v2.7.3-pre  |  **Branch:** main (bannerhub-offline repo)
-**Root cause / motivation:** First-launch of GameHub downloads Box64, DXVK, VKD3D from network. Users with poor connectivity can't play. BhQuickSetupActivity lets users pre-install all 3 with one tap before launching any game.
-**Files created:**
-- `patches/smali_classes16/.../BhQuickSetupActivity.smali` — main Activity; fields: `mBtns:[Button`, `mStatusTVs:[TextView`, `mGlobalStatus:TextView`, `mInstallAllBtn:Button`; methods: `dp(I)I`, `isInstalled(String)Z` (checks `banners_sources` SP), `getName/getVersion/getUrl/getType/getDesc(I)` (hardcoded Box64/DXVK/VKD3D), `startInstall(I)V`, `buildCards(LinearLayout)V`, `onCreate`
-- `patches/smali_classes16/.../BhQuickSetupActivity$1.smali` — InstallRunnable; downloads WCP via HttpURLConnection (30s timeout, 8KB buf) to cacheDir → posts $2 on success or $3 on error
-- `patches/smali_classes16/.../BhQuickSetupActivity$2.smali` — SuccessRunnable; calls `ComponentInjectorHelper.injectComponent(ctx, uri, type)`; scans components dir for newest dir; writes `banners_sources` SP keys (dl:url→"1", dirName→"BannerHub", dirName:type→typeName, url_for:dirName→url); updates button (gray/✓) + statusTV (visible) + globalStatus
-- `patches/smali_classes16/.../BhQuickSetupActivity$3.smali` — ErrorRunnable; re-enables button (orange bg / "Install" text); sets globalStatus to "Error: {msg}"
-- `patches/smali_classes16/.../BhQuickSetupActivity$BhBackListener.smali` — back button onClick → `finish()`
-- `patches/smali_classes16/.../BhQuickSetupActivity$BhInstallListener.smali` — per-card install button onClick → `startInstall(index)`
-- `patches/smali_classes16/.../BhQuickSetupActivity$BhInstallAllListener.smali` — "Install All Missing" button; loops i=0..2, skips already-installed, calls `startInstall(i)`
-- `bundle.json` — component manifest (Box64 0x5e, DXVK 0x0c, VKD3D 0x0d) with URLs from Nightlies repo
-**Files modified:**
-- `patches/smali_classes5/.../HomeLeftMenuDialog.smali` — added ID=11 "Quick Setup" menu item; added `:pswitch_11` handler (startActivity BhQuickSetupActivity); extended packed-switch table from 11→12 entries
-- `patches/AndroidManifest.xml` — added `<activity android:name="...BhQuickSetupActivity" android:screenOrientation="sensorLandscape"/>`
-**Key smali fixes applied:**
-- `setTypeface(null, BOLD)` needs 2 args after `this` (`const/4 v3, 0x0` + `const/4 v4, 0x1`)
-- `OutputStream.write([BII)` not `write([BI)` — added offset register `v4=0`
-- Removed dead `addCard()` call in `onCreate` (method doesn't exist; cards built by `buildCards()`)
-**CI result:** ✅ run 23586531385 (after 3 fix commits: /range for $2 ctor, .end class removed, const/4→const/16 for 0x8/0x10)
-
----
-
 ## How this log works
 
 Each entry covers one logical change unit (commit or closely related set of commits):
@@ -62,6 +27,308 @@ Each entry covers one logical change unit (commit or closely related set of comm
 | `[MOV]` | File moved / renamed |
 | `[CI✅]` | CI build passed |
 | `[CI❌]` | CI build failed |
+
+---
+
+## Entry 138 — fix: GPU driver from imported config not applying at launch (v2.9.2-pre, main)
+**Date:** 2026-04-05
+**Branch:** main  |  **Tag:** v2.9.2-pre (retagged)  |  **Commit:** 16b3f2379
+
+### Root cause analysis
+After importing a game config, the GPU driver never applied on launch despite all other
+components working. Root cause identified from SP diff: the config file stored the GPU driver
+display label (e.g. `"✓ 26.1.0_r6 — Turnip_v26.1.0_R6"`) as the `name` field in
+`pc_ls_GPU_DRIVER_`. When the `:wine` process called `EmuComponents.c.a().n(displayLabel)`,
+the HashMap had no entry under the display label — only under the actual `versionName` key
+(`"26.1.0_r6_Turnip_v26.1.0_R6"`) that `ComponentInjectorHelper` registered from
+`profile.json`. Result: null → `wineActivityData.v(null)` → no driver path → driver skipped.
+
+Manual re-selection via PcGameSettingsActivity wrote the correct raw component name,
+which is why the game worked after that.
+
+### Files modified
+- `[MOD]` `extension/BhSettingsExporter.java`
+
+### Methods changed
+- **`injectAndRegister()`** — Now snapshots `filesDir/usr/home/components/` dir listing
+  before and after calling `ComponentInjectorHelper.injectComponent()`. The new dir entry
+  is the actual `versionName` registered in EmuComponents. Returns the actual name (String)
+  instead of void. For GPU type, also registers under the actual name in banners_sources.
+- **`downloadMissingComponents()`** — Added `gameId` parameter. Tracks `gpuActualName[]`
+  from injection return values. In final ui.post(): calls `onComplete.run()` first (writes
+  settings including potentially broken GPU name), then calls `fixGpuDriverName()` to
+  overwrite with the correct key using `commit()`.
+- **`fixGpuDriverName()`** [NEW] — Reads `pc_ls_GPU_DRIVER_` from game SP, parses JSON,
+  sets `name` and `displayName` to the actual component name, writes back with `commit()`.
+- **`applyConfig()`** — Updated `downloadMissingComponents()` call to pass `gameId`.
+
+### CI result
+[CI✅] Build APK (Quick — Normal only) — run 24008331098 — ~4m — passed
+
+---
+
+## Entry 137 — fix: import components activate immediately without manual re-select (v2.9.2-pre, main)
+**Date:** 2026-04-05
+**Branch:** main  |  **Tag:** v2.9.2-pre (retagged)  |  **Commit:** 634bc1e25
+
+### Root cause analysis
+After importing a game config and downloading missing components, the first game launch
+failed silently (GPU driver not loaded). Root cause: `ComponentInjectorHelper.injectComponent()`
+extracts the .tzst to `filesDir/usr/home/components/<name>/` correctly, but does NOT register
+the component in `EmuComponents`.
+
+`EmuComponents` is a singleton backed by `sp_winemu_all_components12` SharedPreferences. On
+game launch, GameHub calls `EmuComponents.c.a().n(name)` to get the `ComponentRepo` and resolve
+the disk path via `getComponentPath()` = `filesDir/usr/home/components/<name>`. When `n(name)`
+returns null (component not in registry), `getComponentPath()` is never called, `GAMESCOPE_DRIVER_PATH`
+env var is never set, and gamescope runs without the custom Vulkan driver.
+
+After manual re-selection via GameHub's UI, `EmuComponents.D(componentRepo)` is called which
+writes to `sp_winemu_all_components12`. The next launch succeeds.
+
+### Changes
+
+**[MOD]** `extension/BhSettingsExporter.java`
+- `injectAndRegister()`: after successful inject, call `registerInEmuComponents()` then `refreshEmuComponents()`
+- `registerInEmuComponents(ctx, name, fileName, contentType)`: builds minimal `ComponentRepo` JSON
+  (`name`, `version=""`, `state="Downloaded"`, `entry` with `ComponentType.type`, `isDep=false`, `isBase=false`)
+  and writes to `sp_winemu_all_components12` SharedPreferences with key = component name
+- `contentTypeToEnvLayerType(contentType)`: maps BH contentType int → ComponentType.type int
+  (GPU_DRIVER=10→2, DXVK=12→3, VKD3D=13→4, TRANSLATOR=32→1, STEAM_CLIENT=54→7)
+- `refreshEmuComponents()`: reflects into `EmuComponents.s()` to reload in-memory HashMap from SP
+  immediately — avoids need for app restart
+- `applySettings` Runnable: removed `restartMainActivity()` and 1.2s delay; toast → "Config applied — ready to launch!"
+
+### CI
+- **[CI✅]** v2.9.2-pre run 24007251797 (Normal APK only, artifact)
+
+---
+
+## Entry 136 — feat: delete own uploads (detail + list) + total games count (v2.9.1-pre, main)
+**Date:** 2026-04-04
+**Branch:** main  |  **Tag:** v2.9.1-pre  |  **Commit:** aad272173
+
+### Root cause analysis
+No way for users to remove their own shared configs — only admin delete existed. Upload token
+is already stored in `bh_config_uploads` SP at upload time (`token` field), so client-side
+auth is trivially available without any new login flow.
+
+### Changes
+
+**[MOD]** `extension/BhGameConfigsActivity.java`
+- Field: `deviceSubtitleBase` (String) stores the base device+SOC string
+- `buildHeader()`: saves base string to `deviceSubtitleBase` at build time
+- `fetchGames()`: appends "  •  N games" to `deviceSubtitleBase` on `deviceSubtitle` after load
+- `filterGames()`: updates subtitle to "N games" or "N of M games" suffix on screen 1
+- `showScreen()`: resets `deviceSubtitle` to `deviceSubtitleBase` when leaving screen 1
+- `refreshUploadsList()`: added `setOnItemLongClickListener` → AlertDialog "Delete Upload?" → calls `doDeleteUpload(..., false)`
+- `populateDetailScreen()`: adds "Delete My Upload" button (dark red) when `uploadToken != null`; confirmation dialog → `doDeleteUpload(..., true)`
+- `doDeleteUpload()`: added `fromDetail` boolean param; when true, calls `showScreen(4)` before `refreshUploadsList()`
+
+**[MOD]** `/tmp/bannerhub-configs-worker.js` (needs CF redeploy)
+- Route: `POST /delete` → `handleUserDelete(request, env)`
+- Auth: reads `token:<sha>` from KV, rejects if mismatch (403)
+- GitHub: GET file by `configs/{game}/{filename}` → DELETE with commit message
+- KV cleanup: deletes `token:`, `votes:`, `downloads:`, `reports:`, `desc:`, `comments:{game}/{filename}`, `cache:list:{game}`, `cache:games`; decrements `counts:{game}` (deletes key if would go to 0)
+
+### CI
+- **[CI✅]** v2.9.1-pre run 23994237655 (Normal APK only)
+
+---
+
+## Entry 135 — fix: game configs worker KV write limit crash + app JSON hardening (v2.8.9-pre3 retag, main)
+**Date:** 2026-04-04
+**Branch:** main  |  **Tag:** v2.8.9-pre3 (retagged)  |  **Commit:** b839c7c1e
+
+### Root cause analysis
+Cloudflare KV free tier has a hard limit of 1,000 write operations per day. The `/games`
+endpoint writes a cache entry on every miss. With 89+ games and repeated requests, the
+daily write quota was exhausted. The raw `env.CONFIG_KV.put()` call threw an exception
+that propagated uncaught through the worker → CF error 1101 → app received HTML error
+page → `new JSONArray(body)` threw "cannot be converted to JSONArray" → crash.
+
+### Changes
+- **[MOD]** `/tmp/bannerhub-configs-worker.js` (CF deployed):
+  - New `kvPut(kv, key, value, opts)` / `kvDelete(kv, key)` async helpers — catch quota exceptions silently
+  - All `env.CONFIG_KV.put(...)` and `.delete(...)` calls replaced with helpers
+  - KV reads wrapped in try-catch (cache miss falls through to re-fetch gracefully)
+  - Top-level `try/catch` in `fetch` handler returns `{error}` JSON on any uncaught exception
+- **[MOD]** `extension/BhGameConfigsActivity.java`:
+  - `fetchGames()`: parse body via `JSONTokener.nextValue()`, validate root is `JSONArray`; if object, extract `error` field for Toast
+  - `fetchConfigs()`: same fix
+
+### CI
+- [CI✅] run 23982476410 — success (artifact only)
+
+---
+
+## Entry 134 — fix: Apply to Game picker scans shared_prefs instead of full ux_db (v2.8.9-pre3, main)
+**Date:** 2026-04-04
+**Branch:** main  |  **Tag:** v2.8.9-pre3  |  **Commit:** e0b5038ab
+
+### Root cause analysis
+Previous implementation queried `StarterGame` from `ux_db` which returns all games ever seen
+by GameHub, including games no longer installed. Game configs live in `pc_g_setting{gameId}`
+SharedPreferences files — only games with an SP file actually have a config to write into.
+
+### Changes
+- **[MOD]** `extension/BhGameConfigsActivity.java`:
+  - `applyConfigToGame()`: replaced full `ux_db StarterGame` query with `shared_prefs/` scan
+  - Scans `getApplicationInfo().dataDir/shared_prefs/pc_g_setting*.xml` for present gameIds
+  - Queries `ux_db StarterGame` with `IN (...)` clause limited to found IDs for name lookup
+  - Falls back to `"Game #id"` for SP files with no matching ux_db entry
+  - Re-sorts merged list alphabetically by name
+  - Toast changed: "No configured games found in GameHub"
+
+### CI
+- [CI❌] run 23981926309 — failed (variable `n` redeclared; loop var renamed to `fn`)
+- [CI✅] run 23982010393 — success (artifact only)
+
+---
+
+## Entry 133 — feat: Game Configs — D-pad nav, count badge, filter, age indicator, verified badge, share, report (v2.8.8-pre1, main)
+**Date:** 2026-04-04
+**Branch:** main  |  **Tag:** v2.8.8-pre1 (retagged)  |  **Commit:** d9fe43f35
+
+### Root cause analysis
+Multiple UX improvements requested: D-pad focus on detail buttons, SOC matching/filtering,
+config age indication, share URL, report function, config count in games list.
+
+### Changes
+- **[MOD]** `extension/BhGameConfigsActivity.java`:
+  - New imports: `ClipData`, `ClipboardManager`, `Context`
+  - New constants: `REPORTS_SP = "bh_config_reports"`, `GREEN`, `AMBER`, `GOLD`
+  - New fields: `currentSoc`, `filterByDevice`, `allConfigs`, `gameCounts`, `filterToggleBtn`
+  - `onCreate`: detect SOC via `Build.class.getField("SOC_MODEL")` reflection (API 31+); fallback to `Build.HARDWARE`
+  - `buildConfigsScreen()`: added filter bar with "My Device" toggle button; GradientDrawable with green outline when active
+  - `updateFilterToggle()`, `applyDeviceFilter()`: toggle state + filter logic with SOC partial match
+  - `refreshGamesList()`: added count badge ("N configs" in ACCENT) per game row
+  - `refreshConfigsList()`: full rewrite to custom JSONObject adapter; title row with device+soc+verified badge; sub row with date+votes+age indicator (amber >6mo); SOC match badge ("✓ My SOC" green)
+  - `populateDetailScreen()`: verified SOC badge in info card; all action buttons via `actionBtn()`; share button (ClipboardManager); report button (POST /report + bh_config_reports SP)
+  - `fetchGames()`: parses `[{name,count}]` objects OR legacy `[string]` for backward compat
+  - `fetchConfigs()`: resets `allConfigs` + `filterByDevice`; calls `updateFilterToggle()`
+  - New helpers: `actionBtn()`, `setActionBtnColor()`, `blendDark()`, `isSOCMatch()`, `doReport()`
+
+- **[MOD]** `/tmp/bannerhub-configs-worker.js` (deployed separately to CF):
+  - `handleGames`: parallel KV reads for `counts:<name>`; returns `[{name,count}]`
+  - `handleUpload`: increments `counts:<safegame>` in KV; deletes `cache:games`
+  - `handleReport`: new endpoint; IP dedup via `reported:<ip>:<sha>` KV (7-day TTL); increments `reports:<sha>`
+  - Route dispatcher: added `m === "POST" && p === "/report"` → `handleReport`
+
+### Methods added
+- `BhGameConfigsActivity.actionBtn(String, int, OnClickListener)` — D-pad-focusable button helper
+- `BhGameConfigsActivity.setActionBtnColor(Button, int)` — safe color update on GradientDrawable
+- `BhGameConfigsActivity.blendDark(int)` — darken a color 30% for focus state
+- `BhGameConfigsActivity.isSOCMatch(String)` — case+separator insensitive SOC comparison
+- `BhGameConfigsActivity.updateFilterToggle()` — sync filter button appearance to filterByDevice state
+- `BhGameConfigsActivity.applyDeviceFilter()` — filter allConfigs → currentConfigs by SOC match
+- `BhGameConfigsActivity.doReport(JSONObject, Button)` — POST /report with IP dedup + SP persistence
+
+### CI result
+- Workflow: build-quick.yml | Run: 23968920755 | Result: ⏳ in_progress
+
+---
+
+## Entry 132 — feat: Game Configs — Steam cover art in games list (v2.8.8-pre1, main)
+**Date:** 2026-04-04
+**Branch:** main  |  **Tag:** v2.8.8-pre1 (retagged)  |  **Commit:** TBD
+
+### Root cause analysis
+Games list showed only text — no visual indication of which game each entry was.
+
+### Changes
+- **[MOD]** `extension/BhGameConfigsActivity.java`:
+  - Added `Bitmap`, `BitmapFactory`, `ImageView`, `HashMap`, `Map` imports
+  - Added constants `COVERS_SP`, `STEAM_SEARCH`, `STEAM_HEADER`
+  - Added `coverCache: Map<String, Bitmap>` field for in-memory cache
+  - `refreshGamesList()` rewritten: custom adapter with `LinearLayout` row containing 160×90dp `ImageView` + bold `TextView`; ImageView tagged with game name for recycle safety
+  - Added `loadCover(String game, ImageView iv)`: memory cache check → SP cached appid → Steam storesearch API → header.jpg download → setImageBitmap on UI thread only if tag still matches
+
+### Methods added
+- `BhGameConfigsActivity.loadCover(String, ImageView)` — async Steam cover loader with two-level cache (memory + SP appid)
+
+### CI result
+- Workflow: build-quick.yml | Run: ⏳ | Result: pending
+
+---
+
+## Entry 131 — feat: Game Configs side menu — browse, vote, comment (v2.8.8-pre1, main)
+**Date:** 2026-04-03
+**Branch:** main  |  **Tag:** v2.8.8-pre1  |  **Commit:** TBD
+
+### Root cause analysis
+Community config sharing (v2.8.7) had no in-app browse UX — users had to already be inside a game's settings to Import. There was no way to discover configs for games, vote on quality, or discuss configs with other users.
+
+### Changes
+- **[NEW]** `extension/BhGameConfigsActivity.java` — full Activity, three-screen flow (games list → configs list → detail). Games screen: search EditText + ListView filtered by TextWatcher. Configs screen: sorted by vote count desc. Detail: device/SOC/date/meta info card (fetched by downloading config JSON), upvote button (local SP dedup + server IP rate limit), download to BannerHub/configs/, comments view + post EditText.
+- **[MOD]** `extension/BhSettingsExporter.java` — `doExport()` now writes a `meta` block: device, soc, bh_version, settings_count, components_count. Displayed in detail view without needing to parse all settings.
+- **[MOD]** `patches/AndroidManifest.xml` — added `BhGameConfigsActivity` with `sensorLandscape` + `adjustResize`
+- **[MOD]** `patches/smali_classes5/.../HomeLeftMenuDialog.smali` — added "Game Configs" MenuItem id=0xd (13); added `:pswitch_13` handler launching `BhGameConfigsActivity`; added `:pswitch_13` to packed-switch table
+- **[WORKER]** `/tmp/bannerhub-configs-worker.js` redeployed with 4 new endpoints: `GET /games` (GitHub Contents API on configs/ root), `POST /vote` (KV increment + IP TTL dedup), `GET /comments`, `POST /comment` (KV JSON array, 500-char limit, 200-comment cap). KV namespace `bannerhub-config-social` (id: 84a4729c49694cf9b25507a8bc59dec7) created + bound as CONFIG_KV.
+
+### Methods added
+- `BhGameConfigsActivity.fetchGames()` — GET /games → populates allGames list
+- `BhGameConfigsActivity.fetchConfigs(game)` — GET /list?game=X → currentConfigs with vote counts
+- `BhGameConfigsActivity.fetchMeta(config, metaCard)` — GET /download → parse meta block → fill info rows
+- `BhGameConfigsActivity.doVote(config)` — POST /vote; local SP check before request; updates label + button
+- `BhGameConfigsActivity.downloadConfig(config)` — GET /download → save to BannerHub/configs/
+- `BhGameConfigsActivity.fetchComments(config)` — GET /comments → renderComments()
+- `BhGameConfigsActivity.postComment(config, text, box)` — POST /comment
+
+### CI result
+- Workflow: build-quick.yml | Run: ⏳ | Result: pending
+
+---
+
+## Entry 130 — feat: SOC type in community config filenames (v2.8.8-pre1, main)
+**Date:** 2026-04-03
+**Branch:** main  |  **Tag:** v2.8.8-pre1  |  **Commit:** `0fbcb97f7`
+
+### Root cause analysis
+Community config filenames were `GameName-Manufacturer-Model-Timestamp.json`. Users browsing the community list couldn't tell which configs were made on the same SOC family (e.g. Snapdragon 8 Gen 3 vs Snapdragon 8 Gen 2). Settings like VRAM limit, GPU tile size, and renderer backend can vary significantly between SOC generations, so SOC filtering is valuable.
+
+### Fix
+- Added SOC to filename: `GameName-Manufacturer-Model-SOC-Timestamp.json`
+- SOC value: `Build.SOC_MODEL` (API 31+, gives e.g. "SM8650") with `Build.HARDWARE` fallback for older Android
+- Community browse label updated to show `Device [SOC] (date)`
+- Cloudflare Worker `/list` parses SOC from new format; backward-compat with old format (no SOC returned for old files)
+
+### Files created / modified
+- `extension/BhSettingsExporter.java` — `doExport()`: SOC detection + filename; `showCommunityImportDialog()`: label includes soc field
+- `/tmp/bannerhub-configs-worker.js` — `handleList()`: parse SOC, return `soc` field, backward-compat check
+
+### Methods changed
+- `BhSettingsExporter.doExport()` — added `socModel` var from `Build.SOC_MODEL`/`Build.HARDWARE`; appended to filename
+- `BhSettingsExporter.showCommunityImportDialog()` — added `soc` from `entry.optString("soc","")`, appended to label
+
+### CI result
+- Workflow: build-quick.yml | Run: ⏳ | Result: pending
+
+---
+
+## Entry 102 — feat: Controller focus highlight for GOG/Epic/Amazon cards (v2.8.2-pre9, main)
+**Date:** 2026-04-01
+**Branch:** main  |  **Tag:** v2.8.2-pre9  |  **Commit:** `84e4c4920`
+
+### Root cause analysis
+`onFocusChangeListener` on card/tile roots never fired with `hasFocus=true` because child `Button` views inside each card were focusable by default. When D-pad navigated to a card, Android's focus engine passed focus to the first focusable descendant (the `actionBtn` button) instead of the card root — so the card's stroke/highlight code never ran. The user could press A (onClick still worked via touch dispatch) but had no visual indicator.
+
+### Changes
+- **3 files × 2 view modes = 6 locations patched**
+- Added `card.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS)` — focus now lands on the card/tile root, not children
+- Upgraded `onFocusChangeListener`: 3dp gold (#FFD700) stroke + slightly lighter background tint on focus; both cleared on blur
+- Added `import android.view.ViewGroup` to all three files
+
+#### Files modified
+| File | Change |
+|------|--------|
+| `extension/GogGamesActivity.java` | Import + list card + poster tile |
+| `extension/EpicGamesActivity.java` | Import + list card + grid tile |
+| `extension/AmazonGamesActivity.java` | Import + list card + grid tile |
+
+### CI
+- **Workflow:** Build APK (Quick — Normal only)
+- **Run:** 23874934728  |  **Result:** ✅ success
 
 ---
 
@@ -3700,3 +3967,736 @@ Porting BannerHub (5.3.5 smali) UI upgrades to BannerHub Lite (5.1.4 Java extens
 - `patches/smali_classes5/HomeLeftMenuDialog.smali`: pswitch_10 const-class updated from com.xj.landscape.launcher.ui.menu.GogMainActivity → app.revanced.extension.gamehub.GogMainActivity
 - `patches/AndroidManifest.xml`: removed old smali package registrations; added app.revanced.extension.gamehub.GogMainActivity/GogLoginActivity/GogGamesActivity
 - `build.yml` + `build-quick.yml`: added Java compilation step (javac + d8) injecting classes18.dex into rebuilt APK
+
+## Entry 79 — v2.7.5-pre — Fix Winlator HUD: root cache, real FPS, drag support (2026-03-27)
+
+**Files touched:**
+- `extension/BhFrameRating.java`
+- `patches/smali_classes16/com/xj/winemu/sidebar/BhPerfSetupDelegate.smali`
+
+**Root cause analysis:**
+1. **Root dialog on every sidebar open**: `isRootAvailable()` ran `su -c id` on the UI thread every `onAttachedToWindow()` call. With Magisk, this triggers a root grant dialog every time the Performance sidebar opens. Fixed by adding `rootChecked`/`rootAvailable` static fields — su is spawned at most once per app process lifetime.
+2. **FPS stuck at 1**: `ProfilePuller$AdrenoProfilePuller.c()` reads GPU utilization (busy/total ratio 0.0–1.0) from `/sys/class/kgsl/kgsl-3d0/gpubusy`, NOT FPS. Returned ~1.0 which displayed as "FPS 1". Fixed by reading FPS from `WineActivity.h` (WinUIBridge field) → `.M()` method via reflection. Also changed BhPerfSetupDelegate to pass Activity (not applicationContext) to BhFrameRating so the WinUIBridge can be accessed.
+3. **HUD cannot be dragged**: No touch listener was added. Fixed by adding `OnTouchListener` in constructor — on ACTION_DOWN, switches LayoutParams gravity to 0 and records absolute position; on ACTION_MOVE, updates leftMargin/topMargin.
+4. **GPU showing 0%**: `gpu_busy_percentage` sysfs file may not be world-readable. Switched to `gpubusy` (same file GameHub uses natively, format "busy total") as primary source.
+
+**CI:** v2.7.5-pre
+
+## Entry 80 — v2.7.5-pre — Fix root call + real FPS from HudDataProvider (2026-03-27)
+
+**Files touched:**
+- `extension/BhFrameRating.java`
+- `patches/smali_classes16/com/xj/winemu/sidebar/BhPerfSetupDelegate.smali`
+
+**Root cause analysis:**
+1. **Sidebar still requesting root**: `isRootAvailable()` was still present (just cached) — but any `su` call triggers the Magisk dialog. Full fix: removed `isRootAvailable()` entirely from `BhPerfSetupDelegate`. Sidebar now reads `root_granted` boolean from `bh_prefs` SharedPreferences (written by `BhRootGrantHelper` via the app settings menu). Zero su calls from sidebar.
+2. **FPS still 1**: `WinUIBridge.M()` internally calls `ProfilePuller.Companion.a().c()` — which is GPU ratio (0.0-1.0), exactly the same wrong path. Real FPS source: `WineActivity.j` field → `HudDataProvider.a()` which returns the averaged FPS from a sampled LinkedList (the same data GameHub's HUD displays). Fixed via reflection on field `j` then method `a`.
+
+**CI:** v2.7.5-pre (re-tagged)
+
+## Entry 81 — v2.7.6-pre — 3-way API selector: GameHub / EmuReady / BannerHub (2026-03-27)
+
+**Files touched:**
+- `patches/smali_classes6/app/revanced/extension/gamehub/prefs/GameHubPrefs.smali`
+
+**What changed:**
+- Replaced boolean `use_external_api` with int `api_source` (0=GameHub default, 1=EmuReady, 2=BannerHub)
+- Added `getApiSource()I` method — reads `api_source` int from prefs
+- `isExternalAPI()` now delegates to `getApiSource() != 0` — all 5 call sites unchanged
+- `toggleAPI()` now cycles 0→1→2→0 via (current+1)%3 instead of XOR flip
+- `getEffectiveApiUrl()`: 3-way URL branch — BannerHub = `https://bannerhub-api.the412banner.workers.dev/`
+- Startup mismatch check: `last_api_source` now stored as int (was boolean); uses `getInt`/`putInt`
+- `handleSettingToggle()` for CONTENT_TYPE_API: 3-way toast messages; returns `isExternalAPI()` for switch visual
+- `getCustomSettingName()`: row label changed from "EmuReady API" to "Compatibility API"
+- Added `BANNERHUB_URL` field
+
+**UX:** Tap the "Compatibility API" row in settings to cycle. Toast confirms selection. Switch ON = non-GameHub selected.
+
+**CI:** v2.7.6-pre
+
+## Entry 82 — v2.7.7-pre — 3-way API selector AlertDialog (2026-03-27)
+
+**Files touched:**
+- [MOD] `patches/smali_classes6/app/revanced/extension/gamehub/prefs/GameHubPrefs.smali`
+- [NEW] `patches/smali_classes16/com/xj/winemu/sidebar/BhApiSelectorListener.smali`
+- [NEW] `patches/smali_classes10/com/xj/landscape/launcher/ui/setting/holder/SettingSwitchHolder.smali`
+
+**Root cause / motivation:**
+Cycle-tap was confusing — user couldn't tell which API was active or switch directly to a specific one.
+Solution: intercept the click at `SettingSwitchHolder.w()` (has the View's context available) and show an
+AlertDialog with radio buttons pre-selected from the current `api_source` pref.
+
+**Methods added / changed:**
+- `GameHubPrefs.setApiSource(I)V` — saves `api_source` + `last_api_source` int prefs, calls `clearComponentAndTokenCaches()`, shows appropriate toast
+- `BhApiSelectorListener.onClick(DialogInterface, int)V` — implements `DialogInterface.OnClickListener`; calls `setApiSource(which)`, dismisses dialog, updates switchBtn via `isExternalAPI()`
+- `SettingSwitchHolder.w()` — bumped `.locals 5→9`; after `getContentType()→v3`, check `v3==0x1a`; if yes: fetch switchBtn, get context, build AlertDialog.Builder with 3-item CharSequence array, pre-select `getApiSource()`, attach `BhApiSelectorListener`, `show()`, return Unit early; else fall through to `:cond_normal_toggle`
+
+**CI:** ✅ run 23652279209 (v2.7.7-pre, 3m53s)
+
+---
+
+## Entry 90 — v2.7.5-pre3 — FPS overlay: fix API label reading runtime engine name (2026-03-28)
+**Commit:** `62aa09c68`  |  **Tag:** v2.7.5-pre3  |  **Branch:** main  |  **[CI✅]** run 23687466600
+
+**Root-cause analysis:**
+readApiName() checked SP keys pc_ls_DXVK and pc_ls_VK3k (what renderer is configured per-game). Game had both set; code checked DXVK first and returned early → always showed "DXVK" even when VKD3D was the active renderer. The original GameHub HUD does NOT read SP for the API name — it uses a runtime callback: Wine/DXVK/VKD3D calls back via a native Unix socket perf event (PerfPlugin → PerfEventListener.d(driverName, driverVersion, engineName, ...)) on first frame presented → ProgramController.d() → HUDLayer.setEngineName() → UnifiedHUDView.a = engineName.toUpperCase(). Field a defaults to "N/A" before first frame.
+
+**Methods changed:**
+- `readApiName()` — complete rewrite: reflect WineActivity.g (ActivityWineBinding) → .hudLayer (HUDLayer) → .b (UnifiedHUDView) → .a (String); return "API" if null/"N/A"/empty; SharedPreferences import removed
+
+**Files modified:** 1
+- `extension/BhFrameRating.java`
+
+---
+
+## Entry 89 — v2.7.5-pre2 — FPS overlay: CHRG label when charging, strip API version (2026-03-28)
+**Commit:** `57de19552`  |  **Tag:** v2.7.5-pre2  |  **Branch:** main  |  **[CI✅]** run 23687095100
+
+**Root-cause analysis:**
+Two user-reported issues from pre1 test: (1) BAT label disappeared entirely when device is charging — should show "CHRG" to confirm the charging state is detected. (2) API label showed full displayName string (e.g. "DXVK dxvk-2.3.1") — user wants type-only label ("DXVK", "VKD3D", "WineD3D"). Logcat confirmed both features were working (no exceptions); changes are purely display logic. Also: `sepBat` field was only used for the hide/show logic — since BAT is now always visible, field + its save are removed; `showName()` + `org.json` import no longer needed.
+
+**Methods changed:**
+- `run()` → `handler.post()` — charging branch: `tvBat.setText("CHRG")` instead of GONE; removed `sepBat` visibility calls
+- `readApiName()` — DXVK/VKD3D branches return bare label only, no version suffix
+
+**Methods removed:**
+- `showName(String)` — no longer needed
+
+**Files modified:** 1
+- `extension/BhFrameRating.java`
+
+---
+
+## Entry 88 — v2.7.5-pre1 — FPS overlay: API label, FPS graph, charging detection (2026-03-28)
+**Commit:** `ffefa9c32`  |  **Tag:** v2.7.5-pre1  |  **Branch:** main  |  **[CI✅]** run 23686862934 (3m46s)
+
+**Root-cause analysis:**
+BhFrameRating overlay was missing two Winlator overlay features: (1) DXVK/VKD3D/WineD3D API label at the left end, (2) FPS history graph at the right end. Additionally, BAT watts were always shown even when device is charging (GameHub's own HUD hides this when charging). The original GameHub HUD uses HudDataProvider.b() (ACTION_BATTERY_CHANGED sticky broadcast) for charging detection and stores selected renderer in pc_g_setting{gameId} SP under keys pc_ls_DXVK / pc_ls_VK3k as JSON PcSettingDataEntity objects.
+
+**Methods added:**
+- `readApiName()` — reads WineActivity.u.a (gameId), opens pc_g_setting{gameId} SP, reads pc_ls_DXVK or pc_ls_VK3k JSON, applies showName() logic (displayName fallback to name), returns "DXVK X", "VKD3D X", or "WineD3D"
+- `showName(String json)` — mirrors PcSettingDataEntity.getShowName(): displayName if non-empty, else name
+- `isCharging()` — uses ACTION_BATTERY_CHANGED sticky broadcast (same as HudDataProvider.b()); returns true when BATTERY_STATUS_CHARGING or FULL
+- `dpToPx(Context, int)` — dp → px helper for FpsGraphView layout
+- `FpsGraphView` (inner static class) — 30-sample float ring buffer, Canvas bar chart; push(float) adds sample + invalidates; bars color-shift green→red relative to max sample in window
+
+**Methods changed:**
+- `addSep(Context)` — return type void → View so sepBat ref can be saved
+- Constructor — added tvApi (left, purple 0xFFCE93D8), saved sepBat ref, added FpsGraphView at right with 60dp width
+- `run()` — calls readApiName(), isCharging(), conditionally hides sepBat+tvBat when charging, pushes fps to fpsGraph
+
+**Files modified:** 1
+- `extension/BhFrameRating.java`
+
+---
+
+## Entry 87 — v2.7.4-pre6 — fix: VRam Limit read from SharedPreferences (2026-03-27)
+**Commit:** `2a51abc2b`  |  **Tag:** v2.7.4-pre6  |  **Branch:** main  |  **[CI✅]** run 23668107295
+
+**Root-cause analysis:**
+`WINEMU_MEMORY_LIMIT` env var is set by EnvironmentController.l() in the EnvVars map and passed to the native wine binary via execve. However, wine child processes (.exe) may not inherit it consistently, causing readWineEnv("WINEMU_MEMORY_LIMIT") to return null while readWineEnv("WINEMU_CPU_AFFINITY") works. The reliable source is the SharedPreferences file — the same source GameHub uses. SP file: `pc_g_setting<gameId>`, key: `pc_ls_max_memory` (int, MB). WineActivity stores gameId in field `u` (WineActivityData), field `a`.
+
+**Methods added:**
+- `getContainerVramInfo(Context)V` — new static method in `BhTaskManagerFragment.smali` (`.locals 3`): check-cast to WineActivity → iget WineActivityData (field u) → iget gameId (field a) → build SP name → getSharedPreferences → getInt("pc_ls_max_memory", 0) → "XXXX MB" / "Unlimited" / "N/A"
+
+**Methods changed:**
+- `onCreateView(...)` — VRam row: replaced readWineEnv block (20 lines) with invoke-static to getContainerVramInfo (3 lines)
+
+**Files modified:** 1
+- `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment.smali`
+
+---
+
+## Entry 86 — v2.7.4-pre5 — VRam Limit row in Container Info (2026-03-27)
+**Commit:** `0371035de`  |  **Tag:** v2.7.4-pre5  |  **Branch:** main  |  **[CI✅]** run 23667070420
+
+**Root-cause analysis:**
+Task Manager RAM row (5718 MB / 15278 MB total) showed device system RAM — no VRam limit visible, even when user had VRam Limit = 512 MB in Game Settings. `WINEMU_MEMORY_LIMIT` env var is the VRam limit (not system RAM), set by EnvironmentController via execve into wine child process. System RAM shows nothing container-specific, so a dedicated VRam row is needed.
+
+**Methods changed:**
+- `onCreateView(...)` in `BhTaskManagerFragment.smali`: RAM label renamed "Sys RAM:"; new VRam Limit row added after it — calls `readWineEnv("WINEMU_MEMORY_LIMIT")`, appends " MB" if found, "Unlimited" if null
+
+**Files modified:** 1
+- `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment.smali`
+
+---
+
+## Entry 87 — v2.7.5-pre5 — feat: Extra Detailed checkbox for Winlator HUD (2026-03-28)
+**Commit:** `3efcb78ad`  |  **Tag:** v2.7.5-pre5  |  **Branch:** main  |  **[CI✅]** run 23689179502
+
+**Root-cause analysis:**
+User requested additional HUD stats (per-core MHz, GPU model/freq/temp, SWAP, BAT%, skin temp, fan, time). Previous overlay had no room in horizontal mode. Solution: extra detail block only shown in vertical mode (after tap-to-toggle), controlled by a new CheckBox in the Performance sidebar. BhFrameRating reads `hud_extra_detail` pref every second in its background loop — no direct method call from smali needed.
+
+**Methods added/changed:**
+- `addExtraLabel(Context, String, int)V` — new helper, adds TextView to extraDetailGroup
+- `readCoreMhz()` → `int[]` — reads 8 cores from `cpufreq/scaling_cur_freq` (kHz→MHz)
+- `readGpuMhz()` → `int` — kgsl gpuclk (Hz→MHz) or clock_mhz
+- `readGpuModel()` → `String` — kgsl gpu_model, TM marker stripped
+- `readGpuThermal()` → `int` — thermal zone type="gpu"
+- `readSkinTemp()` → `int` — thermal zone type="skin"
+- `readThermalZone(String)` → `int` — scans 30 thermal zones by type name
+- `readRamDetail()` → `float[]` — used/total GB via ActivityManager
+- `readSwap()` → `String` — parses /proc/meminfo SwapTotal/SwapFree
+- `readBatPercent()` → `int` — BATTERY_PROPERTY_CAPACITY
+- `readFanSpeed()` → `int` — hwmon fan*_input (0 if no sensor)
+- `readTime()` → `String` — SimpleDateFormat HH:mm
+- `run()` extended: reads newExtra each cycle, syncs extraDetailGroup visibility, posts extra rows
+- `toggleOrientation()` extended: updates extraDetailGroup visibility on orientation flip
+
+**Files created:** 1
+- `patches/smali_classes16/com/xj/winemu/sidebar/BhHudExtraDetailListener.smali`
+
+**Files modified:** 2
+- `extension/BhFrameRating.java`
+- `patches/smali_classes16/com/xj/winemu/sidebar/BhPerfSetupDelegate.smali`
+
+---
+
+## Entry 86 — v2.7.5-pre4 — feat: tap-to-toggle vertical/horizontal FPS overlay (2026-03-28)
+**Commit:** `1b7994096`  |  **Tag:** v2.7.5-pre4  |  **Branch:** main  |  **[CI✅]** run 23688722622
+
+**Root-cause analysis:**
+The FPS overlay had no way to switch layout once placed. Horizontal mode takes up screen width; vertical mode is useful on narrow screen edges. Single tap (< 10px drag = tap) now calls `toggleOrientation()` which flips `LinearLayout` orientation, hides/shows separators (GONE in vertical), and updates `FpsGraphView` LayoutParams (60dp wide × MATCH_PARENT tall horizontal; MATCH_PARENT wide × 40dp tall vertical). `dragMoved` flag tracks whether `ACTION_MOVE` exceeded slop before `ACTION_UP` fires.
+
+**Methods added/changed:**
+- `toggleOrientation()V` — new method in `BhFrameRating.java`; flips `isVertical`, calls `setOrientation()`, iterates `sepViews` list, updates fpsGraph and all label `LayoutParams`, calls `requestLayout()`
+- `onTouch()` (anonymous `OnTouchListener`) — added `dragStartX/Y`, `dragMoved` tracking; `ACTION_UP` branch triggers `toggleOrientation()` when not dragged
+
+**Files modified:** 1
+- `extension/BhFrameRating.java`
+
+---
+
+## Entry 85 — v2.7.4-pre4 — fix: smali if-ltz for readWineEnv() zero comparisons (2026-03-27)
+**Commit:** `b258d3848`  |  **Tag:** v2.7.4-pre4  |  **Branch:** main  |  **[CI✅]** run 23666627847
+
+**Root-cause analysis:**
+Entry 84's `readWineEnv()` used `if-lt vX, 0, :label` at two points (indexOf result checks). Smali's `if-lt` instruction requires two register operands — a literal `0` is not a register. The assembler rejected it: "mismatched input '0' expecting REGISTER". The correct single-register form for "less than zero" is `if-ltz vX, :label`.
+
+**Methods changed:**
+- `readWineEnv(String)V` in `BhTaskManagerFragment.smali` — line 229: `if-lt v6, 0, :next_proc` → `if-ltz v6, :next_proc`; line 241: `if-lt v7, 0, :value_to_end` → `if-ltz v7, :value_to_end`
+
+**Files modified:** 1
+- `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment.smali`
+
+---
+
+## Entry 84 — v2.7.4-pre4 — Wine Task Manager container-accurate CPU + RAM (2026-03-27)
+**Commit:** `3e444a792`  |  **Tag:** v2.7.4-pre4  |  **Branch:** main  |  **[CI✅]** run 23664109023
+
+**Root-cause analysis:**
+CPU and RAM rows in Task Manager showed device-wide values (Runtime.availableProcessors() / /proc/meminfo totals), not what is configured per container. EnvironmentController sets `WINEMU_CPU_AFFINITY` (affinity bitmask int) and `WINEMU_MEMORY_LIMIT` (MB int) as env vars in the `:wine` process before launch. Since BhTaskManagerFragment runs in that same process, `System.getenv()` reads them directly.
+
+**Files modified:**
+- `[MOD]` `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment.smali`
+
+**Methods added:**
+- `getContainerCpuInfo()Ljava/lang/String;` (.locals 5): reads `WINEMU_CPU_AFFINITY` → `Integer.parseInt()` → `Integer.bitCount()` for assigned core count; 0 = no limit (fallback to `getActiveCores()`); returns "CPU Cores:  X / Y total"
+- `getContainerRamInfo()Ljava/lang/String;` (.locals 10): reads `/proc/meminfo` for usedMb/totalMb; reads `WINEMU_MEMORY_LIMIT` → if set+nonzero returns "X MB used / Y MB limit", else "X MB used / Y MB total"; two try-catch blocks (RAF read + env parse)
+
+**Methods removed:**
+- `getRamInfo()Ljava/lang/String;` — replaced entirely by `getContainerRamInfo()`
+
+**Methods changed:**
+- `onCreateView()` — CPU row: replaced 14-line inline StringBuilder with `invoke-static getContainerCpuInfo()`; RAM row: calls `getContainerRamInfo()` instead of `getRamInfo()`
+
+**Key smali notes:**
+- `append(J)` long pair: {sb, lo, hi} e.g. {v6, v4, v5} — v4-v5 must be a consecutive long pair
+- v8 needed in limit path for " MB used / " string to avoid clobbering v7 (limitMb int)
+- Branches from within try block to label outside try block (e.g. `:no_limit`, `:build_cpu_str`) are valid smali; try-catch only catches exceptions
+
+---
+
+## Entry 83 — v2.7.4-pre4 — Wine Task Manager three-tab UI (2026-03-27)
+
+**Files touched:**
+- [NEW] `patches/res/drawable/sidebar_taskmanager.xml`
+- [NEW] `patches/res/layout/winemu_activitiy_settings_layout.xml`
+- [MOD] `patches/res/values/public.xml` — added id/sidebar_taskmanager (0x7f0a0f10) + drawable/sidebar_taskmanager (0x7f080b4e)
+- [NEW] `patches/smali_classes16/com/xj/winemu/sidebar/BhTabListener.smali`
+- [NEW] `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskClickListener.smali`
+- [MOD] `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment.smali` — complete rewrite for three-tab UI
+- [NEW] `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment$KillListener.smali`
+- [NEW] `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment$RefreshListener.smali`
+- [NEW] `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment$ScanRunnable.smali`
+- [NEW] `patches/smali_classes16/com/xj/winemu/sidebar/BhTaskManagerFragment$UpdateRunnable.smali`
+- [MOD] `patches/smali_classes3/com/xj/winemu/sidebar/WineActivityDrawerContent.smali`
+
+**Root cause / motivation:**
+User confirmed Wine Task Manager working, then requested three-tab UI: Applications (.exe), Processes (wine infra), Performance (CPU/RAM/VRAM).
+classes6 and classes9 are both at 65535 method-ref limit — all new code in smali_classes16.
+
+**Bugs hit:**
+1. `const-wide/16 v2, 0x100000` — overflow (>16-bit signed); fixed to `const-wide/32`
+2. `const/high16 v1, 0x4150` — invalid; requires full 32-bit `0x41500000`
+3. `StringBuilder.append(J)` with 2 registers instead of 3 (long occupies lo+hi pair) → VerifyError
+4. Wrong `String.hashCode()` constant for "BhTaskManagerFragment" (manual calc off); corrected to `-0x37c3556e` via javac/java
+5. `.locals 14` in `onScanComplete` → p2 mapped to v16, invalid in non-range invoke; fixed to `.locals 13`
+
+**Methods added / changed:**
+- `BhTabListener.<init>(BhTaskManagerFragment,I)V` — stores fragment + tabIndex
+- `BhTabListener.onClick(View)V` — calls `fragment.showTab(tabIndex)`
+- `BhTaskClickListener.invoke()V` — Function0; calls `WineActivityDrawerContent.U("BhTaskManagerFragment")`
+- `BhTaskManagerFragment.<init>()V` — trivial Fragment constructor
+- `BhTaskManagerFragment.showTab(I)V` — hides all 3 layout panels; shows selected one (0=apps, 1=procs, 2=perf)
+- `BhTaskManagerFragment.onCreateView()` — builds tab bar (3 weighted Buttons + ↺ refresh), appsLayout (VISIBLE), procsLayout (GONE), perfLayout (GONE with CPU/RAM/VRAM content)
+- `BhTaskManagerFragment.startScan()V` — spawns background Thread(ScanRunnable)
+- `BhTaskManagerFragment.onScanComplete(ArrayList,ArrayList)V` — routes .exe → appsLayout, others → procsLayout; empty-state placeholders
+- `BhTaskManagerFragment$ScanRunnable.run()V` — reads /proc/*/comm, filters wine/.exe, posts UpdateRunnable
+- `BhTaskManagerFragment$UpdateRunnable.run()V` — calls onScanComplete on main thread
+- `BhTaskManagerFragment$KillListener.onClick(View)V` — Process.sendSignal(pid,9) + startScan()
+- `BhTaskManagerFragment$RefreshListener.onClick(View)V` — calls startScan()
+- `WineActivityDrawerContent.<init>()` — added BhTaskClickListener for sidebar_taskmanager (0x7f0a0f10)
+- `WineActivityDrawerContent.U(String)` — hash -0x37c3556e check for "BhTaskManagerFragment"
+
+**Commit:** `44c53437d`  |  **Tag:** v2.7.4-pre4
+**CI:** [CI✅] run 23659625566
+
+---
+
+## Entry 122 — v2.7.6-pre — Fix offline component picker (2026-03-29)
+
+**Root cause:** `appendLocalComponents` calls `EmuComponents.e()` to get the in-memory singleton. This singleton (`EmuComponents.d`) is only set by `WinEmuServiceImpl$Companion.b(Context)` — which only runs when a game is launched via Wine. In a fresh process session where no game has been launched yet, `EmuComponents.d == null`. The method hit `if-eqz v0, :done` immediately and returned with no entries added.
+
+Online: API provides the list so this went unnoticed. Offline: API fails → fallback builds default items only → `appendLocalComponents` returns nothing → injected DXVK/Box64/etc. don't appear in the component picker.
+
+**Fix:**
+- `appendLocalComponents`: added lazy init block — if `EmuComponents.e()` returns null, call `Companion.b(Application)` using `Utils.a()` (Blankj application context) to load from `sp_winemu_all_components12` SharedPreferences before iterating.
+
+**Files changed:**
+- `patches/smali_classes16/com/xj/landscape/launcher/ui/menu/ComponentInjectorHelper.smali`
+
+**Methods changed:**
+- `ComponentInjectorHelper.appendLocalComponents(List, int)V` — added 7-instruction lazy-init block before `if-eqz v0, :done`
+
+**Commit:** `8e0160aa9`  |  **Tag:** v2.7.6-pre
+**CI:** ✅ run 23697679345
+
+---
+
+## Entry 123 — amazon-integration Phase 1 — Amazon auth skeleton (2026-03-29)
+
+**Root cause / motivation:** Begin Amazon Games integration on the `amazon-integration` branch. Phase 1 establishes the auth layer: PKCE device registration, credential persistence, and the entry-point Activity reachable via side menu.
+
+**What was added:**
+- `AmazonPKCEGenerator`: device serial (UUID hex uppercase), clientId (hex UTF-8 of `serial#A2UMVHOX7UP4V7`), code verifier (32 SecureRandom bytes Base64 URL_SAFE/NO_PAD/NO_WRAP), code challenge (SHA-256 S256, same Base64), sha256Upper (uppercase hex for hardwareHash)
+- `AmazonCredentialStore`: JSON file at `filesDir/amazon/credentials.json`; fields: access_token, refresh_token, device_serial, client_id, expires_at (epoch ms); getValidAccessToken() auto-refreshes 5min before expiry
+- `AmazonAuthClient`: POST https://api.amazon.com/auth/register (PKCE exchange, parses `response.success.tokens.bearer`), POST https://api.amazon.com/auth/token (refresh, reuses old refresh_token), POST https://api.amazon.com/auth/deregister (non-fatal logout)
+- `AmazonLoginActivity`: WebView loads Amazon sign-in with code_challenge; intercepts redirect to `https://www.amazon.com/?openid.assoc_handle=amzn_sonic_games_launcher`; AtomicBoolean prevents double-fire; background Thread calls registerDevice; saves creds + finish()
+- `AmazonMainActivity`: entry point (side menu ID=11/0xb); login card (Amazon orange #FF9900) / logged-in card; sign out deregisters + clears; opens AmazonGamesActivity
+- `AmazonGamesActivity`: stub placeholder (Phase 2 replaces with library list)
+- `HomeLeftMenuDialog.smali`: `:pswitch_11` → AmazonMainActivity; Amazon menu item ID=0xb; packed-switch extended with `:pswitch_11`
+- `AndroidManifest.xml`: AmazonMainActivity, AmazonLoginActivity, AmazonGamesActivity registered
+
+**Files changed:**
+- `extension/AmazonPKCEGenerator.java` (new)
+- `extension/AmazonCredentialStore.java` (new)
+- `extension/AmazonAuthClient.java` (new)
+- `extension/AmazonLoginActivity.java` (new)
+- `extension/AmazonMainActivity.java` (new)
+- `extension/AmazonGamesActivity.java` (new, stub)
+- `patches/smali_classes5/com/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog.smali`
+- `patches/AndroidManifest.xml`
+
+**Methods changed:**
+- `HomeLeftMenuDialog` pswitch handler: added `:pswitch_11` block
+- `HomeLeftMenuDialog` menu builder: added Amazon menu item (id=0xb)
+- `HomeLeftMenuDialog` packed-switch: extended from 0xa to 0xb
+
+**Commit:** (pending)  |  **Branch:** amazon-integration
+**CI:** pending first build
+
+---
+
+## Entry 124 — amazon-integration Phase 2 — Library sync + game cards (2026-03-29)
+
+**Root cause / motivation:** Phase 2 implements the library sync (GetEntitlements API) and the game list UI. Users can now log in and see their Amazon library.
+
+**What was added:**
+- `AmazonGame`: POJO data class; shortId() strips "amzn1.adg.product." prefix for display
+- `AmazonApiClient`: POST GetEntitlements (paginated, dedup by productId, hardwareHash = sha256Upper(serial)); POST GetGameDownload (uses entitlementId); POST GetLiveVersionIds; GET SDK channel spec; appendPath helper (splits at '?' to preserve query params); postGaming adds X-Amz-Target + x-amzn-token + Content-Encoding: amz-1.0; getBytes for manifest.proto download
+- `AmazonGamesActivity` (full): header with back/refresh buttons; indeterminate ProgressBar; ScrollView with collapsible cards; top row: 60×60 cover art (async HTTP load) + title/developer/installed indicator + expand arrow; expand section: publisher, product ID, Install/Launch stubs; SharedPreferences cache (bh_amazon_prefs, amazon_library_cache); install state preserved from cache on re-sync; token auto-refresh via AmazonCredentialStore.getValidAccessToken()
+
+**Files changed:**
+- `extension/AmazonGame.java` (new)
+- `extension/AmazonApiClient.java` (new)
+- `extension/AmazonGamesActivity.java` (replaced Phase 1 stub)
+
+**Commit:** (pending)  |  **Branch:** amazon-integration
+**CI:** pending
+
+---
+
+## Entry 125 — amazon-integration Phase 3 — Manifest parser + download pipeline (2026-03-29)
+
+**Root cause / motivation:** Phase 3 implements the actual game download: protobuf manifest parsing and parallel file-by-hash download.
+
+**What was added:**
+- `AmazonManifest`: parse binary format (4-byte big-endian headerSize, ManifestHeader protobuf for compression, LZMA/XZ body); minimal ProtoReader (varint/length-delimited/skip); XZInputStream detection via 0xFD 0x37 magic; ManifestFile.hashHex() uses `b & 0xFF` for correct unsigned encoding; ManifestFile.unixPath() converts backslashes; ParsedManifest computes allFiles + totalInstallSize
+- `AmazonDownloadManager`: ExecutorService(6) batches; downloadFileWithRetry (3 attempts, exponential backoff); resume check destFile.length()==file.size; file URL = appendPath(baseUrl, "files/"+hashHex); User-Agent "nile/0.1 Amazon"; SHA-256 verify (Arrays.equals); write to .tmp then rename; progress AtomicLong + lastEmit compareAndSet (emit every 512KB); cancellation checked between batches + in read loop; IN_PROGRESS_MARKER at start / COMPLETE_MARKER on success; manifest cached at filesDir/manifests/amazon/
+- `AmazonGamesActivity` updated: Install → startInstall() → background thread; progress on button text; install state + installPath persisted to bh_amazon_prefs cache; Uninstall → confirmUninstall() → AlertDialog → deleteDir recursive; showGames() refreshes cards after install/uninstall
+
+**Files changed:**
+- `extension/AmazonManifest.java` (new)
+- `extension/AmazonDownloadManager.java` (new)
+- `extension/AmazonGamesActivity.java` (install/uninstall wired up)
+
+**Commit:** (pending)  |  **Branch:** amazon-integration
+**CI:** pending
+
+---
+
+## Entry 126 — amazon-integration Phase 4+5+6 — Launch, SDK, Polish (2026-03-29)
+
+**Phase 4 — Launch:**
+- `AmazonLaunchHelper`: fuel.json parser (Main.Command, WorkingSubdirOverride, Args from JSONArray); exe scoring heuristic (Java port of ExecutableSelectionUtils.kt — UE shipping +300, UE Binaries/ +250, root-level +200, name fuzzy match +100, negative keywords -150, generic -200, tiebreak by size); `buildFuelEnv()` 5 FuelPump env vars (FUEL_DIR, AMAZON_GAMES_SDK_PATH, AMAZON_GAMES_FUEL_ENTITLEMENT_ID, AMAZON_GAMES_FUEL_PRODUCT_SKU, AMAZON_GAMES_FUEL_DISPLAY_NAME=Player)
+- `LandscapeLauncherMainActivity.smali`: Amazon pending launch check mirroring GOG pattern — reads `pending_amazon_exe` from `bh_amazon_prefs` → calls `B3(exePath)` → clears pref
+- `AmazonGamesActivity`: Launch button → `launchGame()` → background thread → `ensureSdkFiles()` → `buildLaunchSpec()` → stores `pending_amazon_exe` → finish()
+
+**Phase 5 — SDK:**
+- `AmazonSdkManager`: GET SDK channel spec (LAUNCHER_CHANNEL_ID); manifest.proto pipeline (same as game); filter `"Amazon Games Services"` files, skip `._*` macOS forks; `FuelSDK_x64.dll` → `Legacy/`; `AmazonGamesSDK_*` → `AmazonGamesSDK/`; cache at `filesDir/amazon_sdk/` + `.sdk_version` sentinel; `isSdkCached()` = VERSION_FILE exists + hasAnyFile in Amazon Games Services/; `deploySdkToPrefix()` idempotent copy (skip if dest exists + size matches); `ensureSdkFiles()` called from install AND launch
+
+**Phase 6 — Polish:**
+- Update check: `checkForUpdates()` in sync thread — `GetLiveVersionIds` per installed game; if `liveVersion != versionId` → marks `versionId += "_UPDATE_AVAILABLE"` → card shows "✓ Installed — Update Available" in orange
+- Launch: `ensureSdkFiles()` called in background thread before building launch spec
+- Uninstall: confirmation dialog + recursive deleteDir + bh_amazon_prefs cache update (Phase 3, now confirmed complete)
+
+**Files changed:**
+- `extension/AmazonLaunchHelper.java` (Phase 4, new)
+- `patches/smali_classes11/.../LandscapeLauncherMainActivity.smali` (Phase 4)
+- `extension/AmazonSdkManager.java` (Phase 5, new)
+- `extension/AmazonGamesActivity.java` (all phases — install/launch/uninstall/update-check)
+
+**Commits:** Phase 4 `edc4fbeca`, Phase 5 `024d6f199`  |  **Branch:** amazon-integration
+**CI Phase 4:** ✅ run 23707604129  |  **CI Phase 5:** ✅ run 23707686644
+
+---
+## Entry 130 — stable: v2.8.8 — Game Configs browser (community share, My Uploads, D-pad, votes, downloads, descriptions) (2026-04-03)
+
+**Commits:** `e08dc7c8b`–`b2c789300` | **Tag:** v2.8.8
+**Root cause / motivation:** Full community Game Configs feature — users can browse, vote, download, and upload configs by game; uploaders can add descriptions; D-pad nav on all 4 screens.
+
+**Files touched:**
+- `extension/BhGameConfigsActivity.java` — 4-screen browser (games list, configs list, detail, My Uploads); D-pad gold outlines via StateListDrawable + setSelector; count badge; age indicator; verified SOC badge; share/report buttons; vote button; uploader description; fetchMeta flat-format fallback (finalSc/finalCc lambda fix)
+- `extension/BhSettingsExporter.java` — community import URL fix (construct from game_folder+filename); upload token generation + SP record storage
+- Cloudflare Worker `/tmp/bannerhub-configs-worker.js` — deployed: BootstrapPackagedGame filter; download count tracking; token-auth description; GET /desc + POST /describe routes; downloads field in /list
+
+**CI:** ✅ run 23969711793 — 9 APKs
+
+## Entry 138 — stable v2.8.9 + README update (2026-04-04)
+
+**Branch:** main | **Commit:** `fd0f81656` (README) | **Tag:** v2.8.9 | **CI:** ✅ run 23984847514 — 9 APKs
+
+**Files modified:**
+- `README.md` — added Community Game Configs section (4-screen browser, SOC filter chips, vote/comments, My Uploads); updated Per-Game Config Export/Import section (preview dialog, SOC mismatch warning); updated ToC
+
+**Stable release notes set via `gh release edit v2.8.9`.** All 5 pre-releases (pre4–pre8) deleted from GitHub after stable published.
+
+---
+
+## Entry 137 — feat: export preview + local import preview with SOC mismatch warning (v2.8.9-pre8, 2026-04-04)
+
+**Branch:** main | **Commit:** `037b6f5a6` | **Tag:** v2.8.9-pre8 | **CI:** ✅ run 23984663594
+
+**Files modified:**
+- `extension/BhSettingsExporter.java` — `showExportDialog()`, new `showLocalImportPreview()`, updated `showLocalImportDialog()`
+
+**Changes:**
+- `showExportDialog()`: reads SP key count + `buildComponentsArray()` length synchronously before showing dialog; displays Device/SOC/Settings/Components preview in `setMessage()`; replaced `.setItems()` with `.setPositiveButton()` + `.setNeutralButton()` for Save/Share/Cancel
+- `showLocalImportDialog()`: item click now calls `showLocalImportPreview()` instead of `applyConfig()` directly
+- `showLocalImportPreview()`: new method — parses config JSON, reads `meta` block (device/soc/settings_count/components_count), builds preview string, appends `⚠ SOC mismatch` block if `detectSoc(ctx)` differs from config's soc, shows AlertDialog with Apply/Cancel
+
+---
+
+## Entry 136 — feat: SOC filter chips on configs list screen (v2.8.9-pre7, 2026-04-04)
+
+**Branch:** main | **Commit:** `ad95beb43` | **Tag:** v2.8.9-pre7 | **CI:** ✅ run 23984467858
+
+**Files modified:**
+- `extension/BhGameConfigsActivity.java` — `buildConfigsScreen()`, new `buildSocChips()`, new `addSocChip()`, new `applyFilter()`, `fetchConfigs()`
+
+**New fields:** `allConfigs` (unfiltered source list), `selectedSocFilter` (active chip value, "" = All), `socFilterBar` (LinearLayout chip container)
+
+**New import:** `android.widget.HorizontalScrollView`
+
+**Changes:**
+- `buildConfigsScreen()`: added `HorizontalScrollView` + `socFilterBar` + divider above ListView
+- `buildSocChips()`: clears bar, collects unique soc values from `allConfigs` via `LinkedHashSet`, adds "All" chip first then one per SOC
+- `addSocChip(label, filterValue)`: creates a styled pill Button (rounded, accent fill when selected, grey outline otherwise); onClick sets `selectedSocFilter`, rebuilds chips, calls `applyFilter()`
+- `applyFilter()`: copies matching items from `allConfigs` → `currentConfigs` (empty filter = all), calls `refreshConfigsList()`
+- `fetchConfigs()`: now populates `allConfigs` instead of `currentConfigs` directly; resets `selectedSocFilter = ""`; calls `buildSocChips()` + `applyFilter()` on UI thread instead of `refreshConfigsList()`
+
+---
+
+## Entry 135 — chore: disable Apply to Game button (v2.8.9-pre7, 2026-04-04)
+
+**Branch:** main | **Commit:** `a356e1ab4` | **Tag:** v2.8.9-pre7 (retagged) | **CI:** ✅
+
+**Files modified:**
+- `extension/BhGameConfigsActivity.java` — `populateDetailScreen()` button creation
+
+**Change:** Apply to Game button set `setEnabled(false)` + `setAlpha(0.4f)` + null click listener. Grayed out pending reliable game name resolution for locally-added games.
+
+---
+
+## Entry 134 — fix: two-pass StarterGame lookup for Apply to Game picker (v2.8.9-pre6, 2026-04-04)
+
+**Branch:** main | **Commit:** `2cae1cc21` | **Tag:** v2.8.9-pre6 | **CI:** ✅ run 23984210142
+
+**Files modified:**
+- `extension/BhGameConfigsActivity.java` — `applyConfigToGame()` inner Runnable, added `resolveGameName()` static helper
+
+**Root cause:** For locally-added games, GameHub stores settings in `pc_g_setting{Room_id}.xml` using the Room PrimaryKey (`StarterGame.id`, auto-increment), NOT the server `gameId` field. Our query only searched `WHERE gameId IN (...)`, so locally-added games always returned 0 rows and fell back to "Game #id".
+
+**Fix:** Two-pass lookup:
+1. Pass 1: `WHERE gameId IN (...)` — matches server games
+2. Pass 2: for IDs still unmatched, `WHERE id IN (...)` — matches locally-added games
+
+Also extracted `resolveGameName(int id, String gameName, String filePath)` helper (null/empty gameName → last filePath segment → `"Game #id"`).
+
+---
+
+## Entry 133 — fix: read gpu_renderer from device_info SP for detectSoc() (v2.8.9-pre5, 2026-04-04)
+
+**Branch:** main | **Commit:** `6503f0ef3` | **Tag:** v2.8.9-pre5 | **CI:** ✅ run 23983920528
+
+**Files modified:**
+- `extension/BhSettingsExporter.java` — `detectSoc(Context)` (was `detectSoc()`)
+
+**Root cause:** `detectSoc()` was reading the raw kgsl sysfs node (`/sys/class/kgsl/kgsl-3d0/gpu_model`) as the primary GPU source. GameHub's own `GetGpuInfo` class already probes OpenGL on first launch and caches the renderer string in `device_info.xml` SP under key `gpu_renderer` — this is cleaner and more consistent with what GameHub itself uses.
+
+**Fix:** Changed `detectSoc()` to accept `Context`, added primary read of `ctx.getSharedPreferences("device_info", MODE_PRIVATE).getString("gpu_renderer", "")`. Fallback chain: kgsl sysfs → `Build.SOC_MODEL` → `Build.HARDWARE`. Both call sites updated to pass `ctx`.
+
+---
+
+## Entry 132 — fix: filePath fallback for game name in Apply to Game picker (v2.8.9-pre4, 2026-04-04)
+
+**Branch:** main | **Commit:** `7b43c4f7c` | **Tag:** v2.8.9-pre4 | **CI:** queued run 23983599649
+
+**Files modified:**
+- `extension/BhGameConfigsActivity.java` — `applyConfigToGame()` method
+
+**Root cause:** `gameName` in StarterGame can be null/empty for locally-added games, causing "Game #id" fallback even when a name is recoverable.
+
+**Fix:** Added `filePath` to the `db.query()` column list (`{"gameId","gameName","filePath"}`). When `gameName` is null or blank, extract last path segment of `filePath` (last `/`-delimited token) as display name. True orphans (deleted from GameHub library, SP file persists) still fall back to "Game #id".
+
+**Methods changed:**
+- `applyConfigToGame(JSONObject)` — inner Runnable: Cursor column list expanded, null/empty gameName check + filePath segment extraction added
+
+---
+
+## Entry 131 — fix: game configs worker KV write limit crash + JSON hardening (v2.8.9-pre3, 2026-04-04)
+
+**Branch:** main | **Commit:** `b839c7c1e` | **Tag:** v2.8.9-pre3 | **CI:** ✅ run 23982476410
+
+**Files modified:**
+- `extension/BhGameConfigsActivity.java` — `fetchGames()`, `fetchConfigs()`
+- `/tmp/bannerhub-configs-worker.js` (CF Worker, deployed)
+
+**Root cause:** CF Worker was exhausting the KV free-tier 1,000 writes/day limit during `handleGames()` (89 parallel KV reads + cache puts). Worker crashed with error 1101. App then crashed with `JSONArray` parse exception when worker returned `{"error":"..."}`.
+
+**Fix (worker):** `kvPut`/`kvDelete` helpers swallow quota errors silently. `handleGames` rewritten to fetch pre-built `games.json` from raw.githubusercontent.com (generated every 30 min by `update-games-json.yml` workflow) — eliminating all KV reads. CORS headers fixed (new Response + new Headers instead of mutating immutable headers). Top-level try-catch returns JSON error instead of CF 1101.
+
+**Fix (app):** `JSONTokener.nextValue()` + `instanceof JSONArray` check in `fetchGames()` and `fetchConfigs()` — extracts error message for Toast instead of crashing.
+
+---
+
+## Entry 130 — fix: shared_prefs scan for Apply to Game picker (v2.8.9-pre2, 2026-04-04)
+
+**Branch:** main | **Commit:** `e814eebdb` | **Tag:** v2.8.9-pre2 | **CI:** ✅ run 23982010393
+
+**Files modified:**
+- `extension/BhGameConfigsActivity.java` — `applyConfigToGame()`
+
+**Root cause:** Picker was doing a full `StarterGame` query, returning all games ever added to GameHub (including unrelated ones). Only games with a `pc_g_setting{gameId}.xml` SP file are actually configured.
+
+**Fix:** Scan `shared_prefs/` directory for files matching `pc_g_setting*.xml`, extract gameIds, then query `StarterGame WHERE gameId IN (...)` for only those IDs. Falls back to "Game #id" for orphaned SP files with no matching DB row.
+
+---
+
+## Entry 129 — feat: BhDetailedHud extra detail overlay (v2.8.3-pre, 2026-04-02)
+
+**Branch:** main | **Commit:** `5ab0566be` | **Tag:** v2.8.3-pre | **CI:** ✅ run 23882828021
+
+**Root cause / motivation:** Extra Detailed checkbox was grayed out permanently. User wanted a proper second HUD that shows per-core MHz, per-stat temperatures, and SWAP alongside all existing stats, replacing the normal HUD only when both toggles are on.
+
+**Files created:**
+- `[NEW] extension/BhDetailedHud.java` — new Java class compiled to classes18.dex
+  - `BhDetailedHud(Context)` — constructor: builds layout, sets drag touch listener
+  - `buildLayout()` — resets all view refs, calls buildHorizontal() or buildVertical()
+  - `buildHorizontal()` — 2-row stats block + MATCH_PARENT height FPS block (right)
+  - `buildVertical()` — single-column, all stats including GPU MHz + SWAP
+  - `toggleOrientation()` — flip isVertical, rebuild layout, reclampPosition()
+  - `reclampPosition()` — measure unconstrained, clamp leftMargin + translationY
+  - `makeDragListener()` — tap=toggle, drag=reposition+persist (hud_detail_pos_x/y)
+  - `onAttachedToWindow()` — restore orientation+position from prefs, start update thread
+  - `run()` — 1-second loop: read all stats, post UI updates
+  - `readCpuTemp()` — scan thermal_zone*/type for cpu-cluster/cpu0-thermal/cpu
+  - `readGpuTemp()` — kgsl sysfs /sys/class/kgsl/kgsl-3d0/temp, then thermal zone scan
+  - `readBatTemp()` — /sys/class/power_supply/battery/temp / 10
+  - `readSwap()` — /proc/meminfo SwapTotal/SwapFree → [usedGB, totalGB]
+
+**Files modified:**
+- `[MOD] patches/smali_classes16/com/xj/winemu/sidebar/BhPerfSetupDelegate.smali`
+  - Label changed: "Extra Detailed (coming soon)" → "Extra Detailed"
+  - `:cond_extra_cb_exists` block rewritten: re-reads winlator_hud pref; if ON: enable, 1.0 alpha, restore hud_extra_detail, wire BhHudExtraDetailListener; if OFF: disable, 0.5 alpha, force unchecked
+- `[MOD] patches/smali_classes16/com/xj/winemu/sidebar/BhHudInjector.smali`
+  - Full rewrite of `injectOrUpdate()`: .locals 7→11; now reads both winlator_hud + hud_extra_detail prefs; manages BhFrameRating AND BhDetailedHud (bh_detailed_hud tag) visibility with create-if-needed logic
+- `[MOD] patches/smali_classes16/com/xj/winemu/sidebar/BhHudStyleSwitchListener.smali`
+  - .locals 6→8; after BhFrameRating visibility update: finds bh_hud_extra_cb, on HUD-off: disable+0.5alpha+uncheck+clear hud_extra_detail pref+hide BhDetailedHud; on HUD-on: enable+1.0alpha
+- `[MOD] patches/smali_classes16/com/xj/winemu/sidebar/BhHudExtraDetailListener.smali`
+  - Full rewrite: .locals 3→10; saves pref then gets DecorView, finds both HUDs by tag; checked → hide BhFrameRating + show/create BhDetailedHud; unchecked → show BhFrameRating + hide BhDetailedHud
+
+---
+
+## Entry 128 — perf: parallel GOG downloads, fix Amazon batch stall, 128KB buffer (v2.8.2-pre, 2026-04-01)
+
+**Branch:** main | **Commit:** `3d51b5c47` | **Tag:** v2.8.2-pre | **CI:** queued
+
+**Root cause / motivation:** GOG Gen2 pipeline was downloading all files sequentially on a single thread — one file at a time, one chunk at a time. Amazon used batched parallelism (invokeAll on groups of 6), which left all threads idle waiting for the slowest file in each batch before starting the next group. GOG installer fallback used a 32KB read buffer, well below what modern Android I/O handles efficiently.
+
+**Files changed:**
+- `extension/GogDownloadManager.java` — Gen2 download loop replaced with 6-thread ExecutorService; each file task fetches its own chunks independently; thread-safe AtomicLong progress + speed tracking; 32KB → 128KB buffer in `downloadWithProgress`; added imports: Callable, ExecutorService, Executors, Future, AtomicInteger, AtomicLong
+- `extension/AmazonDownloadManager.java` — replaced batch-invokeAll loop with submit-all-then-collect; all files submitted to pool at once; pool stays fully saturated throughout the download; explicit Exception catch on `f.get()` for cleaner error propagation
+
+**Methods changed:**
+- `GogDownloadManager.runGen2()` — sequential for-loop → parallel submit/collect
+- `GogDownloadManager.downloadWithProgress()` — 32KB → 128KB buffer
+- `AmazonDownloadManager.install()` — batch loop → single submit-all
+
+## Entry 127 — epic-integration — Full Epic Games Store integration (2026-03-29)
+
+**Branch:** epic-integration | **Commit:** `ae57801a9`
+
+**Root cause / motivation:** Epic Games Store integration requested; full pipeline from OAuth2 login through library sync, chunked manifest download, Windows exe scan, and launch. Previous epic work (beta62-67) was on a now-deleted testing repo. Clean Java-only implementation started fresh using confirmed knowledge of prior root causes (0-byte downloads: CDN selection, binary manifest parse, chunk subfolder decimal vs hex, no auth tokens on chunks).
+
+**Files added/modified:**
+- `extension/EpicGame.java` (new — data model with appName as primary key)
+- `extension/EpicCredentialStore.java` (new — bh_epic_prefs, auto-refresh token)
+- `extension/EpicAuthClient.java` (new — Legendary credentials, auth_code + refresh, ISO 8601 manual parse)
+- `extension/EpicApiClient.java` (new — library paginated fetch, catalog enrichment, manifest JSON unwrap)
+- `extension/EpicDownloadManager.java` (new — binary/JSON manifest, columnar FileManifestList, CDN skip cloudflare, chunk subfolder DECIMAL %02d, no auth on chunks)
+- `extension/EpicLoginActivity.java` (new — WebView OAuth2, AtomicBoolean double-fire guard)
+- `extension/EpicMainActivity.java` (new — side menu entry ID=0xc)
+- `extension/EpicGamesActivity.java` (new — list/grid/poster views, install confirm with async size fetch, exe scan, launch)
+- `.github/workflows/build-epic.yml` (new — artifact-only CI, permissions: contents: read)
+- `patches/smali_classes5/.../HomeLeftMenuDialog.smali` (Epic menu item id=0xc + pswitch_12)
+- `patches/smali_classes11/.../LandscapeLauncherMainActivity.smali` (pending_epic_exe hook)
+- `patches/AndroidManifest.xml` (3 Epic activities)
+
+**CI:** queued — artifact-only build on epic-integration branch push
+
+### [475] — v2.8.3 stable — Extra Detailed HUD release (2026-04-02)
+**Commit:** `bba9c10b7`  |  **Tag:** v2.8.3
+
+**Root-cause context:** BhDetailedHud (new class, classes18.dex) renders expanded performance metrics. Shadow clipping was the hardest bug — `setShadowLayer()` renders beyond TextView bounds but every parent LinearLayout clips by default. Fix: `setClipChildren(false)` + `setClipToPadding(false)` on root and all helper-created containers (addColGroup, addSepCol, inlineRow, row). BhHudInjector.injectOrUpdate() centralized to prevent dual-HUD-visible-on-launch race.
+
+**Files:**
+- `extension/BhDetailedHud.java` — horizontal column-group layout + vertical layout; applyBackgroundOpacity with shadow rules; buildLayout calls applyBackgroundOpacity at end
+- `patches/smali_classes16/.../BhHudInjector.smali` — create-on-demand for both HUDs; reads winlator_hud + hud_extra_detail; single point of HUD visibility
+- `patches/smali_classes16/.../BhHudExtraDetailListener.smali` — guard against winlator_hud=off; delegates to injectOrUpdate
+- `patches/smali_classes16/.../BhHudStyleSwitchListener.smali` — full rewrite; clears hud_extra_detail on HUD off; updates checkbox enabled/alpha; delegates to injectOrUpdate
+- `patches/smali_classes16/.../BhHudOpacityListener.smali` — updated to also find bh_detailed_hud and call applyBackgroundOpacity
+- `patches/smali_classes16/.../BhPerfSetupDelegate.smali` — inline injection replaced with injectOrUpdate call; checkbox restore logic
+
+**CI:** ✅ run 23894058893 — 9 APKs
+
+### [476] — v2.8.4-pre — orphaned virtual container fix (2026-04-02)
+**Commit:** `984421bb4`  |  **Tag:** v2.8.4-pre
+
+**Root-cause:** GameHub creates `virtual_containers/{gameId}/` on game install/launch via EmuContainerImpl. UninstallGameHelper.h() calls IWinEmuService.d() (deletes pc_g_setting SP) but never calls IWinEmuService.e() or deletes the directory. Container accumulated indefinitely.
+
+**Fix:** BhContainerCleanup.cleanup(gameId) called at top of h() — builds path directly from gameId, recursively deletes. ActivityThread accessed via reflection (not in public android.jar SDK). Try/catch so failure is silent.
+
+**Files:**
+- `extension/BhContainerCleanup.java` — static cleanup; reflection-based context; recursive delete
+- `patches/smali_classes3/com/xj/game/UninstallGameHelper.smali` — invoke-static BhContainerCleanup.cleanup(p1) before existing d() call
+
+**CI:** ✅ run 23904490412
+
+### [477] — v2.8.5-pre — touch button scale cap raised to 300% (2026-04-02)
+**Commit:** `a6b41664a`  |  **Tag:** v2.8.5-pre
+
+**Root-cause:** Issue #35 — NiftySlider `android:valueTo="150"` in `control_element_settings.xml` artificially capped button scale at 150%. The underlying system already handles values beyond 150% (users confirmed via manual JSON edit + re-import). Cap was purely a UI constraint.
+
+**Fix:** Copy `control_element_settings.xml` to patches/, change `android:valueTo="150"` → `android:valueTo="300"`.
+
+**Files:**
+- `patches/res/layout/control_element_settings.xml` — SBScale slider: valueTo 150→300
+
+**CI:** ⏳ run 23926822469
+
+### [478] — v2.8.7-pre1 — Per-game Export Config + Import Config (2026-04-03)
+**Commit:** `(pending)`  |  **Tag:** v2.8.7-pre1
+
+**Root-cause / motivation:** Users want to share working per-game configs with others. The entire game config is stored in `SharedPreferences` file `pc_g_setting<gameId>` (52 keys: `pc_d_*` components, `pc_ls_*` settings, `pc_Enable_*` toggles). Exporting to JSON lets any user import that baseline on their device.
+
+**Fix:** 
+- Added `BhSettingsExporter.java` (classes18.dex) with `exportConfig(Context, int, String)` and `showImportDialog(Context, int, String)` + `applyConfig()`. Writes to `/sdcard/BannerHub/configs/` with filename `<gameName>-<Build.MODEL>.json`. Import shows AlertDialog listing files, applies all typed keys (Boolean/Integer/Long/Float/String) to target game's SP.
+- `BhExportLambda.smali` + `BhImportLambda.smali` in `patches/smali/com/xj/landscape/launcher/ui/gamedetail/` implement `kotlin.jvm.functions.Function1`. Export lambda holds `GameDetailEntity`; calls `Utils.a()` for context. Import lambda holds `GameDetailSettingMenu` + `GameDetailEntity`; calls `menu.z()` for Activity context (needed for AlertDialog).
+- CI smali patch (both `build-quick.yml` + `build.yml`) injects two `Option` items into `getPcGamesOptions()` (method `W`, line ~4902) via unique anchor `XjLog.c(v8, v0)` before `return-object v1`. Uses `move-object/from16 v2, p0` and `move-object/from16 v3, p1` to bring parameters into 4-bit register range for `invoke-direct`.
+- Register layout: v9=Option, v10=title-String, v11-v14=0 (defaulted by mask 0x1e), v15=lambda, v16=mask 0x1e, v17=null (DefaultConstructorMarker).
+
+**Files:**
+- `extension/BhSettingsExporter.java` — export/import logic, JSON serialization, AlertDialog
+- `patches/smali/com/xj/landscape/launcher/ui/gamedetail/BhExportLambda.smali` — Function1 for Export
+- `patches/smali/com/xj/landscape/launcher/ui/gamedetail/BhImportLambda.smali` — Function1 for Import (uses menu.z() for Activity context)
+- `.github/workflows/build-quick.yml` — new "Apply Settings Import/Export smali patch" step
+- `.github/workflows/build.yml` — same step in prepare job
+
+**CI:** ⏳ run 23953526581
+
+---
+
+### Entry 053 — SOC detection via gpu_model sysfs (2026-04-04)
+**Commit:** `9abbf8031`  |  **Tag:** v2.8.9-pre1  |  **CI:** ✅ run 23981281809
+
+**Files changed:**
+- `extension/BhSettingsExporter.java` — added `detectSoc()` static helper; reads `/sys/class/kgsl/kgsl-3d0/gpu_model` first (Qualcomm sysfs, no root required; returns e.g. `Adreno33v2` on OCed SD8G3); falls back to `Build.SOC_MODEL` (API 31+, skips "unknown") then `Build.HARDWARE`. Both `meta.soc` JSON field and config filename now use this value.
+
+**Root cause / design:**
+- `Build.SOC_MODEL` returns "unknown" on many devices even on API 31+ (OEMs don't populate it). `Build.HARDWARE` returns "qcom" on Qualcomm — not useful. `gpu_model` sysfs gives the actual Adreno model string without root.
+
+---
+
+### Entry 054 — Apply to Game from community config browser (2026-04-04)
+**Commit:** `c4c20fb48`  |  **Tag:** v2.8.9-pre2  |  **CI:** ✅ run 23981547373
+
+**Files changed:**
+- `extension/BhGameConfigsActivity.java` — replaced "After downloading..." note with `actionBtn("Apply to Game...", 0xFF4A148C, ...)`. Added `applyConfigToGame(JSONObject config)`: downloads config to `BannerHub/configs/`, queries `ux_db` StarterGame table via `SQLiteDatabase.openDatabase(getDatabasePath("ux_db"))`, builds game name+id list sorted A–Z, shows AlertDialog picker, calls `BhSettingsExporter.applyConfig()` on selection. Added `Cursor`/`SQLiteDatabase` imports.
+- `extension/BhSettingsExporter.java` — `applyConfig()` visibility changed `private static` → `static` (package-private) to allow access from BhGameConfigsActivity in the same package.
+
+**Root cause / design:**
+- Previously configs could only be applied from within a game's own settings menu (required gameId context). Now the community browser can apply directly by querying GameHub's Room DB (`ux_db`, table `StarterGame`, columns `gameId`/`gameName`) to build the picker. DB name confirmed from JADX source: `GameSirUxDB$Companion$get$2.java` line 80.
+
+### Entry #[next] — v2.8.10-pre — SOC badge detection fix (2026-04-04)
+**Files:** `extension/BhGameConfigsActivity.java`
+**Root cause:** `BhGameConfigsActivity` used `Build.SOC_MODEL` (e.g. `SM8750`) for SOC matching, while `BhSettingsExporter` used `device_info` → `gpu_renderer` (EGL-queried, e.g. `Adreno (TM) 750`). The mismatch meant "✓ My SOC" badges never fired for configs with `meta.soc = "Adreno (TM) 750"`.
+**Fix:** Aligned `BhGameConfigsActivity` SOC detection to use `device_info` → `gpu_renderer` first (same as `BhSettingsExporter.detectSoc()`), with kgsl sysfs and `Build.SOC_MODEL`/`HARDWARE` as fallbacks.
+**CI:** v2.8.10-pre triggered
+
+### Entry #1 (Offline) — v2.9.2-offline-pre1 — Ground-up rebuild + QuickSetup (2026-04-06)
+**Files:**
+- `patches/smali_classes5/com/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog.smali`
+- `patches/smali_classes6/app/revanced/extension/gamehub/prefs/GameHubPrefs.smali`
+- `patches/AndroidManifest.xml`
+- `patches/smali_classes16/com/xj/landscape/launcher/ui/menu/BhQuickSetupActivity.smali` (+ $1–$6, $BhBackListener, $BhGameHubListener, $BhInstallAllListener, $BhInstallListener)
+- `.github/workflows/build-quick.yml`
+- `bundle.json`
+
+**Methods changed:**
+- `HomeLeftMenuDialog`: packed-switch table (adds pswitch_14) + menu builder (adds MenuItem id=14 "Quick Setup")
+- `GameHubPrefs`: new constant CONTENT_TYPE_QUICK_SETUP = 0x65
+- `BhQuickSetupActivity.getGhBundlePath/getGhRelPath`: updated Fex→20260321, Turnip→R5, added ImageFS pswitch_7
+- `BhQuickSetupActivity.isAllGhReady`: loop limit 7→8
+- `BhQuickSetupActivity$5.run`: extraction loop limit 7→8
+
+**Root cause / design:**
+- Rebuilt offline repo from scratch based on BannerHub v2.9.2 (old offline was at v2.7.x)
+- All patches, extension, signing keys now mirror v2.9.2 state
+- Quick Setup bundles all 11 required components (3 WCP + 8 GH) directly in APK as STORED zip entries
+- APK zip entries: `wcp/...` and `xj_winemu/...` (NO `bundled/` prefix — CI does `cd bundled && zip -0 ../apk -r .`)
+- CI downloads Wine + ImageFS from bannerhub-api Components release, Fex/Turnip from bannerhub-api Components release, native GH components from bigeyes.com CDN, WCP from Nightlies releases
+- First-launch after install: tap Quick Setup in side menu → one tap installs everything offline
+
+**CI:** v2.9.2-offline-pre1 pending

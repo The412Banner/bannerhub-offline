@@ -1,4 +1,4 @@
-name: Build APK (Quick — Normal only)
+name: Build APK (Offline — Normal only)
 
 on:
   push:
@@ -62,6 +62,9 @@ jobs:
 
       - name: Download and bundle components
         run: |
+          BASE="https://github.com/The412Banner/bannerhub-api/releases/download/Components"
+          BIGEYES="https://zlyer-cdn-comps-en.bigeyes.com"
+
           # WCP components (bundled/wcp/)
           mkdir -p bundled/wcp
 
@@ -79,44 +82,51 @@ jobs:
 
           # GameHub components (bundled/xj_winemu/xj_downloads/...)
           mkdir -p "bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3"
+          mkdir -p "bundled/xj_winemu/xj_downloads/env/Firmware/1.3.3"
           mkdir -p "bundled/xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1"
           mkdir -p "bundled/xj_winemu/xj_downloads/component/base/1.0.0"
           mkdir -p "bundled/xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0"
-          mkdir -p "bundled/xj_winemu/xj_downloads/component/Fex-20251029/1.0.0"
-          mkdir -p "bundled/xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/Fex-20260321/1.0.0"
+          mkdir -p "bundled/xj_winemu/xj_downloads/component/Turnip_v26.1.0_R5/1.0.0"
           mkdir -p "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0"
 
           echo "Downloading Proton Wine..."
-          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/6dcb/13/70/wine_proton10.0-arm64x-2.tar.zst" \
+          wget -q "$BASE/wine_proton10.0-arm64x-2.tar.zst" \
             -O "bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
 
+          echo "Downloading ImageFS (Firmware)..."
+          wget -q "$BASE/imagefs.zst" \
+            -O "bundled/xj_winemu/xj_downloads/env/Firmware/1.3.3/imagefs.zst"
+
           echo "Downloading VKD3D 2.12..."
-          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape-test/pc_zst/4f3e/99/43/vkd3d-2.12.tzst" \
+          wget -q "$BIGEYES/ux-landscape-test/pc_zst/4f3e/99/43/vkd3d-2.12.tzst" \
             -O "bundled/xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1/vkd3d-2.12.tzst"
 
           echo "Downloading base..."
-          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/3d5c/31/b1/base.tzst" \
+          wget -q "$BIGEYES/ux-landscape/pc_zst/3d5c/31/b1/base.tzst" \
             -O "bundled/xj_winemu/xj_downloads/component/base/1.0.0/base.tzst"
 
           echo "Downloading DXVK async..."
-          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/d430/3a/db/dxvk-v2.4.1-async.tzst" \
+          wget -q "$BIGEYES/ux-landscape/pc_zst/d430/3a/db/dxvk-v2.4.1-async.tzst" \
             -O "bundled/xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
 
-          echo "Downloading FEX..."
-          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/6cc2/b3/29/6cc2b329633dfbc95f23ea702cf84bd2.tzst" \
-            -O "bundled/xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
+          echo "Downloading FEX-20260321..."
+          wget -q "$BASE/e41acf1248a8e48411ce2b7f8c73dc65.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/component/Fex-20260321/1.0.0/Fex-20260321.tzst"
 
-          echo "Downloading Turnip..."
-          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/b21a/d1/44/b21ad144bf44a1783433dc2201ee6849.tzst" \
-            -O "bundled/xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
+          echo "Downloading Turnip_v26.1.0_R5..."
+          wget -q "$BASE/36e67b87b7597fb049edf3d18b62e353.tzst" \
+            -O "bundled/xj_winemu/xj_downloads/component/Turnip_v26.1.0_R5/1.0.0/Turnip_v26.1.0_R5.tzst"
 
           echo "Downloading Steam..."
-          wget -q "https://zlyer-cdn-comps-en.bigeyes.com/ux-landscape/pc_zst/250a/09/96/steam_9866233.tar.zst" \
+          wget -q "$BIGEYES/ux-landscape/pc_zst/250a/09/96/steam_9866233.tar.zst" \
             -O "bundled/xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
 
           echo "--- Bundled file sizes ---"
-          du -sh bundled/wcp/* bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/* \
-            bundled/xj_winemu/xj_downloads/component/*/*/* 2>/dev/null || true
+          du -sh bundled/wcp/* \
+            "bundled/xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst" \
+            "bundled/xj_winemu/xj_downloads/env/Firmware/1.3.3/imagefs.zst" \
+            bundled/xj_winemu/xj_downloads/component/*/* 2>/dev/null || true
 
       - name: Apply Grant Root Access smali patches
         run: |
@@ -135,7 +145,6 @@ jobs:
               print(f"OK: {label}")
 
           # Patch 1: SettingBtnHolder.w() — handle click for contentType=0x64 (Grant Root Access)
-          # Injected EARLY right after getContentType() move-result p0, while p2 is still a View.
           patch(
               'apktool_out/smali_classes6/com/xj/landscape/launcher/ui/setting/holder/SettingBtnHolder.smali',
               '    move-result p0\n'
@@ -238,7 +247,7 @@ jobs:
           # Inject bundled components with STORED compression (already compressed)
           cd bundled && zip -0 ../rebuilt-unsigned.apk -r . && cd ..
 
-          # Compile and inject GOG extension dex as classes18.dex
+          # Compile and inject extension dex as classes18.dex
           ANDROID_JAR=$(ls $ANDROID_SDK_ROOT/platforms/android-*/android.jar 2>/dev/null | sort -V | tail -1)
           mkdir -p ext_classes
           javac -source 8 -target 8 -cp "$ANDROID_JAR" -d ext_classes extension/*.java
@@ -252,7 +261,7 @@ jobs:
           ${ANDROID_SDK_ROOT}/build-tools/$(ls ${ANDROID_SDK_ROOT}/build-tools | tail -1)/zipalign -f -v 4 rebuilt-unsigned.apk rebuilt-aligned.apk
 
           # Sign
-          APK_NAME="BannerHub-${GITHUB_REF_NAME}-Normal.apk"
+          APK_NAME="BannerHub-Offline-${GITHUB_REF_NAME}-Normal.apk"
           ${ANDROID_SDK_ROOT}/build-tools/$(ls ${ANDROID_SDK_ROOT}/build-tools | tail -1)/apksigner sign \
             --key testkey.pk8 \
             --cert testkey.x509.pem \
@@ -276,8 +285,8 @@ jobs:
       - name: Upload release
         run: |
           TAG="${{ steps.tag.outputs.name }}"
-          APK=$(ls BannerHub-*.apk | head -1)
+          APK=$(ls BannerHub-Offline-*.apk | head -1)
           gh release delete "$TAG" --yes 2>/dev/null || true
-          gh release create "$TAG" --title "BannerHub $TAG" --prerelease "$APK"
+          gh release create "$TAG" --title "BannerHub Offline $TAG" --prerelease "$APK"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

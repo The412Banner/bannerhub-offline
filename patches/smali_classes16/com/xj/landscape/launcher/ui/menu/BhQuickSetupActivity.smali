@@ -1,20 +1,21 @@
 # BhQuickSetupActivity — one-tap install of essential components (Box64, DXVK, VKD3D + GameHub)
 # Extracts bundled APK assets on device — no network required.
-# Side menu ID=11. Package: com.xj.landscape.launcher.ui.menu
+# Side menu ID=14. Package: com.xj.landscape.launcher.ui.menu
 #
 # WCP Components (hardcoded, index 0-2):
 #   [0] Box64          type=94  box64-0.4.1-fix
 #   [1] DXVK           type=12  dxvk-gplasync-arm64ec-2.7.1-1
 #   [2] VKD3D-Proton   type=13  vkd3d-proton-3.0b
 #
-# GameHub Components (index 0-6):
+# GameHub Components (index 0-7):
 #   [0] wine_proton10.0-arm64x-2.tar.zst
 #   [1] vkd3d-2.12.tzst
 #   [2] base.tzst
 #   [3] dxvk-v2.4.1-async.tzst
-#   [4] Fex-20251029.tzst
-#   [5] Turnip_v26.1.0_R4.tzst
+#   [4] Fex-20260321.tzst
+#   [5] Turnip_v26.1.0_R5.tzst
 #   [6] steam_9866233.tar.zst
+#   [7] imagefs.zst  (Firmware 1.3.3)
 
 .class public final Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;
 .super Landroidx/appcompat/app/AppCompatActivity;
@@ -184,6 +185,7 @@
         :pswitch_4
         :pswitch_5
         :pswitch_6
+        :pswitch_7
     .end packed-switch
     :pswitch_0
     const-string p1, "xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
@@ -198,18 +200,21 @@
     const-string p1, "xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
     return-object p1
     :pswitch_4
-    const-string p1, "xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/Fex-20260321/1.0.0/Fex-20260321.tzst"
     return-object p1
     :pswitch_5
-    const-string p1, "xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/Turnip_v26.1.0_R5/1.0.0/Turnip_v26.1.0_R5.tzst"
     return-object p1
     :pswitch_6
     const-string p1, "xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
     return-object p1
+    :pswitch_7
+    const-string p1, "xj_winemu/xj_downloads/env/Firmware/1.3.3/imagefs.zst"
+    return-object p1
 .end method
 
 # ── getGhRelPath(index) -> String ─────────────────────────────────────────────
-# Returns filesDir-relative destination path for GameHub component (strip "bundled/" prefix)
+# Returns filesDir-relative destination path for GameHub component
 .method public getGhRelPath(I)Ljava/lang/String;
     .locals 0
     packed-switch p1, :pswitch_data
@@ -224,6 +229,7 @@
         :pswitch_4
         :pswitch_5
         :pswitch_6
+        :pswitch_7
     .end packed-switch
     :pswitch_0
     const-string p1, "xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst"
@@ -238,13 +244,16 @@
     const-string p1, "xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
     return-object p1
     :pswitch_4
-    const-string p1, "xj_winemu/xj_downloads/component/Fex-20251029/1.0.0/Fex-20251029.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/Fex-20260321/1.0.0/Fex-20260321.tzst"
     return-object p1
     :pswitch_5
-    const-string p1, "xj_winemu/xj_downloads/component/turnip_v26.1.0_R4/1.0.0/Turnip_v26.1.0_R4.tzst"
+    const-string p1, "xj_winemu/xj_downloads/component/Turnip_v26.1.0_R5/1.0.0/Turnip_v26.1.0_R5.tzst"
     return-object p1
     :pswitch_6
     const-string p1, "xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
+    return-object p1
+    :pswitch_7
+    const-string p1, "xj_winemu/xj_downloads/env/Firmware/1.3.3/imagefs.zst"
     return-object p1
 .end method
 
@@ -264,12 +273,12 @@
 .end method
 
 # ── isAllGhReady() -> boolean ─────────────────────────────────────────────────
-# Returns true if all 7 GameHub components are installed
+# Returns true if all 8 GameHub components are installed
 .method public isAllGhReady()Z
     .locals 2
     const/4 v0, 0x0
     :loop
-    const/16 v1, 0x7
+    const/16 v1, 0x8
     if-ge v0, v1, :all_ready
     invoke-virtual {p0, v0}, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;->isGhInstalled(I)Z
     move-result v1
@@ -671,7 +680,7 @@
     const-string v2, "\u2713 All installed"
     goto :gh_status_set
     :gh_status_not_ready
-    const-string v2, "Wine, DXVK, VKD3D, FEX, Turnip, Steam (7 files)"
+    const-string v2, "Wine, DXVK, VKD3D, FEX, Turnip, Steam, ImageFS (8 files)"
     :gh_status_set
     invoke-virtual {v1, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
     const v2, 0xFF888888   # gray

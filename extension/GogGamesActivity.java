@@ -17,6 +17,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -86,7 +87,7 @@ public class GogGamesActivity extends Activity {
         List<GogGame> cached = loadCachedGames();
         if (cached != null && !cached.isEmpty()) {
             showGames(cached);
-            setSync(cached.size() + " game(s) — cached  •  tap ↺ to refresh");
+            int cn = cached.size(); setSync(cn + (cn == 1 ? " game" : " games") + " — cached  •  tap ↺ to refresh");
         }
         startSync(cached == null || cached.isEmpty());
     }
@@ -108,9 +109,16 @@ public class GogGamesActivity extends Activity {
         Button backBtn = new Button(this);
         backBtn.setText("←");
         backBtn.setTextColor(0xFFFFFFFF);
-        backBtn.setBackgroundColor(0xFF333333);
+        GradientDrawable backBtnBg = new GradientDrawable();
+        backBtnBg.setColor(0xFF333333);
+        backBtnBg.setCornerRadius(dp(4));
+        backBtn.setBackground(backBtnBg);
         backBtn.setTextSize(16f);
         backBtn.setPadding(dp(12), 0, dp(12), 0);
+        backBtn.setOnFocusChangeListener((v, hasFocus) -> {
+            backBtnBg.setColor(hasFocus ? 0xFF555555 : 0xFF333333);
+            backBtnBg.setStroke(hasFocus ? dp(2) : 0, hasFocus ? 0xFFFFD700 : 0x00000000);
+        });
         backBtn.setOnClickListener(v -> finish());
         header.addView(backBtn, new LinearLayout.LayoutParams(-2, dp(40)));
 
@@ -126,9 +134,16 @@ public class GogGamesActivity extends Activity {
         viewToggleBtn = new Button(this);
         viewToggleBtn.setText(viewModeIcon(viewMode));
         viewToggleBtn.setTextColor(0xFFFFFFFF);
-        viewToggleBtn.setBackgroundColor(0xFF333333);
+        GradientDrawable viewToggleBtnBg = new GradientDrawable();
+        viewToggleBtnBg.setColor(0xFF333333);
+        viewToggleBtnBg.setCornerRadius(dp(4));
+        viewToggleBtn.setBackground(viewToggleBtnBg);
         viewToggleBtn.setTextSize(16f);
         viewToggleBtn.setPadding(dp(12), 0, dp(12), 0);
+        viewToggleBtn.setOnFocusChangeListener((v, hasFocus) -> {
+            viewToggleBtnBg.setColor(hasFocus ? 0xFF555555 : 0xFF333333);
+            viewToggleBtnBg.setStroke(hasFocus ? dp(2) : 0, hasFocus ? 0xFFFFD700 : 0x00000000);
+        });
         viewToggleBtn.setOnClickListener(v -> {
             if ("list".equals(viewMode)) viewMode = "grid";
             else if ("grid".equals(viewMode)) viewMode = "poster";
@@ -145,9 +160,16 @@ public class GogGamesActivity extends Activity {
         refreshBtn = new Button(this);
         refreshBtn.setText("↺");
         refreshBtn.setTextColor(0xFFFFFFFF);
-        refreshBtn.setBackgroundColor(0xFF333333);
+        GradientDrawable refreshBtnBg = new GradientDrawable();
+        refreshBtnBg.setColor(0xFF333333);
+        refreshBtnBg.setCornerRadius(dp(4));
+        refreshBtn.setBackground(refreshBtnBg);
         refreshBtn.setTextSize(16f);
         refreshBtn.setPadding(dp(12), 0, dp(12), 0);
+        refreshBtn.setOnFocusChangeListener((v, hasFocus) -> {
+            refreshBtnBg.setColor(hasFocus ? 0xFF555555 : 0xFF333333);
+            refreshBtnBg.setStroke(hasFocus ? dp(2) : 0, hasFocus ? 0xFFFFD700 : 0x00000000);
+        });
         refreshBtn.setOnClickListener(v -> startSync(true));
         header.addView(refreshBtn, new LinearLayout.LayoutParams(-2, dp(40)));
 
@@ -268,7 +290,7 @@ public class GogGamesActivity extends Activity {
                     setSync("No compatible games found");
                 } else {
                     showGames(finalGames);
-                    setSync(finalGames.size() + " game(s) — tap a card to install");
+                    int fn = finalGames.size(); setSync(fn + (fn == 1 ? " game" : " games") + " — tap a card to install");
                 }
                 enableRefresh();
             });
@@ -361,7 +383,19 @@ public class GogGamesActivity extends Activity {
         final List<GogGame> result = filtered;
         uiHandler.post(() -> {
             gameListLayout.removeAllViews();
-            if ("grid".equals(viewMode)) {
+            if (result.isEmpty()) {
+                gameListLayout.setPadding(dp(8), dp(8), dp(8), dp(8));
+                TextView emptyTV = new TextView(GogGamesActivity.this);
+                String q2 = query == null ? "" : query.trim();
+                emptyTV.setText(q2.isEmpty() ? "Your GOG library is empty"
+                                             : "No results for \u201c" + q2 + "\u201d");
+                emptyTV.setTextColor(0xFF666666);
+                emptyTV.setTextSize(14f);
+                emptyTV.setGravity(Gravity.CENTER);
+                LinearLayout.LayoutParams emLp = new LinearLayout.LayoutParams(-1, -2);
+                emLp.topMargin = dp(32);
+                gameListLayout.addView(emptyTV, emLp);
+            } else if ("grid".equals(viewMode)) {
                 gameListLayout.setPadding(dp(4), dp(4), dp(4), dp(4));
                 addGamesAsGrid(result);
             } else if ("poster".equals(viewMode)) {
@@ -431,6 +465,11 @@ public class GogGamesActivity extends Activity {
         cardBg.setCornerRadius(dp(6));
         card.setBackground(cardBg);
         card.setFocusable(true);
+        card.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        card.setOnFocusChangeListener((v, hasFocus) -> {
+            cardBg.setColor(hasFocus ? 0xFF2A2A4E : 0xFF1A1A2E);
+            cardBg.setStroke(hasFocus ? dp(3) : 0, hasFocus ? 0xFFFFD700 : 0x00000000);
+        });
         LinearLayout.LayoutParams cardLp = new LinearLayout.LayoutParams(-1, -2);
         cardLp.bottomMargin = dp(8);
 
@@ -478,7 +517,25 @@ public class GogGamesActivity extends Activity {
         View titleSpacer = new View(this);
         titleRow.addView(titleSpacer, new LinearLayout.LayoutParams(0, 0, 1f));
 
-        topRow.addView(titleRow, new LinearLayout.LayoutParams(0, -2, 1f));
+        // ── Subtitle (developer · genre) shown while collapsed ────────────────
+        LinearLayout infoCol = new LinearLayout(this);
+        infoCol.setOrientation(LinearLayout.VERTICAL);
+        infoCol.setGravity(Gravity.CENTER_VERTICAL);
+        infoCol.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
+        if (!game.developer.isEmpty() || !game.category.isEmpty()) {
+            String sub = game.developer.isEmpty() ? game.category
+                       : game.category.isEmpty()  ? game.developer
+                       : game.developer + "  ·  " + game.category;
+            TextView subTV = new TextView(this);
+            subTV.setText(sub);
+            subTV.setTextColor(0xFF888888);
+            subTV.setTextSize(11f);
+            subTV.setMaxLines(1);
+            subTV.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            infoCol.addView(subTV, new LinearLayout.LayoutParams(-1, -2));
+        }
+
+        topRow.addView(infoCol, new LinearLayout.LayoutParams(0, -2, 1f));
 
         TextView arrowTV = new TextView(this);
         arrowTV.setText("▼");
@@ -521,6 +578,8 @@ public class GogGamesActivity extends Activity {
         progressBar.setMax(100);
         progressBar.setProgress(0);
         progressBar.setVisibility(View.GONE);
+        progressBar.getProgressDrawable().setColorFilter(0xFFFF9800,
+                android.graphics.PorterDuff.Mode.SRC_IN);
         LinearLayout.LayoutParams pbLp = new LinearLayout.LayoutParams(-1, dp(6));
         pbLp.topMargin = dp(6);
         expandSection.addView(progressBar, pbLp);
@@ -552,52 +611,78 @@ public class GogGamesActivity extends Activity {
         card.addView(expandSection, new LinearLayout.LayoutParams(-1, -2));
 
         // Button click
+        final Runnable[] cancelRef1 = {null};
         actionBtn.setOnClickListener(v -> {
             String btnLabel = actionBtn.getText().toString();
+            if ("Cancel".equals(btnLabel)) {
+                if (cancelRef1[0] != null) cancelRef1[0].run();
+                return;
+            }
             if ("Add Game".equals(btnLabel) || "Add to Launcher".equals(btnLabel)) {
                 String exePath = prefs.getString("gog_exe_" + game.gameId, null);
                 if (exePath != null) GogLaunchHelper.triggerLaunch(this, exePath);
                 return;
             }
-            actionBtn.setEnabled(false);
-            actionBtn.setText("Downloading…");
-            actionBtn.setBackgroundColor(0xFF555555);
-            progressBar.setVisibility(View.VISIBLE);
-            statusTV.setVisibility(View.VISIBLE);
-            pctTV.setText("0%");
-            pctTV.setVisibility(View.VISIBLE);
+            showInstallConfirm(game, () -> {
+                cancelRef1[0] = null;
+                actionBtn.setEnabled(true);
+                actionBtn.setText("Cancel");
+                actionBtn.setBackgroundColor(0xFFCC3333);
+                progressBar.setVisibility(View.VISIBLE);
+                statusTV.setVisibility(View.VISIBLE);
+                pctTV.setText("0%");
+                pctTV.setVisibility(View.VISIBLE);
 
-            GogDownloadManager.startDownload(this, game, new GogDownloadManager.Callback() {
-                @Override public void onProgress(String msg, int pct) {
-                    uiHandler.post(() -> {
-                        statusTV.setText(msg);
-                        progressBar.setProgress(pct);
-                        pctTV.setText(pct + "%");
-                    });
-                }
-                @Override public void onComplete(String exePath) {
-                    uiHandler.post(() -> {
-                        progressBar.setProgress(100);
-                        pctTV.setVisibility(View.GONE);
-                        checkmark.setVisibility(View.VISIBLE);
-                        collapsedCheckTV.setVisibility(View.VISIBLE);
-                        statusTV.setText("Installed");
-                        actionBtn.setText("Add Game");
-                        actionBtn.setBackgroundColor(0xFF2E7D32);
-                        actionBtn.setEnabled(true);
-                    });
-                }
-                @Override public void onError(String msg) {
-                    uiHandler.post(() -> {
-                        pctTV.setVisibility(View.GONE);
-                        statusTV.setText("Error: " + msg);
-                        actionBtn.setText("Install");
-                        actionBtn.setBackgroundColor(0xFF7033FF);
-                        actionBtn.setEnabled(true);
-                        Toast.makeText(GogGamesActivity.this, "Error: " + msg,
-                                Toast.LENGTH_LONG).show();
-                    });
-                }
+                cancelRef1[0] = GogDownloadManager.startDownload(this, game, new GogDownloadManager.Callback() {
+                    @Override public void onProgress(String msg, int pct) {
+                        uiHandler.post(() -> {
+                            statusTV.setText(msg);
+                            progressBar.setProgress(pct);
+                            pctTV.setText(pct + "%");
+                        });
+                    }
+                    @Override public void onComplete(String exePath) {
+                        uiHandler.post(() -> {
+                            cancelRef1[0] = null;
+                            progressBar.setProgress(100);
+                            pctTV.setVisibility(View.GONE);
+                            checkmark.setVisibility(View.VISIBLE);
+                            collapsedCheckTV.setVisibility(View.VISIBLE);
+                            statusTV.setText("Installed");
+                            actionBtn.setText("Add Game");
+                            actionBtn.setBackgroundColor(0xFF2E7D32);
+                            actionBtn.setEnabled(true);
+                        });
+                    }
+                    @Override public void onError(String msg) {
+                        uiHandler.post(() -> {
+                            cancelRef1[0] = null;
+                            pctTV.setVisibility(View.GONE);
+                            statusTV.setText("Error: " + msg);
+                            actionBtn.setText("Install");
+                            actionBtn.setBackgroundColor(0xFF7033FF);
+                            actionBtn.setEnabled(true);
+                            Toast.makeText(GogGamesActivity.this, "Error: " + msg,
+                                    Toast.LENGTH_LONG).show();
+                        });
+                    }
+                    @Override public void onCancelled() {
+                        uiHandler.post(() -> {
+                            cancelRef1[0] = null;
+                            progressBar.setProgress(0);
+                            progressBar.setVisibility(View.GONE);
+                            pctTV.setVisibility(View.GONE);
+                            statusTV.setText("");
+                            actionBtn.setText("Install");
+                            actionBtn.setBackgroundColor(0xFF7033FF);
+                            actionBtn.setEnabled(true);
+                        });
+                    }
+                    @Override public void onSelectExe(java.util.List<String> candidates,
+                                                       java.util.function.Consumer<String> onSelected) {
+                        showExePicker(candidates, onSelected);
+                    }
+                });
             });
         });
 
@@ -612,7 +697,12 @@ public class GogGamesActivity extends Activity {
 
         card.setOnClickListener(v -> {
             if (expandSection.getVisibility() == View.VISIBLE) {
-                showDetailDialog(game, checkmark, actionBtn);
+                showDetailDialog(game, checkmark, actionBtn, () -> {
+                    checkmark.setVisibility(View.GONE);
+                    collapsedCheckTV.setVisibility(View.GONE);
+                    actionBtn.setText("Install");
+                    actionBtn.setBackgroundColor(0xFF7033FF);
+                });
             } else {
                 if (expandedSection != null) {
                     expandedSection.setVisibility(View.GONE);
@@ -685,7 +775,21 @@ public class GogGamesActivity extends Activity {
         tileBg.setCornerRadius(dp(5));
         tile.setBackground(tileBg);
         tile.setClipToOutline(true);
-        tile.setFocusable(true);
+
+        // Wrapper handles focus border via foreground (drawn over tile, not hidden by it)
+        FrameLayout focusWrapper = new FrameLayout(this);
+        GradientDrawable focusBorder = new GradientDrawable();
+        focusBorder.setColor(0x00000000);
+        focusBorder.setCornerRadius(dp(5));
+        focusWrapper.setForeground(focusBorder);
+        focusWrapper.setFocusable(true);
+        focusWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        focusWrapper.setOnFocusChangeListener((v, hasFocus) -> {
+            tileBg.setColor(hasFocus ? 0xFF1D1D3A : 0xFF111122);
+            focusBorder.setStroke(hasFocus ? dp(3) : 0, hasFocus ? 0xFFFFD700 : 0x00000000);
+        });
+        focusWrapper.setOnClickListener(v -> tile.performClick());
+        focusWrapper.setOnLongClickListener(v -> tile.performLongClick());
 
         // ── Art area (FrameLayout so badges/title can overlay) ─────────────────
         FrameLayout artFrame = new FrameLayout(this);
@@ -774,45 +878,68 @@ public class GogGamesActivity extends Activity {
         tile.addView(actionRow, new LinearLayout.LayoutParams(-1, -2));
 
         // Button click
+        final Runnable[] cancelRef2 = {null};
         actionBtn.setOnClickListener(v -> {
             String lbl = actionBtn.getText().toString();
+            if ("Cancel".equals(lbl)) {
+                if (cancelRef2[0] != null) cancelRef2[0].run();
+                return;
+            }
             if ("Add Game".equals(lbl) || "Add to Launcher".equals(lbl)) {
                 String exe = prefs.getString("gog_exe_" + game.gameId, null);
                 if (exe != null) GogLaunchHelper.triggerLaunch(this, exe);
                 return;
             }
-            actionBtn.setEnabled(false);
-            actionBtn.setText("0%");
-            actionBtn.setBackgroundColor(0xFF444444);
-            progressBar.setVisibility(View.VISIBLE);
+            showInstallConfirm(game, () -> {
+                cancelRef2[0] = null;
+                actionBtn.setEnabled(true);
+                actionBtn.setText("Cancel");
+                actionBtn.setBackgroundColor(0xFFCC3333);
+                progressBar.setVisibility(View.VISIBLE);
 
-            GogDownloadManager.startDownload(this, game, new GogDownloadManager.Callback() {
-                @Override public void onProgress(String msg, int pct) {
-                    uiHandler.post(() -> {
-                        progressBar.setProgress(pct);
-                        actionBtn.setText(pct + "%");
-                    });
-                }
-                @Override public void onComplete(String exePath) {
-                    uiHandler.post(() -> {
-                        progressBar.setProgress(100);
-                        progressBar.setVisibility(View.GONE);
-                        checkTV.setVisibility(View.VISIBLE);
-                        actionBtn.setText("Add Game");
-                        actionBtn.setBackgroundColor(0xFF2E7D32);
-                        actionBtn.setEnabled(true);
-                    });
-                }
-                @Override public void onError(String msg) {
-                    uiHandler.post(() -> {
-                        progressBar.setVisibility(View.GONE);
-                        actionBtn.setText("Install");
-                        actionBtn.setBackgroundColor(0xFF5533CC);
-                        actionBtn.setEnabled(true);
-                        Toast.makeText(GogGamesActivity.this, "Error: " + msg,
-                                Toast.LENGTH_LONG).show();
-                    });
-                }
+                cancelRef2[0] = GogDownloadManager.startDownload(this, game, new GogDownloadManager.Callback() {
+                    @Override public void onProgress(String msg, int pct) {
+                        uiHandler.post(() -> {
+                            progressBar.setProgress(pct);
+                        });
+                    }
+                    @Override public void onComplete(String exePath) {
+                        uiHandler.post(() -> {
+                            cancelRef2[0] = null;
+                            progressBar.setProgress(100);
+                            progressBar.setVisibility(View.GONE);
+                            checkTV.setVisibility(View.VISIBLE);
+                            actionBtn.setText("Add Game");
+                            actionBtn.setBackgroundColor(0xFF2E7D32);
+                            actionBtn.setEnabled(true);
+                        });
+                    }
+                    @Override public void onError(String msg) {
+                        uiHandler.post(() -> {
+                            cancelRef2[0] = null;
+                            progressBar.setVisibility(View.GONE);
+                            actionBtn.setText("Install");
+                            actionBtn.setBackgroundColor(0xFF5533CC);
+                            actionBtn.setEnabled(true);
+                            Toast.makeText(GogGamesActivity.this, "Error: " + msg,
+                                    Toast.LENGTH_LONG).show();
+                        });
+                    }
+                    @Override public void onCancelled() {
+                        uiHandler.post(() -> {
+                            cancelRef2[0] = null;
+                            progressBar.setProgress(0);
+                            progressBar.setVisibility(View.GONE);
+                            actionBtn.setText("Install");
+                            actionBtn.setBackgroundColor(0xFF5533CC);
+                            actionBtn.setEnabled(true);
+                        });
+                    }
+                    @Override public void onSelectExe(java.util.List<String> candidates,
+                                                       java.util.function.Consumer<String> onSelected) {
+                        showExePicker(candidates, onSelected);
+                    }
+                });
             });
         });
 
@@ -832,11 +959,16 @@ public class GogGamesActivity extends Activity {
         });
 
         tile.setOnLongClickListener(v -> {
-            showDetailDialog(game, checkTV, actionBtn);
+            showDetailDialog(game, checkTV, actionBtn, () -> {
+                checkTV.setVisibility(View.GONE);
+                actionBtn.setText("Install");
+                actionBtn.setBackgroundColor(0xFF5533CC);
+            });
             return true;
         });
 
-        return tile;
+        focusWrapper.addView(tile, new FrameLayout.LayoutParams(-1, -1));
+        return focusWrapper;
     }
 
     private LinearLayout.LayoutParams makeGridTileLp() { return makeGridTileLp(dp(3)); }
@@ -933,16 +1065,23 @@ public class GogGamesActivity extends Activity {
             btnLp.topMargin = dp(12);
             content.addView(customInstall, btnLp);
 
+            final Runnable[] cancelRef3 = {null};
             customInstall.setOnClickListener(v -> {
-                customInstall.setEnabled(false);
-                customInstall.setText("Downloading…");
-                customInstall.setBackgroundColor(0xFF555555);
+                if ("Cancel".equals(customInstall.getText().toString())) {
+                    if (cancelRef3[0] != null) cancelRef3[0].run();
+                    return;
+                }
+                showInstallConfirm(game, () -> {
+                cancelRef3[0] = null;
+                customInstall.setEnabled(true);
+                customInstall.setText("Cancel");
+                customInstall.setBackgroundColor(0xFFCC3333);
                 progressBar.setVisibility(View.VISIBLE);
                 statusTV.setVisibility(View.VISIBLE);
                 statusTV.setText("0%  Starting…");
                 dialog.setCancelable(false);
 
-                GogDownloadManager.startDownload(this, game, new GogDownloadManager.Callback() {
+                cancelRef3[0] = GogDownloadManager.startDownload(this, game, new GogDownloadManager.Callback() {
                     @Override public void onProgress(String msg, int pct) {
                         uiHandler.post(() -> {
                             progressBar.setProgress(pct);
@@ -951,6 +1090,7 @@ public class GogGamesActivity extends Activity {
                     }
                     @Override public void onComplete(String exePath) {
                         uiHandler.post(() -> {
+                            cancelRef3[0] = null;
                             progressBar.setProgress(100);
                             statusTV.setText("✓ Installed");
                             customInstall.setText("Add to Launcher");
@@ -967,6 +1107,7 @@ public class GogGamesActivity extends Activity {
                     }
                     @Override public void onError(String msg) {
                         uiHandler.post(() -> {
+                            cancelRef3[0] = null;
                             progressBar.setVisibility(View.GONE);
                             statusTV.setText("Error: " + msg);
                             customInstall.setText("Install");
@@ -975,7 +1116,24 @@ public class GogGamesActivity extends Activity {
                             dialog.setCancelable(true);
                         });
                     }
+                    @Override public void onCancelled() {
+                        uiHandler.post(() -> {
+                            cancelRef3[0] = null;
+                            progressBar.setProgress(0);
+                            progressBar.setVisibility(View.GONE);
+                            statusTV.setText("");
+                            customInstall.setText("Install");
+                            customInstall.setBackgroundColor(0xFF7033FF);
+                            customInstall.setEnabled(true);
+                            dialog.setCancelable(true);
+                        });
+                    }
+                    @Override public void onSelectExe(java.util.List<String> candidates,
+                                                       java.util.function.Consumer<String> onSelected) {
+                        showExePicker(candidates, onSelected);
+                    }
                 });
+                }); // end showInstallConfirm
             });
             return; // dialog already shown above
         }
@@ -985,28 +1143,79 @@ public class GogGamesActivity extends Activity {
 
     // ── Dialogs (list view detail) ────────────────────────────────────────────
 
-    private void showDetailDialog(GogGame game, View checkmark, Button actionBtn) {
+    private void showDetailDialog(GogGame game, View checkmark, Button actionBtn, Runnable onUninstalled) {
         AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setTitle(game.title);
+
+        // Custom view: message text + optional Set .exe button
+        android.widget.LinearLayout container = new android.widget.LinearLayout(this);
+        container.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = dp(20);
+        container.setPadding(pad, dp(8), pad, dp(4));
 
         StringBuilder msg = new StringBuilder();
         if (!game.developer.isEmpty()) msg.append("Developer: ").append(game.developer).append("\n");
         if (!game.category.isEmpty())  msg.append("Genre: ").append(game.category).append("\n");
         if (!game.description.isEmpty()) msg.append("\n").append(game.description);
-        b.setMessage(msg.toString().trim());
 
-        b.setPositiveButton("Close", null);
+        android.widget.TextView msgView = new android.widget.TextView(this);
+        msgView.setText(msg.toString().trim());
+        msgView.setTextColor(0xFFCCCCCC);
+        container.addView(msgView);
 
         String installedExe = prefs.getString("gog_exe_" + game.gameId, null);
-        if (installedExe != null) {
-            b.setNegativeButton("Uninstall", (dialog, which) -> uninstall(game, checkmark, actionBtn));
+        String dirName      = prefs.getString("gog_dir_" + game.gameId, null);
+
+        if (installedExe != null && dirName != null) {
+            android.widget.TextView exeView = new android.widget.TextView(this);
+            exeView.setText("\n.exe: " + new java.io.File(installedExe).getName());
+            exeView.setTextColor(0xFF888888);
+            exeView.setTextSize(12f);
+            container.addView(exeView);
+
+            Button setExeBtn = new Button(this);
+            setExeBtn.setText("Set .exe\u2026");
+            setExeBtn.setTextColor(0xFFFFFFFF);
+            setExeBtn.setBackgroundColor(0xFF444444);
+            android.widget.LinearLayout.LayoutParams lp =
+                    new android.widget.LinearLayout.LayoutParams(-2, -2);
+            lp.topMargin = dp(10);
+            setExeBtn.setOnClickListener(v -> {
+                java.io.File installPath = GogInstallPath.getInstallDir(this, dirName);
+                new Thread(() -> {
+                    java.util.List<String> candidates =
+                            GogDownloadManager.collectExeCandidates(installPath);
+                    if (candidates.isEmpty()) {
+                        uiHandler.post(() -> Toast.makeText(this,
+                                "No .exe files found in install directory",
+                                Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+                    showExePicker(candidates, selected -> {
+                        if (selected != null && !selected.isEmpty()) {
+                            prefs.edit().putString("gog_exe_" + game.gameId, selected).apply();
+                            uiHandler.post(() -> {
+                                exeView.setText("\n.exe: " + new java.io.File(selected).getName());
+                                Toast.makeText(this,
+                                        "Exe set to: " + new java.io.File(selected).getName(),
+                                        Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    });
+                }).start();
+            });
+            container.addView(setExeBtn, lp);
+
+            b.setNegativeButton("Uninstall", (dialog, which) -> uninstall(game, onUninstalled));
             b.setNeutralButton("Copy to Downloads", (dialog, which) -> copyToDownloads(game));
         }
 
+        b.setView(container);
+        b.setPositiveButton("Close", null);
         b.show();
     }
 
-    private void uninstall(GogGame game, View checkmark, Button actionBtn) {
+    private void uninstall(GogGame game, Runnable onUninstalled) {
         String dirName = prefs.getString("gog_dir_" + game.gameId, null);
         if (dirName != null) {
             new Thread(() -> {
@@ -1018,10 +1227,7 @@ public class GogGamesActivity extends Activity {
                         .remove("gog_cover_" + game.gameId)
                         .apply();
                 uiHandler.post(() -> {
-                    checkmark.setVisibility(View.GONE);
-                    actionBtn.setText("Install");
-                    actionBtn.setBackgroundColor(0xFF7033FF);
-                    actionBtn.setEnabled(true);
+                    onUninstalled.run();
                     Toast.makeText(this, game.title + " uninstalled", Toast.LENGTH_SHORT).show();
                 });
             }).start();
@@ -1086,7 +1292,100 @@ public class GogGamesActivity extends Activity {
     // ── Utilities ─────────────────────────────────────────────────────────────
 
     private void setSync(String msg) {
-        uiHandler.post(() -> syncText.setText(msg));
+        uiHandler.post(() -> {
+            syncText.setText(msg);
+            if (msg.startsWith("Error") || msg.startsWith("Session expired")
+                    || msg.startsWith("Failed") || msg.startsWith("Not logged in")) {
+                syncText.setTextColor(0xFFFF6B6B);
+            } else if (msg.contains("game") && (msg.contains("tap") || msg.contains("cached"))) {
+                syncText.setTextColor(0xFF81C784);
+            } else {
+                syncText.setTextColor(0xFFCCCCCC);
+            }
+        });
+    }
+
+    /** Shows a pre-install confirmation dialog with game size (async-fetched) and available storage. */
+    private void showInstallConfirm(GogGame game, Runnable onConfirm) {
+        long freeBytes = -1;
+        try {
+            java.io.File installBase = GogInstallPath.getInstallDir(this, "_check");
+            java.io.File parent = installBase.getParentFile();
+            if (parent != null) parent.mkdirs();
+            android.os.StatFs sf = new android.os.StatFs(
+                    parent != null ? parent.getAbsolutePath() : getCacheDir().getAbsolutePath());
+            freeBytes = sf.getAvailableBlocksLong() * sf.getBlockSizeLong();
+        } catch (Exception ignored) {}
+
+        final long finalFree = freeBytes;
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(20), dp(8), dp(20), dp(8));
+
+        TextView gameSizeTV = new TextView(this);
+        gameSizeTV.setText("Game size:  Fetching…");
+        gameSizeTV.setTextColor(0xFFCCCCCC);
+        gameSizeTV.setTextSize(14f);
+        content.addView(gameSizeTV);
+
+        TextView freeTV = new TextView(this);
+        freeTV.setText("Available storage:  " + GogDownloadManager.formatBytes(finalFree));
+        freeTV.setTextColor(0xFF88CC88);
+        freeTV.setTextSize(14f);
+        LinearLayout.LayoutParams tvLp = new LinearLayout.LayoutParams(-2, -2);
+        tvLp.topMargin = dp(6);
+        content.addView(freeTV, tvLp);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Install " + game.title + "?")
+                .setView(content)
+                .setPositiveButton("Install", null)
+                .setNegativeButton("Cancel", null)
+                .create();
+        dialog.show();
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            dialog.dismiss();
+            onConfirm.run();
+        });
+
+        new Thread(() -> {
+            long size = GogDownloadManager.fetchGameSize(this, game);
+            runOnUiThread(() -> {
+                if (!dialog.isShowing()) return;
+                gameSizeTV.setText("Game size:  " + GogDownloadManager.formatBytes(size));
+                if (size > 0 && finalFree > 0 && size > finalFree) {
+                    gameSizeTV.setTextColor(0xFFFF5252);
+                    gameSizeTV.setText("Game size:  " + GogDownloadManager.formatBytes(size)
+                            + "  ⚠ Not enough space");
+                    freeTV.setTextColor(0xFFFF5252);
+                }
+            });
+        }).start();
+    }
+
+    /**
+     * Shows a dialog letting the user pick from multiple exe candidates.
+     * {@code candidates} contains absolute paths; display name is the last 2 path segments.
+     * Calls {@code onSelected} with the chosen absolute path on the background thread.
+     */
+    private void showExePicker(java.util.List<String> candidates,
+                                java.util.function.Consumer<String> onSelected) {
+        String[] labels = new String[candidates.size()];
+        for (int i = 0; i < candidates.size(); i++) {
+            java.io.File f = new java.io.File(candidates.get(i));
+            java.io.File parent = f.getParentFile();
+            labels[i] = (parent != null) ? parent.getName() + "/" + f.getName() : f.getName();
+        }
+        uiHandler.post(() ->
+            new AlertDialog.Builder(this)
+                .setTitle("Select game executable")
+                .setItems(labels, (d, which) ->
+                    new Thread(() -> onSelected.accept(candidates.get(which))).start())
+                .setCancelable(false)
+                .show()
+        );
     }
 
     private int dp(int v) {

@@ -13,6 +13,9 @@
 .field public static final CONTENT_TYPE_PERF_METRICS:I = 0x1d
 
 .field public static final CONTENT_TYPE_SD_CARD_STORAGE:I = 0x18
+.field public static final CONTENT_TYPE_QUICK_SETUP:I = 0x65
+
+.field private static final BANNERHUB_URL:Ljava/lang/String; = "https://bannerhub-api.the412banner.workers.dev/"
 
 .field private static final EMUREADY_URL:Ljava/lang/String; = "https://gamehub-lite-api.emuready.workers.dev/"
 
@@ -20,7 +23,7 @@
 
 .field private static final KEY_CUSTOM_STORAGE:Ljava/lang/String; = "use_custom_storage"
 
-.field private static final KEY_EXTERNAL_API:Ljava/lang/String; = "use_external_api"
+.field private static final KEY_API_SOURCE:Ljava/lang/String; = "api_source"
 
 .field private static final KEY_LAST_API_SOURCE:Ljava/lang/String; = "last_api_source"
 
@@ -181,6 +184,12 @@
 
     move-result-object v5
 
+    # BannerHub: skip primary/emulated storage — only accept true removable SD cards
+    const-string v6, "/storage/emulated/"
+    invoke-virtual {v5, v6}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+    move-result v6
+    if-nez v6, :goto_1
+
     .line 364
     const-string v6, "/Android/data"
 
@@ -205,18 +214,8 @@
 
     invoke-direct {v6, v5, v7}, Ljava/io/File;-><init>(Ljava/lang/String;Ljava/lang/String;)V
 
-    .line 368
-    invoke-virtual {v6}, Ljava/io/File;->exists()Z
-
-    move-result v7
-
-    if-eqz v7, :cond_2
-
-    invoke-virtual {v6}, Ljava/io/File;->isDirectory()Z
-
-    move-result v7
-
-    if-eqz v7, :cond_2
+    # BannerHub: create GHL folder if it doesn't exist (no longer requires pre-existing folder)
+    invoke-virtual {v6}, Ljava/io/File;->mkdirs()Z
 
     invoke-virtual {v6}, Ljava/io/File;->canWrite()Z
 
@@ -745,7 +744,7 @@
     if-ne p0, v0, :cond_1
 
     .line 231
-    const-string p0, "EmuReady API"
+    const-string p0, "Compatibility API"
 
     return-object p0
 
@@ -830,12 +829,13 @@
     move-result-object v3
 
     .line 208
-    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->isExternalAPI()Z
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getApiSource()I
 
     move-result v4
 
     .line 210
-    invoke-interface {v3, v0, v2}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+    const/4 v2, -0x1
+    invoke-interface {v3, v0, v2}, Landroid/content/SharedPreferences;->getInt(Ljava/lang/String;I)I
 
     move-result v2
 
@@ -856,7 +856,7 @@
 
     invoke-direct {v6, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
 
-    invoke-virtual {v6, v4}, Ljava/lang/StringBuilder;->append(Z)Ljava/lang/StringBuilder;
+    invoke-virtual {v6, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
 
     move-result-object v1
 
@@ -866,7 +866,7 @@
 
     move-result-object v1
 
-    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Z)Ljava/lang/StringBuilder;
+    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
 
     move-result-object v1
 
@@ -890,7 +890,7 @@
 
     move-result-object v1
 
-    invoke-interface {v1, v0, v4}, Landroid/content/SharedPreferences$Editor;->putBoolean(Ljava/lang/String;Z)Landroid/content/SharedPreferences$Editor;
+    invoke-interface {v1, v0, v4}, Landroid/content/SharedPreferences$Editor;->putInt(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;
 
     move-result-object v0
 
@@ -913,15 +913,22 @@
     .line 221
     :cond_1
     :goto_0
-    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->isExternalAPI()Z
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getApiSource()I
 
     move-result v0
 
-    if-eqz v0, :cond_2
+    if-eqz v0, :cond_url_gamehub
+
+    const/4 v1, 0x1
+    if-ne v0, v1, :cond_url_bannerhub
 
     const-string p0, "https://gamehub-lite-api.emuready.workers.dev/"
+    goto :cond_url_gamehub
 
-    :cond_2
+    :cond_url_bannerhub
+    const-string p0, "https://bannerhub-api.the412banner.workers.dev/"
+
+    :cond_url_gamehub
     return-object p0
 .end method
 
@@ -1367,25 +1374,41 @@
 
     const-string v0, "last_api_source"
 
-    invoke-interface {p0, v0, p1}, Landroid/content/SharedPreferences$Editor;->putBoolean(Ljava/lang/String;Z)Landroid/content/SharedPreferences$Editor;
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getApiSource()I
+
+    move-result v2
+
+    invoke-interface {p0, v0, v2}, Landroid/content/SharedPreferences$Editor;->putInt(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;
 
     move-result-object p0
 
     invoke-interface {p0}, Landroid/content/SharedPreferences$Editor;->apply()V
 
-    if-eqz p1, :cond_9
+    # 3-way toast based on new api_source
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getApiSource()I
 
-    .line 289
+    move-result v0
+
+    if-eqz v0, :api_cond_gamehub
+
+    const/4 v2, 0x1
+
+    if-ne v0, v2, :api_cond_bannerhub
+
     const-string p0, "Switched to EmuReady API \u2014 restart to refresh components"
 
-    goto :goto_3
+    goto :api_goto_toast
 
-    .line 290
-    :cond_9
+    :api_cond_bannerhub
+    const-string p0, "Switched to BannerHub API \u2014 restart to refresh components"
+
+    goto :api_goto_toast
+
+    :api_cond_gamehub
     const-string p0, "Switched to Official API \u2014 restart to refresh components"
 
     .line 291
-    :goto_3
+    :api_goto_toast
     invoke-static {}, Lcom/blankj/utilcode/util/Utils;->a()Landroid/app/Application;
 
     move-result-object v0
@@ -1396,6 +1419,11 @@
 
     .line 292
     invoke-virtual {p0}, Landroid/widget/Toast;->show()V
+
+    # Return isExternalAPI() as the new switch state
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->isExternalAPI()Z
+
+    move-result p1
 
     :cond_a
     return p1
@@ -1440,22 +1468,88 @@
 .end method
 
 .method public static isExternalAPI()Z
+    .locals 1
+
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getApiSource()I
+
+    move-result v0
+
+    if-eqz v0, :cond_not_external
+
+    const/4 v0, 0x1
+
+    return v0
+
+    :cond_not_external
+    const/4 v0, 0x0
+
+    return v0
+.end method
+
+# Returns the selected API source: 0=GameHub (default), 1=EmuReady, 2=BannerHub
+.method public static getApiSource()I
     .locals 3
 
-    .line 36
     invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getPrefs()Landroid/content/SharedPreferences;
 
     move-result-object v0
 
-    const-string v1, "use_external_api"
+    const-string v1, "api_source"
 
     const/4 v2, 0x0
 
-    invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+    invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getInt(Ljava/lang/String;I)I
 
     move-result v0
 
     return v0
+.end method
+
+# Sets the selected API source (0=GameHub, 1=EmuReady, 2=BannerHub), saves pref, clears caches, shows toast
+.method public static setApiSource(I)V
+    .locals 4
+
+    # Save api_source pref
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getPrefs()Landroid/content/SharedPreferences;
+    move-result-object v0
+    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+    move-result-object v1
+    const-string v2, "api_source"
+    invoke-interface {v1, v2, p0}, Landroid/content/SharedPreferences$Editor;->putInt(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;
+    move-result-object v1
+    invoke-interface {v1}, Landroid/content/SharedPreferences$Editor;->apply()V
+
+    # Save last_api_source (used for startup mismatch detection)
+    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+    move-result-object v1
+    const-string v2, "last_api_source"
+    invoke-interface {v1, v2, p0}, Landroid/content/SharedPreferences$Editor;->putInt(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;
+    move-result-object v1
+    invoke-interface {v1}, Landroid/content/SharedPreferences$Editor;->apply()V
+
+    # Clear all component / token caches
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->clearComponentAndTokenCaches()V
+
+    # Build toast message based on chosen source
+    const/4 v1, 0x0
+    if-eqz p0, :api_src_gamehub
+    const/4 v2, 0x1
+    if-ne p0, v2, :api_src_bannerhub
+    const-string v3, "Switched to EmuReady API \u2014 restart to refresh components"
+    goto :api_src_toast
+    :api_src_bannerhub
+    const-string v3, "Switched to BannerHub API \u2014 restart to refresh components"
+    goto :api_src_toast
+    :api_src_gamehub
+    const-string v3, "Switched to Official API \u2014 restart to refresh components"
+    :api_src_toast
+    invoke-static {}, Lcom/blankj/utilcode/util/Utils;->a()Landroid/app/Application;
+    move-result-object v0
+    invoke-static {v0, v3, v1}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
+    move-result-object v0
+    invoke-virtual {v0}, Landroid/widget/Toast;->show()V
+
+    return-void
 .end method
 
 .method public static isLogAllRequestsEnabled()Z
@@ -2609,35 +2703,34 @@
     return p0
 .end method
 
+# Cycles api_source: 0 (GameHub) → 1 (EmuReady) → 2 (BannerHub) → 0
 .method public static toggleAPI()V
     .locals 4
 
-    .line 62
-    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getPrefs()Landroid/content/SharedPreferences;
-
-    move-result-object v0
-
-    .line 63
-    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
-
-    move-result-object v1
-
-    .line 64
-    const-string v2, "use_external_api"
-
-    const/4 v3, 0x1
-
-    invoke-interface {v0, v2, v3}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getApiSource()I
 
     move-result v0
 
-    xor-int/2addr v0, v3
+    add-int/lit8 v0, v0, 0x1
 
-    invoke-interface {v1, v2, v0}, Landroid/content/SharedPreferences$Editor;->putBoolean(Ljava/lang/String;Z)Landroid/content/SharedPreferences$Editor;
+    const/4 v1, 0x3
+
+    rem-int v0, v0, v1
+
+    invoke-static {}, Lapp/revanced/extension/gamehub/prefs/GameHubPrefs;->getPrefs()Landroid/content/SharedPreferences;
+
+    move-result-object v1
+
+    invoke-interface {v1}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+
+    move-result-object v2
+
+    const-string v3, "api_source"
+
+    invoke-interface {v2, v3, v0}, Landroid/content/SharedPreferences$Editor;->putInt(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;
 
     move-result-object v0
 
-    .line 65
     invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->apply()V
 
     return-void

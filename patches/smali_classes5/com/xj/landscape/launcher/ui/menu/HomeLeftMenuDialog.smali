@@ -1588,8 +1588,32 @@
     invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
     goto :goto_1
 
-    # BannerHub: Quick Setup menu item
+    # BannerHub: Amazon Games menu item
     :pswitch_11
+    new-instance p0, Landroid/content/Intent;
+    const-class p1, Lapp/revanced/extension/gamehub/AmazonMainActivity;
+    invoke-direct {p0, p2, p1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+    invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+    goto :goto_1
+
+    # BannerHub: Epic Games menu item
+    :pswitch_12
+    new-instance p0, Landroid/content/Intent;
+    const-class p1, Lapp/revanced/extension/gamehub/EpicMainActivity;
+    invoke-direct {p0, p2, p1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+    invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+    goto :goto_1
+
+    # BannerHub: Game Configs menu item
+    :pswitch_13
+    new-instance p0, Landroid/content/Intent;
+    const-class p1, Lapp/revanced/extension/gamehub/BhGameConfigsActivity;
+    invoke-direct {p0, p2, p1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+    invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+    goto :goto_1
+
+    # BannerHub: Quick Setup menu item
+    :pswitch_14
     new-instance p0, Landroid/content/Intent;
     const-class p1, Lcom/xj/landscape/launcher/ui/menu/BhQuickSetupActivity;
     invoke-direct {p0, p2, p1}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
@@ -1621,6 +1645,9 @@
         :pswitch_9
         :pswitch_10
         :pswitch_11
+        :pswitch_12
+        :pswitch_13
+        :pswitch_14
     .end packed-switch
 .end method
 
@@ -3915,13 +3942,49 @@
     invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
     invoke-interface {p0, v4}, Ljava/util/List;->add(Ljava/lang/Object;)Z
 
-    # BannerHub: Quick Setup menu item (id=11)
+    # BannerHub: Amazon Games menu item (id=11)
+    new-instance v4, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;
+    sget v6, Lcom/xj/landscape/launcher/R$drawable;->menu_setting_normal:I
+    const-string v7, "Amazon"
+    const/16 v10, 0x18
+    const/4 v11, 0x0
+    const/16 v5, 0xb
+    const/4 v8, 0x0
+    const/4 v9, 0x0
+    invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {p0, v4}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+
+    # BannerHub: Epic Games menu item (id=12)
+    new-instance v4, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;
+    sget v6, Lcom/xj/landscape/launcher/R$drawable;->menu_setting_normal:I
+    const-string v7, "Epic"
+    const/16 v10, 0x18
+    const/4 v11, 0x0
+    const/16 v5, 0xc
+    const/4 v8, 0x0
+    const/4 v9, 0x0
+    invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {p0, v4}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+
+    # BannerHub: Game Configs menu item (id=13)
+    new-instance v4, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;
+    sget v6, Lcom/xj/landscape/launcher/R$drawable;->menu_setting_normal:I
+    const-string v7, "Game Configs"
+    const/16 v10, 0x18
+    const/4 v11, 0x0
+    const/16 v5, 0xd
+    const/4 v8, 0x0
+    const/4 v9, 0x0
+    invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {p0, v4}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+
+    # BannerHub: Quick Setup menu item (id=14)
     new-instance v4, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;
     sget v6, Lcom/xj/landscape/launcher/R$drawable;->menu_setting_normal:I
     const-string v7, "Quick Setup"
     const/16 v10, 0x18
     const/4 v11, 0x0
-    const/16 v5, 0xb
+    const/16 v5, 0xe
     const/4 v8, 0x0
     const/4 v9, 0x0
     invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V

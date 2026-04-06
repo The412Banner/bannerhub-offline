@@ -1,23 +1,92 @@
-[
-  {
-    "name": "Box64",
-    "version": "box64-0.4.1-fix",
-    "type": 94,
-    "url": "https://github.com/The412Banner/Nightlies/releases/download/Box64/box64-0.4.1-fix.wcp",
-    "desc": "x64 emulator required for most Windows games"
-  },
-  {
-    "name": "DXVK",
-    "version": "dxvk-gplasync-arm64ec-2.7.1-1",
-    "type": 12,
-    "url": "https://github.com/The412Banner/Nightlies/releases/download/Dxvk-gplasync-arm64ec/dxvk-gplasync-arm64ec-2.7.1-1.wcp",
-    "desc": "DirectX 9-11 to Vulkan translation"
-  },
-  {
-    "name": "VKD3D-Proton",
-    "version": "vkd3d-proton-3.0b",
-    "type": 13,
-    "url": "https://github.com/The412Banner/Nightlies/releases/download/Vkd3d-proton/vkd3d-proton-3.0b.wcp",
-    "desc": "DirectX 12 to Vulkan translation"
-  }
-]
+{
+  "version": "2.9.2",
+  "description": "Bundled components for offline first-launch (no downloads required)",
+  "wcp_components": [
+    {
+      "index": 0,
+      "name": "Box64",
+      "version": "box64-0.4.1-fix",
+      "type": 94,
+      "apk_entry": "wcp/box64-0.4.1-fix.wcp",
+      "url": "https://github.com/The412Banner/Nightlies/releases/download/Box64/box64-0.4.1-fix.wcp"
+    },
+    {
+      "index": 1,
+      "name": "DXVK",
+      "version": "dxvk-gplasync-arm64ec-2.7.1-1",
+      "type": 12,
+      "apk_entry": "wcp/dxvk-gplasync-arm64ec-2.7.1-1.wcp",
+      "url": "https://github.com/The412Banner/Nightlies/releases/download/Dxvk-gplasync-arm64ec/dxvk-gplasync-arm64ec-2.7.1-1.wcp"
+    },
+    {
+      "index": 2,
+      "name": "VKD3D-Proton",
+      "version": "vkd3d-proton-3.0b",
+      "type": 13,
+      "apk_entry": "wcp/vkd3d-proton-3.0b.wcp",
+      "url": "https://github.com/The412Banner/Nightlies/releases/download/Vkd3d-proton/vkd3d-proton-3.0b.wcp"
+    }
+  ],
+  "gamehub_components": [
+    {
+      "index": 0,
+      "name": "proton10.0-arm64x-2",
+      "version": "1.0.3",
+      "file": "wine_proton10.0-arm64x-2.tar.zst",
+      "apk_entry": "xj_winemu/xj_downloads/env/proton10.0-arm64x-2/1.0.3/wine_proton10.0-arm64x-2.tar.zst",
+      "url": "https://github.com/The412Banner/bannerhub-api/releases/download/Components/wine_proton10.0-arm64x-2.tar.zst"
+    },
+    {
+      "index": 1,
+      "name": "vkd3d-2.12",
+      "version": "1.1.1",
+      "file": "vkd3d-2.12.tzst",
+      "apk_entry": "xj_winemu/xj_downloads/component/vkd3d-2.12/1.1.1/vkd3d-2.12.tzst"
+    },
+    {
+      "index": 2,
+      "name": "base",
+      "version": "1.0.0",
+      "file": "base.tzst",
+      "apk_entry": "xj_winemu/xj_downloads/component/base/1.0.0/base.tzst"
+    },
+    {
+      "index": 3,
+      "name": "dxvk-v2.4.1-async",
+      "version": "1.1.0",
+      "file": "dxvk-v2.4.1-async.tzst",
+      "apk_entry": "xj_winemu/xj_downloads/component/dxvk-v2.4.1-async/1.1.0/dxvk-v2.4.1-async.tzst"
+    },
+    {
+      "index": 4,
+      "name": "Fex-20260321",
+      "version": "1.0.0",
+      "file": "Fex-20260321.tzst",
+      "apk_entry": "xj_winemu/xj_downloads/component/Fex-20260321/1.0.0/Fex-20260321.tzst",
+      "url": "https://github.com/The412Banner/bannerhub-api/releases/download/Components/e41acf1248a8e48411ce2b7f8c73dc65.tzst"
+    },
+    {
+      "index": 5,
+      "name": "Turnip_v26.1.0_R5",
+      "version": "1.0.0",
+      "file": "Turnip_v26.1.0_R5.tzst",
+      "apk_entry": "xj_winemu/xj_downloads/component/Turnip_v26.1.0_R5/1.0.0/Turnip_v26.1.0_R5.tzst",
+      "url": "https://github.com/The412Banner/bannerhub-api/releases/download/Components/36e67b87b7597fb049edf3d18b62e353.tzst"
+    },
+    {
+      "index": 6,
+      "name": "steam_9866233",
+      "version": "1.0.0",
+      "file": "steam_9866233.tar.zst",
+      "apk_entry": "xj_winemu/xj_downloads/component/steam_9866233/1.0.0/steam_9866233.tar.zst"
+    },
+    {
+      "index": 7,
+      "name": "Firmware",
+      "version": "1.3.3",
+      "file": "imagefs.zst",
+      "apk_entry": "xj_winemu/xj_downloads/env/Firmware/1.3.3/imagefs.zst",
+      "url": "https://github.com/The412Banner/bannerhub-api/releases/download/Components/imagefs.zst"
+    }
+  ]
+}
