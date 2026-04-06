@@ -1620,6 +1620,18 @@
     invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
     goto :goto_1
 
+    # BannerHub: Import Game menu item — open WinEmuFileSelectorActivity via registered launcher
+    :pswitch_15
+    check-cast p2, Lcom/xj/landscape/launcher/ui/main/LandscapeLauncherMainActivity;
+    invoke-static {p2}, Lcom/xj/landscape/launcher/ui/main/LandscapeLauncherMainActivity;->t2(Lcom/xj/landscape/launcher/ui/main/LandscapeLauncherMainActivity;)Landroidx/activity/result/ActivityResultLauncher;
+    move-result-object p0
+    if-eqz p0, :goto_1
+    const-string p1, "exe"
+    filled-new-array {p1}, [Ljava/lang/String;
+    move-result-object p1
+    invoke-virtual {p0, p1}, Landroidx/activity/result/ActivityResultLauncher;->a(Ljava/lang/Object;)V
+    goto :goto_1
+
     :cond_2
     :goto_1
     sget-object p0, Lkotlin/Unit;->a:Lkotlin/Unit;
@@ -1648,6 +1660,7 @@
         :pswitch_12
         :pswitch_13
         :pswitch_14
+        :pswitch_15
     .end packed-switch
 .end method
 
@@ -3985,6 +3998,18 @@
     const/16 v10, 0x18
     const/4 v11, 0x0
     const/16 v5, 0xe
+    const/4 v8, 0x0
+    const/4 v9, 0x0
+    invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+    invoke-interface {p0, v4}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+
+    # BannerHub: Import Game menu item (id=15)
+    new-instance v4, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;
+    sget v6, Lcom/xj/landscape/launcher/R$drawable;->menu_setting_normal:I
+    const-string v7, "Import Game"
+    const/16 v10, 0x18
+    const/4 v11, 0x0
+    const/16 v5, 0xf
     const/4 v8, 0x0
     const/4 v9, 0x0
     invoke-direct/range {v4 .. v11}, Lcom/xj/landscape/launcher/ui/menu/HomeLeftMenuDialog$MenuItem;-><init>(IILjava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
