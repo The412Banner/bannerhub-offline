@@ -16,7 +16,6 @@
 
 .method public intercept(Lokhttp3/Interceptor$Chain;)Lokhttp3/Response;
     .locals 7
-    .throws Ljava/io/IOException;
     # v0 = Request
     # v1 = temp / bool / HttpUrl
     # v2 = encoded path String
