@@ -1620,16 +1620,13 @@
     invoke-virtual {p2, p0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
     goto :goto_1
 
-    # BannerHub: Import Game menu item — open WinEmuFileSelectorActivity via registered launcher
+    # BannerHub: Import Game menu item — request MANAGE_EXTERNAL_STORAGE then open file selector
     :pswitch_15
     check-cast p2, Lcom/xj/landscape/launcher/ui/main/LandscapeLauncherMainActivity;
-    invoke-static {p2}, Lcom/xj/landscape/launcher/ui/main/LandscapeLauncherMainActivity;->t2(Lcom/xj/landscape/launcher/ui/main/LandscapeLauncherMainActivity;)Landroidx/activity/result/ActivityResultLauncher;
-    move-result-object p0
-    if-eqz p0, :goto_1
-    const-string p1, "exe"
-    filled-new-array {p1}, [Ljava/lang/String;
-    move-result-object p1
-    invoke-virtual {p0, p1}, Landroidx/activity/result/ActivityResultLauncher;->a(Ljava/lang/Object;)V
+    sget-object p0, Lcom/xj/winemu/utils/ManageStoragePermissionUtil;->a:Lcom/xj/winemu/utils/ManageStoragePermissionUtil;
+    new-instance p1, Lcom/xj/landscape/launcher/ui/main/n0;
+    invoke-direct {p1, p2}, Lcom/xj/landscape/launcher/ui/main/n0;-><init>(Lcom/xj/landscape/launcher/ui/main/LandscapeLauncherMainActivity;)V
+    invoke-virtual {p0, p2, p1}, Lcom/xj/winemu/utils/ManageStoragePermissionUtil;->a(Landroid/content/Context;Lkotlin/jvm/functions/Function1;)V
     goto :goto_1
 
     :cond_2
